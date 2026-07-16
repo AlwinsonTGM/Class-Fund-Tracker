@@ -9,31 +9,31 @@ export async function togglePaymentStatus(
   paid: boolean,
   studentName: string
 ) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  // 1. Authenticate user as an officer
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new Error('Unauthorized: You must be logged in as an officer to perform this action.')
-  }
+    // 1. Authenticate user as an officer
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in as an officer to perform this action.' }
+    }
 
-  const officerEmail = user.email || 'unknown_officer'
-  const actionDescription = `${paid ? 'Marked' : 'Unmarked'} student "${studentName}" (ID: ${studentId}) as paid for Week ${weekNumber}.`
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `${paid ? 'Marked' : 'Unmarked'} student "${studentName}" (ID: ${studentId}) as paid for Week ${weekNumber}.`
 
-  // 2. Execute transaction via RPC function (combining payment update + audit log)
-  const { error: rpcError } = await supabase.rpc('toggle_payment_status', {
-    p_student_id: studentId,
-    p_week_number: weekNumber,
-    p_paid: paid,
-    p_officer_email: officerEmail,
-    p_action_description: actionDescription
-  })
+    // 2. Execute transaction via RPC function (combining payment update + audit log)
+    const { error: rpcError } = await supabase.rpc('toggle_payment_status', {
+      p_student_id: studentId,
+      p_week_number: weekNumber,
+      p_paid: paid,
+      p_officer_email: officerEmail,
+      p_action_description: actionDescription
+    })
 
-  // 3. Resilient Fallback: If RPC fails or is missing, run sequentially
-  if (rpcError) {
-    console.warn('RPC toggle_payment_status failed. Falling back to sequential execution:', rpcError.message)
+    // 3. Resilient Fallback: If RPC fails or is missing, run sequentially
+    if (rpcError) {
+      console.warn('RPC toggle_payment_status failed. Falling back to sequential execution:', rpcError.message)
 
-    try {
       // Step A: Update payments table
       // Delete any duplicates first to enforce integrity
       await supabase
@@ -63,17 +63,17 @@ export async function togglePaymentStatus(
       if (auditInsertError) {
         console.error('Failed to create audit log in sequential fallback:', auditInsertError.message)
       }
-    } catch (fallbackError: any) {
-      console.error('Sequential fallback execution failed:', fallbackError.message)
-      throw new Error(`Database operation failed: ${fallbackError.message}`)
     }
+
+    // 4. Revalidate pages to flush caches
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error toggling payment status:', err)
+    return { success: false, error: err.message || 'Failed to toggle payment status.' }
   }
-
-  // 4. Revalidate pages to flush caches
-  revalidatePath('/')
-  revalidatePath('/officer-dashboard')
-
-  return { success: true }
 }
 
 export async function addExpenseAction(
@@ -81,30 +81,31 @@ export async function addExpenseAction(
   amount: number,
   officerName: string
 ) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  // 1. Authenticate user
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new Error('Unauthorized: You must be logged in as an officer to add an expense.')
-  }
+    // 1. Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in as an officer to add an expense.' }
+    }
 
-  const officerEmail = user.email || 'unknown_officer'
-  const actionDescription = `Added expense: "${description}" for ₱${amount.toFixed(2)} (Spent by: ${officerName}).`
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Added expense: "${description}" for ₱${amount.toFixed(2)} (Spent by: ${officerName}).`
 
-  // 2. Call Supabase RPC transaction
-  const { error: rpcError } = await supabase.rpc('add_expense_transaction', {
-    p_description: description,
-    p_amount: amount,
-    p_officer_name: officerName,
-    p_officer_email: officerEmail,
-    p_action_description: actionDescription
-  })
+    // 2. Call Supabase RPC transaction
+    const { error: rpcError } = await supabase.rpc('add_expense_transaction', {
+      p_description: description,
+      p_amount: amount,
+      p_officer_name: officerName,
+      p_officer_email: officerEmail,
+      p_action_description: actionDescription
+    })
 
-  // 3. Fallback: Sequential database insertion
-  if (rpcError) {
-    console.warn('RPC add_expense_transaction failed. Falling back to sequential execution:', rpcError.message)
-    try {
+    // 3. Fallback: Sequential database insertion
+    if (rpcError) {
+      console.warn('RPC add_expense_transaction failed. Falling back to sequential execution:', rpcError.message)
+      
       // Step A: Insert into expenses table
       const { error: expError } = await supabase
         .from('expenses')
@@ -123,97 +124,107 @@ export async function addExpenseAction(
           action_description: actionDescription
         })
       if (logError) throw logError
-    } catch (fallbackError: any) {
-      console.error('Sequential fallback execution for expense failed:', fallbackError.message)
-      throw new Error(`Database operation failed: ${fallbackError.message}`)
     }
+
+    // 4. Revalidate pages
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error adding expense:', err)
+    return { success: false, error: err.message || 'Failed to record expense.' }
   }
-
-  // 4. Revalidate pages
-  revalidatePath('/')
-  revalidatePath('/officer-dashboard')
-
-  return { success: true }
 }
 
 export async function upsertWeekAction(weekNumber: number, dateRange: string, status: string = 'active') {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  // Authenticate user
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new Error('Unauthorized: You must be logged in as an officer.')
+    // Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in as an officer.' }
+    }
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Upserted Week ${weekNumber} (Range: "${dateRange}", Status: "${status}").`
+
+    // Update or insert week
+    const { error: weekError } = await supabase
+      .from('weeks')
+      .upsert(
+        { week_number: weekNumber, date_range: dateRange, status },
+        { onConflict: 'week_number' }
+      )
+    if (weekError) {
+      console.error('Error upserting week:', weekError.message)
+      return { success: false, error: `Database error: ${weekError.message}` }
+    }
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) {
+      console.error('Failed to log upsert week audit log:', logError.message)
+    }
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error upserting week:', err)
+    return { success: false, error: err.message || 'Failed to save week.' }
   }
-
-  const officerEmail = user.email || 'unknown_officer'
-  const actionDescription = `Upserted Week ${weekNumber} (Range: "${dateRange}", Status: "${status}").`
-
-  // Update or insert week
-  const { error: weekError } = await supabase
-    .from('weeks')
-    .upsert(
-      { week_number: weekNumber, date_range: dateRange, status },
-      { onConflict: 'week_number' }
-    )
-  if (weekError) {
-    console.error('Error upserting week:', weekError.message)
-    throw new Error(`Database error: ${weekError.message}`)
-  }
-
-  // Insert audit log
-  const { error: logError } = await supabase
-    .from('audit_logs')
-    .insert({
-      officer_email: officerEmail,
-      action_description: actionDescription
-    })
-  if (logError) {
-    console.error('Failed to log upsert week audit log:', logError.message)
-  }
-
-  revalidatePath('/')
-  revalidatePath('/officer-dashboard')
-
-  return { success: true }
 }
 
 export async function deleteWeekAction(weekNumber: number) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  // Authenticate user
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
-    throw new Error('Unauthorized: You must be logged in as an officer.')
+    // Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in as an officer.' }
+    }
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Deleted Week ${weekNumber} from calendar configuration.`
+
+    // Delete week
+    const { error: weekError } = await supabase
+      .from('weeks')
+      .delete()
+      .eq('week_number', weekNumber)
+    if (weekError) {
+      console.error('Error deleting week:', weekError.message)
+      return { success: false, error: `Database error: ${weekError.message}` }
+    }
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) {
+      console.error('Failed to log delete week audit log:', logError.message)
+    }
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error deleting week:', err)
+    return { success: false, error: err.message || 'Failed to delete week.' }
   }
-
-  const officerEmail = user.email || 'unknown_officer'
-  const actionDescription = `Deleted Week ${weekNumber} from calendar configuration.`
-
-  // Delete week
-  const { error: weekError } = await supabase
-    .from('weeks')
-    .delete()
-    .eq('week_number', weekNumber)
-  if (weekError) {
-    console.error('Error deleting week:', weekError.message)
-    throw new Error(`Database error: ${weekError.message}`)
-  }
-
-  // Insert audit log
-  const { error: logError } = await supabase
-    .from('audit_logs')
-    .insert({
-      officer_email: officerEmail,
-      action_description: actionDescription
-    })
-  if (logError) {
-    console.error('Failed to log delete week audit log:', logError.message)
-  }
-
-  revalidatePath('/')
-  revalidatePath('/officer-dashboard')
-
-  return { success: true }
 }
 
 export async function fetchAuditLogsAction(offset: number, limit: number = 20) {
