@@ -2,37 +2,11 @@ import { createClient } from '@/lib/supabase-server'
 import { StudentPaymentList } from '@/components/student-payment-list'
 import { RecentActivity } from '@/components/recent-activity'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BalanceCard } from '@/components/balance-card'
 import { signOutAction } from '@/app/login/actions'
 
 export const dynamic = 'force-dynamic'
 
-interface BalanceCardProps {
-  balance: number
-}
-
-function BalanceCard({ balance }: BalanceCardProps) {
-  const formattedBalance = new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP'
-  }).format(balance)
-
-  return (
-    <section aria-labelledby="balance-heading" className="rounded-3xl bg-foreground p-6 text-background shadow-lg sm:p-8">
-      <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-3">
-          <p className="text-sm font-semibold uppercase tracking-widest text-background/70">Class treasury</p>
-          <div className="flex flex-col gap-1">
-            <h2 id="balance-heading" className="text-sm font-medium text-background/70">Total Fund Balance</h2>
-            <p className="text-balance text-4xl font-semibold tracking-tight text-background sm:text-5xl">{formattedBalance}</p>
-          </div>
-        </div>
-        <p className="w-fit rounded-full border border-background/20 px-3 py-1.5 text-xs font-medium text-background/80">
-          Updated today
-        </p>
-      </div>
-    </section>
-  )
-}
 
 export default async function Page() {
   const supabase = await createClient()
@@ -83,11 +57,11 @@ export default async function Page() {
   const netBalance = totalContributions - totalExpenses
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 anim-fade-slide-in">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         {/* Header */}
         <header className="flex flex-col gap-2">
-          <div className="flex justify-between items-start gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-primary">School Year 2026–2027</p>
               <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Class Fund Tracker</h1>
@@ -97,14 +71,14 @@ export default async function Page() {
                 <ThemeToggle />
                 <a
                   href="/officer-dashboard"
-                  className="text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 transition-all"
+                  className="text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 press-spring"
                 >
                   Manage →
                 </a>
                 <form action={signOutAction}>
                   <button
                     type="submit"
-                    className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 transition-all cursor-pointer"
+                    className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 cursor-pointer press-spring"
                   >
                     Sign Out
                   </button>
@@ -115,7 +89,7 @@ export default async function Page() {
                 <ThemeToggle />
                 <a
                   href="/login"
-                  className="shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 transition-all"
+                  className="shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 press-spring"
                 >
                   Officer Login
                 </a>

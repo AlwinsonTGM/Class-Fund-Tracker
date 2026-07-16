@@ -26,6 +26,7 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
   // Pagination states
   const [hasMore, setHasMore] = useState(activities.length >= 10)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
 
   // Sync state when props change
   useEffect(() => {
@@ -36,17 +37,26 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
   const handleDelete = (logId: number) => {
     if (confirm('Are you sure you want to delete this activity log? This cannot be undone.')) {
       setError(null)
-      // Optimistic update
-      setLocalActivities((prev) => prev.filter((act) => act.id !== logId))
+      // Trigger slide-out animation
+      setDeletingIds((prev) => new Set(prev).add(logId))
 
-      startTransition(async () => {
-        const result = await deleteAuditLogAction(logId)
-        if (!result.success) {
-          setError(result.error || 'Failed to delete activity.')
-          // Rollback
-          setLocalActivities(activities)
-        }
-      })
+      // Wait for animation, then remove and call server
+      setTimeout(() => {
+        setLocalActivities((prev) => prev.filter((act) => act.id !== logId))
+        setDeletingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(logId)
+          return next
+        })
+
+        startTransition(async () => {
+          const result = await deleteAuditLogAction(logId)
+          if (!result.success) {
+            setError(result.error || 'Failed to delete activity.')
+            setLocalActivities(activities)
+          }
+        })
+      }, 450)
     }
   }
 
@@ -123,16 +133,16 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
         )}
 
         {localActivities.length > 0 && (
-          <div className="max-h-[360px] overflow-y-auto pr-1">
+          <div className="max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
             <ul className="divide-y divide-border" aria-label="Recent activity log">
               {localActivities.map((activity) => {
                 const isEditing = editingLogId === activity.id
 
                 return (
-                  <li key={activity.id} className="flex flex-col py-3 first:pt-0 last:pb-0 text-sm text-foreground">
-                    <div className="flex justify-between items-center gap-3">
+                  <li key={activity.id} className={`flex flex-col py-3 first:pt-0 last:pb-0 text-sm text-foreground gpu-accelerate ${deletingIds.has(activity.id) ? 'anim-slide-out-left overflow-hidden' : ''}`}>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
                       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                        <span className="font-semibold text-xs bg-muted px-2.5 py-0.5 rounded-full text-foreground/80">
+                        <span className="font-semibold text-xs bg-muted px-2.5 py-0.5 rounded-full text-foreground/80 truncate max-w-[200px] sm:max-w-none">
                           👤 {activity.officer_email}
                         </span>
                         <span className="text-[11px] font-medium text-muted-foreground">
@@ -147,18 +157,18 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
 
                       {/* Moderator Action Buttons */}
                       {isModerator && !isEditing && (
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
                           <button
                             onClick={() => handleStartEdit(activity)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2 py-1 transition-colors cursor-pointer"
+                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[36px] min-w-[44px] flex items-center justify-center"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(activity.id)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 transition-colors cursor-pointer"
+                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[36px] min-w-[44px] flex items-center justify-center"
                           >
                             Delete
                           </button>
@@ -212,7 +222,7 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="text-xs font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-full py-2 px-4 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              className="text-xs font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-full py-2 px-4 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 press-spring"
             >
               {isLoadingMore ? (
                 <span className="h-3 w-3 animate-spin rounded-full border border-foreground border-t-transparent" />

@@ -43,6 +43,117 @@ html.dark {
   --border: #29352e;
 }
 
+/* ─── Spring Easing Curves ─── */
+:root {
+  --ease-spring-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-swift: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ─── Keyframe Animations ─── */
+@keyframes modal-overlay-in {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to   { opacity: 1; backdrop-filter: blur(12px); }
+}
+@keyframes modal-overlay-out {
+  from { opacity: 1; backdrop-filter: blur(12px); }
+  to   { opacity: 0; backdrop-filter: blur(0px); }
+}
+@keyframes modal-card-in {
+  0%   { opacity: 0; transform: scale(0.88) translateY(12px); }
+  70%  { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes modal-card-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.95) translateY(8px); }
+}
+@keyframes check-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.78); }
+  70%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes slide-out-left {
+  from { opacity: 1; transform: translateX(0); max-height: 120px; padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  60%  { opacity: 0; transform: translateX(-105%); max-height: 120px; padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  100% { opacity: 0; transform: translateX(-105%); max-height: 0; padding-top: 0; padding-bottom: 0; }
+}
+@keyframes fade-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes theme-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(0.85); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 22, 131, 91), 0.15); }
+  50%      { box-shadow: 0 0 16px 4px rgba(var(--primary-rgb, 22, 131, 91), 0.10); }
+}
+
+/* ─── Animation Utility Classes ─── */
+.anim-modal-overlay-in  { animation: modal-overlay-in 350ms var(--ease-spring-smooth) both; }
+.anim-modal-overlay-out { animation: modal-overlay-out 150ms var(--ease-swift) both; }
+.anim-modal-card-in     { animation: modal-card-in 400ms var(--ease-spring-smooth) both; }
+.anim-modal-card-out    { animation: modal-card-out 150ms var(--ease-swift) both; }
+.anim-check-pop         { animation: check-pop 350ms var(--ease-spring-snappy); }
+.anim-slide-out-left    { animation: slide-out-left 450ms var(--ease-spring-smooth) both; }
+.anim-fade-slide-in     { animation: fade-slide-in 350ms var(--ease-spring-smooth) both; }
+.anim-stagger-in        { animation: stagger-in 400ms var(--ease-spring-smooth) both; }
+.anim-theme-spin        { animation: theme-spin 500ms var(--ease-spring-snappy); }
+
+/* ─── Interactive Press Effect ─── */
+.press-spring {
+  transition: transform 200ms var(--ease-spring-snappy), box-shadow 200ms var(--ease-swift);
+  will-change: transform;
+}
+.press-spring:active {
+  transform: scale(0.96);
+}
+
+/* ─── GPU Acceleration Hints ─── */
+.gpu-accelerate {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Touch Optimization ─── */
+button, a, input, select, label, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Custom Scrollbar ─── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -50,6 +161,7 @@ html.dark {
 
   html {
     background: var(--background);
+    scroll-behavior: smooth;
   }
 
   body {

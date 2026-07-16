@@ -140,7 +140,7 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
             {searchQuery ? 'No students match your search.' : 'No students found.'}
           </div>
         ) : (
-          <div className="max-h-[640px] overflow-y-auto pr-1">
+          <div className="max-h-[640px] overflow-y-auto pr-1 custom-scrollbar">
             <ul aria-label="Student payment statuses" className="divide-y divide-border">
               {filteredStudents.map((student) => {
                 const displayName = formatStudentNamePublic(student.first_name, student.last_name)
@@ -149,21 +149,26 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
                 )
 
                 return (
-                  <li key={student.id} className="flex min-h-16 items-center justify-between gap-4 px-5 py-3 sm:px-6">
-                    <div className="flex items-center gap-3">
-                      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
+                  <li
+                    key={student.id}
+                    className="flex min-h-14 items-center justify-between gap-3 px-5 py-2.5 sm:min-h-16 sm:gap-4 sm:py-3 sm:px-6"
+                    style={{ animation: `stagger-in 400ms var(--ease-spring-smooth) both`, animationDelay: `${Math.min(filteredStudents.indexOf(student) * 20, 300)}ms` }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground sm:size-9 sm:text-sm">
                         {student.seat_number}
                       </span>
-                      <span className="font-medium text-foreground">{displayName}</span>
+                      <span className="font-medium text-foreground truncate text-sm sm:text-base">{displayName}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="hidden text-sm text-muted-foreground sm:inline">{isPaid ? 'Paid' : 'Not paid'}</span>
                       <span
                         aria-label={isPaid ? `${displayName} has paid` : `${displayName} has not paid`}
                         className={isPaid
-                          ? 'flex size-8 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground'
-                          : 'flex size-8 items-center justify-center rounded-full bg-muted text-xl font-medium text-muted-foreground'}
+                          ? 'flex size-7 items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground sm:size-8 sm:text-lg'
+                          : 'flex size-7 items-center justify-center rounded-full bg-muted text-lg font-medium text-muted-foreground sm:size-8 sm:text-xl'}
                         role="img"
+                        style={{ transition: 'background-color 250ms var(--ease-spring-smooth), color 250ms var(--ease-spring-smooth)' }}
                       >
                         {isPaid ? '✓' : '×'}
                       </span>

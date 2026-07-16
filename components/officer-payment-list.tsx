@@ -38,6 +38,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const [payments, setPayments] = useState<Payment[]>(initialPayments)
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({})
   const [isPending, startTransition] = useTransition()
+  const [poppingIds, setPoppingIds] = useState<Set<number>>(new Set())
 
   // Sync selected week to the lowest week number initially
   useEffect(() => {
@@ -192,7 +193,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
             {searchQuery ? 'No students match your search.' : 'No students found.'}
           </div>
         ) : (
-          <div className="max-h-[640px] overflow-y-auto pr-1">
+          <div className="max-h-[640px] overflow-y-auto pr-1 custom-scrollbar">
             <ul aria-label="Student checklists" className="divide-y divide-border">
               {filteredStudents.map((student) => {
                 // Format name as: "Last Name, First Name" for officer checking
@@ -209,32 +210,50 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                 return (
                   <li
                     key={student.id}
-                    className="flex min-h-16 items-center justify-between gap-4 px-5 py-3 sm:px-6 hover:bg-muted/30 transition-colors"
+                    className="flex min-h-14 items-center justify-between gap-3 px-5 py-2.5 sm:min-h-16 sm:gap-4 sm:py-3 sm:px-6 hover:bg-muted/30"
+                    style={{
+                      transition: 'background-color 200ms var(--ease-swift)',
+                      animation: `stagger-in 400ms var(--ease-spring-smooth) both`,
+                      animationDelay: `${Math.min(filteredStudents.indexOf(student) * 20, 300)}ms`
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground sm:size-9 sm:text-sm">
                         {student.seat_number}
                       </span>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-foreground">{fullName}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium text-foreground truncate text-sm sm:text-base">{fullName}</span>
                         {hasError && (
                           <span className="text-xs text-destructive font-medium">{localErrors[errorKey]}</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 shrink-0">
                       <label className="flex items-center gap-2 cursor-pointer select-none">
                         <span className="hidden text-sm text-muted-foreground sm:inline">
                           {isPaid ? 'Paid' : 'Unpaid'}
                         </span>
-                        <input
-                          type="checkbox"
-                          checked={isPaid}
-                          disabled={isPending}
-                          onChange={() => handleToggle(student.id, fullName, isPaid)}
-                          className="size-6 rounded-md border border-border bg-background checked:bg-primary checked:border-primary text-primary-foreground focus:ring-primary focus:ring-offset-2 transition-all cursor-pointer accent-primary"
-                        />
+                        <div className={`${poppingIds.has(student.id) ? 'anim-check-pop' : ''}`}>
+                          <input
+                            type="checkbox"
+                            checked={isPaid}
+                            disabled={isPending}
+                            onChange={() => {
+                              setPoppingIds((prev) => new Set(prev).add(student.id))
+                              setTimeout(() => {
+                                setPoppingIds((prev) => {
+                                  const next = new Set(prev)
+                                  next.delete(student.id)
+                                  return next
+                                })
+                              }, 350)
+                              handleToggle(student.id, fullName, isPaid)
+                            }}
+                            className="size-6 rounded-md border border-border bg-background checked:bg-primary checked:border-primary text-primary-foreground focus:ring-primary focus:ring-offset-2 cursor-pointer accent-primary"
+                            style={{ transition: 'background-color 200ms var(--ease-spring-snappy), border-color 200ms var(--ease-spring-snappy)' }}
+                          />
+                        </div>
                       </label>
                     </div>
                   </li>

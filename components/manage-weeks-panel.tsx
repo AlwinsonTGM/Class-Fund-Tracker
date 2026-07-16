@@ -155,7 +155,7 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full sm:col-span-1 text-xs font-semibold text-background bg-foreground hover:bg-[#383838] border border-transparent rounded-full py-2.5 px-4 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+            className="w-full sm:col-span-1 text-xs font-semibold text-background bg-foreground hover:bg-[#383838] border border-transparent rounded-full py-2.5 px-4 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 press-spring"
           >
             {isPending ? (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-background border-t-transparent" />
@@ -165,7 +165,7 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
         </form>
 
         {/* Weeks List */}
-        <div className="max-h-80 overflow-y-auto pr-1">
+        <div className="max-h-80 overflow-y-auto pr-1 custom-scrollbar">
           {sortedWeeks.length === 0 ? (
             <p className="text-sm text-center py-4 text-muted-foreground">No weeks configured yet.</p>
           ) : (
@@ -236,14 +236,14 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
                           <button
                             onClick={() => startEditing(week)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2.5 py-1.5 cursor-pointer press-spring"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(week.week_number)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 border border-destructive/10 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 border border-destructive/10 rounded-lg px-2.5 py-1.5 cursor-pointer press-spring"
                           >
                             Delete
                           </button>

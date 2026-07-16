@@ -19,6 +19,7 @@ export function AddExpenseModal() {
   const [amount, setAmount] = useState('')
   const [officerName, setOfficerName] = useState(OFFICER_ROLES[0])
   const [error, setError] = useState<string | null>(null)
+  const [isClosing, setIsClosing] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const handleOpen = () => {
@@ -31,7 +32,11 @@ export function AddExpenseModal() {
 
   const handleClose = () => {
     if (!isPending) {
-      setIsOpen(false)
+      setIsClosing(true)
+      setTimeout(() => {
+        setIsOpen(false)
+        setIsClosing(false)
+      }, 150)
     }
   }
 
@@ -54,6 +59,7 @@ export function AddExpenseModal() {
         const result = await addExpenseAction(description, numAmount, officerName)
         if (result && result.success) {
           setIsOpen(false)
+          setIsClosing(false)
         } else {
           setError('Failed to record expense. Please try again.')
         }
@@ -69,17 +75,17 @@ export function AddExpenseModal() {
       {/* Trigger Button */}
       <button
         onClick={handleOpen}
-        className="shrink-0 text-xs font-semibold text-background bg-foreground hover:bg-[#383838] border border-transparent rounded-full px-4 py-2 transition-all cursor-pointer shadow-sm hover:shadow-md flex items-center gap-1.5"
+        className="shrink-0 text-xs font-semibold text-background bg-foreground hover:bg-[#383838] border border-transparent rounded-full px-4 py-2 cursor-pointer shadow-sm hover:shadow-md flex items-center gap-1.5 press-spring"
       >
         <span>➕</span> Add Expense
       </button>
 
       {/* Modal Backdrop & Container */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className={`fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 ${isClosing ? 'anim-modal-overlay-out' : 'anim-modal-overlay-in'}`}>
           {/* Modal Card */}
           <div
-            className="bg-card border border-border rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-200"
+            className={`bg-card border border-border rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 flex flex-col gap-5 gpu-accelerate ${isClosing ? 'anim-modal-card-out' : 'anim-modal-card-in'}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -170,14 +176,14 @@ export function AddExpenseModal() {
                   type="button"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="px-4 py-2 text-sm font-semibold border border-border hover:bg-muted rounded-full text-foreground transition-all cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-semibold border border-border hover:bg-muted rounded-full text-foreground cursor-pointer disabled:opacity-50 press-spring"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-5 py-2 text-sm font-semibold bg-foreground hover:bg-[#383838] rounded-full text-background transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 text-sm font-semibold bg-foreground hover:bg-[#383838] rounded-full text-background cursor-pointer disabled:opacity-50 flex items-center gap-1.5 press-spring"
                 >
                   {isPending ? (
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />

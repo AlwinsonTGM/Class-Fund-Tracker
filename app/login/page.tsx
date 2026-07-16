@@ -60,7 +60,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-12 flex flex-col justify-center items-center sm:px-6">
+    <main className="min-h-screen bg-background px-4 py-12 flex flex-col justify-center items-center sm:px-6 anim-fade-slide-in">
       <div className="w-full max-w-md flex flex-col gap-6">
         <header className="flex flex-col gap-2 text-center">
           <p className="text-sm font-semibold text-primary">School Year 2026–2027</p>
@@ -79,7 +79,7 @@ function LoginForm() {
           <button
             onClick={handleGoogleLogin}
             disabled={isPending || isGooglePending}
-            className="flex w-full items-center justify-center gap-3 rounded-full border border-border bg-background hover:bg-muted py-2.5 px-4 text-sm font-semibold text-foreground transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-full border border-border bg-background hover:bg-muted py-2.5 px-4 text-sm font-semibold text-foreground cursor-pointer disabled:opacity-50 press-spring"
           >
             {isGooglePending ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
@@ -143,7 +143,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isPending || isGooglePending}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-foreground hover:bg-[#383838] py-2.5 px-4 text-sm font-semibold text-background transition-all duration-200 cursor-pointer disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-foreground hover:bg-[#383838] py-2.5 px-4 text-sm font-semibold text-background cursor-pointer disabled:opacity-50 press-spring"
             >
               {isPending ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
