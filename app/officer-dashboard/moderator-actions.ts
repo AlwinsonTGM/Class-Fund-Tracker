@@ -46,8 +46,8 @@ export async function deleteAuditLogAction(logId: number) {
     // 2. Parse and reverse the action based on the log description
     
     // CASE A: Expense addition log
-    // Format: Added expense "description" with amount X. Recorded by: name.
-    const expenseRegex = /^Added expense "([\s\S]+)" with amount ([\d.]+)\. Recorded by: ([\s\S]+)\.$/
+    // Format: Added expense: "description" for ₱amount (Spent by: officerName).
+    const expenseRegex = /^Added expense: "([\s\S]+)" for ₱([\d.]+)\s*\(Spent by:\s*([\s\S]+)\)\.$/
     const expenseMatch = desc.match(expenseRegex)
 
     if (expenseMatch) {
@@ -76,65 +76,41 @@ export async function deleteAuditLogAction(logId: number) {
     }
 
     // CASE B: Payment marked as PAID log
-    // Format: Marked student X as paid for Week Y.
-    const paymentPaidRegex = /^Marked student ([\s\S]+) as paid for Week (\d+)\.$/
+    // Format: Marked student "Name" (ID: id) as paid for Week Y.
+    const paymentPaidRegex = /^Marked student "([\s\S]+)" \(ID: (\d+)\) as paid for Week (\d+)\.$/
     const paymentPaidMatch = desc.match(paymentPaidRegex)
 
     if (paymentPaidMatch) {
-      const studentName = paymentPaidMatch[1]
-      const weekNumber = parseInt(paymentPaidMatch[2])
+      const studentId = parseInt(paymentPaidMatch[2])
+      const weekNumber = parseInt(paymentPaidMatch[3])
 
-      // Fetch students list to find the matching student id
-      const { data: studentsList } = await supabase
-        .from('students')
-        .select('id, first_name, last_name')
-
-      const matchingStudent = studentsList?.find((s) => {
-        const full = s.last_name ? `${s.last_name}, ${s.first_name}` : s.first_name
-        return full.toLowerCase() === studentName.toLowerCase() || s.first_name.toLowerCase() === studentName.toLowerCase()
-      })
-
-      if (matchingStudent) {
-        // Delete the paid payment entry to mark them as unpaid
-        const { error: delPayError } = await supabase
-          .from('payments')
-          .delete()
-          .eq('student_id', matchingStudent.id)
-          .eq('week_number', weekNumber)
-        if (delPayError) console.error('Failed to auto-delete associated payment:', delPayError.message)
-      }
+      // Delete the paid payment entry to mark them as unpaid
+      const { error: delPayError } = await supabase
+        .from('payments')
+        .delete()
+        .eq('student_id', studentId)
+        .eq('week_number', weekNumber)
+      if (delPayError) console.error('Failed to auto-delete associated payment:', delPayError.message)
     }
 
     // CASE C: Payment marked as UNPAID log
-    // Format: Marked student X as unpaid for Week Y.
-    const paymentUnpaidRegex = /^Marked student ([\s\S]+) as unpaid for Week (\d+)\.$/
+    // Format: Unmarked student "Name" (ID: id) as paid for Week Y.
+    const paymentUnpaidRegex = /^Unmarked student "([\s\S]+)" \(ID: (\d+)\) as paid for Week (\d+)\.$/
     const paymentUnpaidMatch = desc.match(paymentUnpaidRegex)
 
     if (paymentUnpaidMatch) {
-      const studentName = paymentUnpaidMatch[1]
-      const weekNumber = parseInt(paymentUnpaidMatch[2])
+      const studentId = parseInt(paymentUnpaidMatch[2])
+      const weekNumber = parseInt(paymentUnpaidMatch[3])
 
-      // Fetch students list
-      const { data: studentsList } = await supabase
-        .from('students')
-        .select('id, first_name, last_name')
-
-      const matchingStudent = studentsList?.find((s) => {
-        const full = s.last_name ? `${s.last_name}, ${s.first_name}` : s.first_name
-        return full.toLowerCase() === studentName.toLowerCase() || s.first_name.toLowerCase() === studentName.toLowerCase()
-      })
-
-      if (matchingStudent) {
-        // Reinsert the payment as paid to reverse the unpaid action
-        const { error: insPayError } = await supabase
-          .from('payments')
-          .insert({
-            student_id: matchingStudent.id,
-            week_number: weekNumber,
-            status: 'paid'
-          })
-        if (insPayError) console.error('Failed to auto-revert student payment to paid:', insPayError.message)
-      }
+      // Reinsert the payment as paid to reverse the unpaid action
+      const { error: insPayError } = await supabase
+        .from('payments')
+        .insert({
+          student_id: studentId,
+          week_number: weekNumber,
+          status: 'paid'
+        })
+      if (insPayError) console.error('Failed to auto-revert student payment to paid:', insPayError.message)
     }
 
     // 3. Delete the activity log itself
