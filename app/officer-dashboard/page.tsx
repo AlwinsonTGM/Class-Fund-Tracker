@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase-server'
-import { StudentPaymentList } from '@/components/student-payment-list'
+import { redirect } from 'next/navigation'
+import { OfficerPaymentList } from '@/components/officer-payment-list'
 import { RecentActivity } from '@/components/recent-activity'
+import { AddExpenseModal } from '@/components/add-expense-modal'
+import { ManageWeeksPanel } from '@/components/manage-weeks-panel'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { signOutAction } from '@/app/login/actions'
 
@@ -34,13 +37,16 @@ function BalanceCard({ balance }: BalanceCardProps) {
   )
 }
 
-export default async function Page() {
+export default async function OfficerDashboardPage() {
   const supabase = await createClient()
 
-  // 1. Get active session user
-  const { data: { user } } = await supabase.auth.getUser()
+  // 1. Enforce Authentication Check
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    redirect('/login')
+  }
 
-  // 2. Fetch data (Students, Payments, Expenses, Weeks, and Audit Logs)
+  // 2. Fetch Data (Students, Payments, Expenses, Weeks, Moderators, and Audit Logs)
   const { data: dbStudents, error: studentsError } = await supabase
     .from('students')
     .select('*')
@@ -59,6 +65,10 @@ export default async function Page() {
     .select('*')
     .order('week_number', { ascending: true })
 
+  const { data: dbModerators, error: moderatorsError } = await supabase
+    .from('moderators')
+    .select('*')
+
   const { data: dbLogs, error: logsError } = await supabase
     .from('audit_logs')
     .select('*')
@@ -69,12 +79,14 @@ export default async function Page() {
   if (paymentsError) console.error('Error fetching payments:', paymentsError)
   if (expensesError) console.error('Error fetching expenses:', expensesError)
   if (weeksError) console.error('Error fetching weeks:', weeksError)
+  if (moderatorsError) console.error('Error fetching moderators:', moderatorsError)
   if (logsError) console.error('Error fetching audit logs:', logsError)
 
   const studentsList = dbStudents || []
   const paymentsList = dbPayments || []
   const expensesList = dbExpenses || []
   const weeksList = dbWeeks || []
+  const moderatorsList = dbModerators || []
   const logsList = dbLogs || []
 
   // 3. Compute calculations
@@ -82,57 +94,60 @@ export default async function Page() {
   const totalExpenses = expensesList.reduce((sum, item) => sum + Number(item.amount), 0)
   const netBalance = totalContributions - totalExpenses
 
+  // 4. Verify if current officer is a moderator
+  const isModerator = moderatorsList.some((m) => m.email === user.email)
+
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         {/* Header */}
         <header className="flex flex-col gap-2">
-          <div className="flex justify-between items-start gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-primary">School Year 2026–2027</p>
-              <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Class Fund Tracker</h1>
+              <p className="text-sm font-semibold text-primary">Officer Management Portal</p>
+              <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Officer Dashboard
+              </h1>
             </div>
-            {user ? (
-              <div className="flex items-center gap-2 shrink-0">
-                <ThemeToggle />
-                <a
-                  href="/officer-dashboard"
-                  className="text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 transition-all"
+
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+
+              {/* Add Expense Button (Opens modal) */}
+              <AddExpenseModal />
+
+              <a
+                href="/"
+                className="shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 transition-all"
+              >
+                ← Public Site
+              </a>
+              <form action={signOutAction} className="shrink-0">
+                <button
+                  type="submit"
+                  className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 transition-all cursor-pointer"
                 >
-                  Manage →
-                </a>
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 transition-all cursor-pointer"
-                  >
-                    Sign Out
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 shrink-0">
-                <ThemeToggle />
-                <a
-                  href="/login"
-                  className="shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground border border-border bg-card rounded-full px-3 py-1.5 transition-all"
-                >
-                  Officer Login
-                </a>
-              </div>
-            )}
+                  Sign Out
+                </button>
+              </form>
+            </div>
           </div>
-          <p className="text-pretty text-sm leading-6 text-muted-foreground sm:text-base">A simple overview of our class contributions.</p>
+          <p className="text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
+            Logged in as <strong className="text-foreground">{user.email}</strong>. Manage payments, expenses, and logs.
+          </p>
         </header>
 
-        {/* Dynamic Balance Card */}
+        {/* Treasury Stats (Dynamic net balance) */}
         <BalanceCard balance={netBalance} />
 
-        {/* Dynamic Student Checklist */}
-        <StudentPaymentList students={studentsList} payments={paymentsList} weeks={weeksList} />
+        {/* Interactive Checklist */}
+        <OfficerPaymentList students={studentsList} initialPayments={paymentsList} weeks={weeksList} />
+
+        {/* Manage Weeks Calendar Configuration Panel */}
+        <ManageWeeksPanel weeks={weeksList} />
 
         {/* Unified Recent Activity (Audit logs-driven) */}
-        <RecentActivity activities={logsList} />
+        <RecentActivity activities={logsList} isModerator={isModerator} />
       </div>
     </main>
   )
