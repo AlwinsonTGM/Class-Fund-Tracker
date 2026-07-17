@@ -113,6 +113,7 @@ export default async function OfficerDashboardPage() {
           posts={postsList}
           courses={coursesList}
           tasksError={!!tasksError}
+          postsError={!!postsError}
           isModerator={isModerator}
           user={user}
           signOutElement={signOutElement}

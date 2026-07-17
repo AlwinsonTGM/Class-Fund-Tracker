@@ -22,6 +22,7 @@ export interface FreedomPost {
 interface FreedomWallProps {
   initialPosts: FreedomPost[]
   isOfficer: boolean
+  dbError?: boolean
   triggerAddOpen?: boolean
   onCloseAddTrigger?: () => void
 }
@@ -354,6 +355,7 @@ function PostReactions({ postId, colorKey }: { postId: number; colorKey: string 
 export function FreedomWall({
   initialPosts,
   isOfficer,
+  dbError = false,
   triggerAddOpen = false,
   onCloseAddTrigger
 }: FreedomWallProps) {
@@ -369,8 +371,18 @@ export function FreedomWall({
 
   // Sync initial posts — re-attach song data from localStorage after server re-sync
   useEffect(() => {
-    const localPostsStr = localStorage.getItem('cft_fallback_posts')
-    if (initialPosts.length > 0) {
+    if (dbError) {
+      setFallbackMode(true)
+      const localPostsStr = localStorage.getItem('cft_fallback_posts')
+      if (localPostsStr) {
+        try {
+          setPosts(JSON.parse(localPostsStr) as FreedomPost[])
+        } catch (e) {
+          console.error('Failed to parse local posts', e)
+        }
+      }
+    } else {
+      setFallbackMode(false)
       const songMap = loadSongMap()
 
       // Check if there's a pending song to assign to the newest server post
@@ -396,15 +408,8 @@ export function FreedomWall({
         song: songMap[p.id] || null
       }))
       setPosts(postsWithSongs)
-    } else if (localPostsStr) {
-      try {
-        setPosts(JSON.parse(localPostsStr) as FreedomPost[])
-        setFallbackMode(true)
-      } catch (e) {
-        console.error('Failed to parse local posts', e)
-      }
     }
-  }, [initialPosts])
+  }, [initialPosts, dbError])
 
   // Open add form if bottom nav + requested it
   useEffect(() => {

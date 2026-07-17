@@ -22,6 +22,7 @@ interface OfficerTabsContainerProps {
   posts: FreedomPost[]
   courses: any[]
   tasksError?: boolean
+  postsError?: boolean
   isModerator: boolean
   user: any
   signOutElement: React.ReactNode
@@ -38,6 +39,7 @@ export function OfficerTabsContainer({
   posts,
   courses,
   tasksError = false,
+  postsError = false,
   isModerator,
   user,
   signOutElement,
@@ -145,6 +147,7 @@ export function OfficerTabsContainer({
           <FreedomWall
             initialPosts={posts}
             isOfficer={true}
+            dbError={postsError}
             triggerAddOpen={addPostTrigger}
             onCloseAddTrigger={() => setAddPostTrigger(false)}
           />

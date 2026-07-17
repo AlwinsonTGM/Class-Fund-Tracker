@@ -20,6 +20,7 @@ interface PublicTabsContainerProps {
   posts: FreedomPost[]
   courses: any[]
   tasksError?: boolean
+  postsError?: boolean
   user: any
   signOutElement: React.ReactNode
   loginElement: React.ReactNode
@@ -35,6 +36,7 @@ export function PublicTabsContainer({
   posts,
   courses,
   tasksError = false,
+  postsError = false,
   user,
   signOutElement,
   loginElement
@@ -106,6 +108,7 @@ export function PublicTabsContainer({
           <FreedomWall
             initialPosts={posts}
             isOfficer={false}
+            dbError={postsError}
             triggerAddOpen={addPostTrigger}
             onCloseAddTrigger={() => setAddPostTrigger(false)}
           />

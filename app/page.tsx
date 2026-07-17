@@ -107,6 +107,7 @@ export default async function Page() {
           posts={postsList}
           courses={coursesList}
           tasksError={!!tasksError}
+          postsError={!!postsError}
           user={user}
           signOutElement={signOutElement}
           loginElement={loginElement}
