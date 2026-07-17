@@ -123,6 +123,102 @@ html.dark {
   backface-visibility: hidden;
 }
 
+/* ─── Freedom Wall Sticky Note Hover System ─── */
+.sticky-note {
+  transform: rotate(var(--tilt-angle, 0deg));
+  will-change: transform, box-shadow;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease;
+}
+.sticky-note:hover {
+  transform: rotate(0deg) translateY(-6px) scale(1.02) !important;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 16px -6px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+/* ─── Liquid Glass Effects & Physics ─── */
+@keyframes liquid-flow {
+  0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 40% 60% 70% 30% / 50% 60% 40% 50%; }
+  100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translate3d(-100%, 0, 0) skewX(-15deg); }
+  100% { transform: translate3d(100%, 0, 0) skewX(-15deg); }
+}
+
+/* Gel-like spring curve for bouncy fluid transitions */
+.liquid-ease {
+  transition-timing-function: cubic-bezier(0.25, 1.4, 0.5, 1.15) !important;
+}
+
+/* Liquid Glass Panels */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    0 16px 40px -8px rgba(0, 0, 0, 0.1),
+    0 4px 12px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.dark .liquid-glass {
+  background: rgba(21, 28, 24, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2),
+    0 8px 32px -4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Shimmer Sheen Layer */
+.liquid-glass-sheen {
+  overflow: hidden;
+}
+.liquid-glass-sheen::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translate3d(-100%, 0, 0);
+  transition: transform 600ms ease;
+  pointer-events: none;
+}
+.liquid-glass-sheen:hover::after {
+  animation: shimmer-sweep 1200ms ease-out forwards;
+}
+
+/* Liquid Blob Active Indicator */
+.liquid-blob {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 131, 91, 0.18) 0%,
+    rgba(46, 189, 127, 0.28) 100%
+  ) !important;
+  animation: liquid-flow 4s ease-in-out infinite;
+  border: 1px solid rgba(46, 189, 127, 0.15) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    0 0 12px 1px rgba(46, 189, 127, 0.08);
+}
+
+html.dark .liquid-blob {
+  background: linear-gradient(
+    135deg,
+    rgba(46, 189, 127, 0.15) 0%,
+    rgba(46, 189, 127, 0.25) 100%
+  ) !important;
+}
+
+
+
 /* ─── Reduced Motion ─── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

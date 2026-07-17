@@ -242,5 +242,206 @@ export async function fetchAuditLogsAction(offset: number, limit: number = 20) {
   return data || []
 }
 
+// ─── Tasks Server Actions ───
+
+export interface AddTaskInput {
+  title: string
+  description?: string
+  course_id: number | null
+  task_type: string
+  participation_type: string
+  group_size?: string
+  priority?: string
+  status?: string
+  due_date: string
+}
+
+export async function addTaskAction(input: AddTaskInput) {
+  try {
+    const supabase = await createClient()
+
+    // 1. Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in as an officer to add tasks.' }
+    }
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Added task: "${input.title}" (Type: ${input.task_type}, Priority: ${input.priority || 'Medium'}).`
+
+    // 2. Insert into tasks
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .insert({
+        title: input.title,
+        description: input.description || null,
+        course_id: input.course_id,
+        task_type: input.task_type,
+        participation_type: input.participation_type,
+        group_size: input.group_size || 'N/A',
+        priority: input.priority || 'Medium',
+        status: input.status || 'Pending',
+        due_date: input.due_date
+      })
+    if (taskError) throw taskError
+
+    // 3. Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log task audit log:', logError.message)
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error adding task:', err)
+    return { success: false, error: err.message || 'Failed to add task.' }
+  }
+}
+
+export async function toggleTaskAction(id: number, status: string, title: string) {
+  try {
+    const supabase = await createClient()
+
+    // 1. Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in to update tasks.' }
+    }
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Marked task "${title}" as ${status}.`
+
+    // 2. Update task status
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .update({ status })
+      .eq('id', id)
+    if (taskError) throw taskError
+
+    // 3. Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log task toggle audit log:', logError.message)
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error toggling task:', err)
+    return { success: false, error: err.message || 'Failed to toggle task.' }
+  }
+}
+
+export async function deleteTaskAction(id: number, title: string) {
+  try {
+    const supabase = await createClient()
+
+    // 1. Authenticate user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: You must be logged in to delete tasks.' }
+    }
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Deleted task: "${title}".`
+
+    // 2. Delete task
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id)
+    if (taskError) throw taskError
+
+    // 3. Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log task deletion audit log:', logError.message)
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error deleting task:', err)
+    return { success: false, error: err.message || 'Failed to delete task.' }
+  }
+}
+
+// ─── Freedom Wall Server Actions ───
+
+export async function addPostAction(content: string, authorName: string, color: string) {
+  try {
+    const supabase = await createClient()
+
+    // Public action, no auth check needed
+    const { error: postError } = await supabase
+      .from('freedom_posts')
+      .insert({
+        content,
+        author_name: authorName.trim() || 'Anonymous',
+        color: color || 'yellow'
+      })
+    if (postError) throw postError
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error adding post to freedom wall:', err)
+    return { success: false, error: err.message || 'Failed to post on the Freedom Wall.' }
+  }
+}
+
+export async function deletePostAction(id: number) {
+  try {
+    const supabase = await createClient()
+
+    // 1. Authenticate user (Only officers can delete inappropriate posts)
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Unauthorized: Only officers can delete posts.' }
+    }
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Deleted post ID ${id} from Freedom Wall.`
+
+    // 2. Delete post
+    const { error: postError } = await supabase
+      .from('freedom_posts')
+      .delete()
+      .eq('id', id)
+    if (postError) throw postError
+
+    // 3. Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log post deletion audit log:', logError.message)
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error deleting post:', err)
+    return { success: false, error: err.message || 'Failed to delete post.' }
+  }
+}
+
+
 
 
