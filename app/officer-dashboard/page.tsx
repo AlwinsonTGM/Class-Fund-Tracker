@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { signOutAction } from '@/app/login/actions'
 import { OfficerTabsContainer } from '@/components/officer-tabs-container'
 
 export const dynamic = 'force-dynamic'
@@ -87,22 +85,9 @@ export default async function OfficerDashboardPage() {
   // 3. Verify if current officer is a moderator
   const isModerator = moderatorsList.some((m) => m.email === user.email)
 
-  const signOutElement = (
-    <form action={signOutAction} className="shrink-0">
-      <button
-        type="submit"
-        className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 cursor-pointer press-spring"
-      >
-        Sign Out
-      </button>
-    </form>
-  )
-
-  const themeToggleElement = <ThemeToggle />
-
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 anim-fade-slide-in">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-3xl lg:max-w-6xl flex-col gap-6">
         <OfficerTabsContainer
           students={studentsList}
           payments={paymentsList}
@@ -116,8 +101,6 @@ export default async function OfficerDashboardPage() {
           postsError={!!postsError}
           isModerator={isModerator}
           user={user}
-          signOutElement={signOutElement}
-          themeToggleElement={themeToggleElement}
         />
       </div>
     </main>

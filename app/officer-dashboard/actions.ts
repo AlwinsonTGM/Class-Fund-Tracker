@@ -3,6 +3,43 @@
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 
+async function verifyOfficerStatus() {
+  const supabase = await createClient()
+
+  // 1. Authenticate user
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    throw new Error('Unauthorized: You must be logged in as an officer.')
+  }
+
+  // 2. Verify whitelist membership in moderators table
+  const { data: moderator } = await supabase
+    .from('moderators')
+    .select('email')
+    .eq('email', user.email)
+    .single()
+
+  let isOfficer = false
+  try {
+    const { data: officer, error: offError } = await supabase
+      .from('officers')
+      .select('email')
+      .eq('email', user.email)
+      .single()
+    if (!offError && officer) {
+      isOfficer = true
+    }
+  } catch (err) {
+    console.warn('Officers table query failed inside verifyOfficerStatus:', err)
+  }
+
+  if (!moderator && !isOfficer) {
+    throw new Error('Access Denied: You do not have officer privileges.')
+  }
+
+  return { supabase, user }
+}
+
 export async function togglePaymentStatus(
   studentId: number,
   weekNumber: number,
@@ -10,13 +47,8 @@ export async function togglePaymentStatus(
   studentName: string
 ) {
   try {
-    const supabase = await createClient()
-
-    // 1. Authenticate user as an officer
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in as an officer to perform this action.' }
-    }
+    // 1. Authenticate and verify officer whitelist
+    const { supabase, user } = await verifyOfficerStatus()
 
     const officerEmail = user.email || 'unknown_officer'
     const actionDescription = `${paid ? 'Marked' : 'Unmarked'} student "${studentName}" (ID: ${studentId}) as paid for Week ${weekNumber}.`
@@ -82,13 +114,8 @@ export async function addExpenseAction(
   officerName: string
 ) {
   try {
-    const supabase = await createClient()
-
-    // 1. Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in as an officer to add an expense.' }
-    }
+    // 1. Authenticate and verify officer whitelist
+    const { supabase, user } = await verifyOfficerStatus()
 
     const officerEmail = user.email || 'unknown_officer'
     const actionDescription = `Added expense: "${description}" for ₱${amount.toFixed(2)} (Spent by: ${officerName}).`
@@ -139,13 +166,8 @@ export async function addExpenseAction(
 
 export async function upsertWeekAction(weekNumber: number, dateRange: string, status: string = 'active') {
   try {
-    const supabase = await createClient()
-
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in as an officer.' }
-    }
+    // Authenticate and verify officer whitelist
+    const { supabase, user } = await verifyOfficerStatus()
 
     const officerEmail = user.email || 'unknown_officer'
     const actionDescription = `Upserted Week ${weekNumber} (Range: "${dateRange}", Status: "${status}").`
@@ -185,13 +207,8 @@ export async function upsertWeekAction(weekNumber: number, dateRange: string, st
 
 export async function deleteWeekAction(weekNumber: number) {
   try {
-    const supabase = await createClient()
-
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in as an officer.' }
-    }
+    // Authenticate and verify officer whitelist
+    const { supabase, user } = await verifyOfficerStatus()
 
     const officerEmail = user.email || 'unknown_officer'
     const actionDescription = `Deleted Week ${weekNumber} from calendar configuration.`
@@ -254,22 +271,28 @@ export interface AddTaskInput {
   priority?: string
   status?: string
   due_date: string
+  background_image?: string
+  is_private?: boolean
 }
 
 export async function addTaskAction(input: AddTaskInput) {
   try {
     const supabase = await createClient()
-
-    // 1. Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in as an officer to add tasks.' }
+      throw new Error('Unauthorized: You must be logged in.')
     }
 
-    const officerEmail = user.email || 'unknown_officer'
+    const email = user.email || 'unknown_user'
+
+    // If it's a public task, verify officer status
+    if (!input.is_private) {
+      await verifyOfficerStatus()
+    }
+
     const actionDescription = `Added task: "${input.title}" (Type: ${input.task_type}, Priority: ${input.priority || 'Medium'}).`
 
-    // 2. Insert into tasks
+    // Insert into tasks
     const { error: taskError } = await supabase
       .from('tasks')
       .insert({
@@ -281,18 +304,23 @@ export async function addTaskAction(input: AddTaskInput) {
         group_size: input.group_size || 'N/A',
         priority: input.priority || 'Medium',
         status: input.status || 'Pending',
-        due_date: input.due_date
+        due_date: input.due_date,
+        background_image: input.background_image || null,
+        is_private: input.is_private || false,
+        created_by: email
       })
     if (taskError) throw taskError
 
-    // 3. Insert audit log
-    const { error: logError } = await supabase
-      .from('audit_logs')
-      .insert({
-        officer_email: officerEmail,
-        action_description: actionDescription
-      })
-    if (logError) console.error('Failed to log task audit log:', logError.message)
+    // Insert audit log only for public tasks
+    if (!input.is_private) {
+      const { error: logError } = await supabase
+        .from('audit_logs')
+        .insert({
+          officer_email: email,
+          action_description: actionDescription
+        })
+      if (logError) console.error('Failed to log task audit log:', logError.message)
+    }
 
     revalidatePath('/')
     revalidatePath('/officer-dashboard')
@@ -303,34 +331,143 @@ export async function addTaskAction(input: AddTaskInput) {
   }
 }
 
+export interface EditTaskInput {
+  id: number
+  title: string
+  description?: string
+  course_id: number | null
+  task_type: string
+  participation_type: string
+  group_size?: string
+  priority?: string
+  due_date: string
+  background_image?: string | null
+  is_private?: boolean
+}
+
+export async function editTaskAction(input: EditTaskInput) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      throw new Error('Unauthorized: You must be logged in.')
+    }
+
+    const email = user.email || 'unknown_user'
+
+    // Fetch existing task to check ownership
+    const { data: existingTask, error: fetchError } = await supabase
+      .from('tasks')
+      .select('is_private, created_by')
+      .eq('id', input.id)
+      .single()
+    if (fetchError || !existingTask) {
+      throw new Error(fetchError?.message || 'Task not found.')
+    }
+
+    const isPrivate = existingTask.is_private
+    const creator = existingTask.created_by
+
+    if (isPrivate) {
+      if (creator !== email) {
+        throw new Error('Access Denied: You can only edit your own personal tasks.')
+      }
+    } else {
+      await verifyOfficerStatus()
+    }
+
+    const actionDescription = `Edited task: "${input.title}" (Type: ${input.task_type}, Priority: ${input.priority || 'Medium'}).`
+
+    // Update task in database
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .update({
+        title: input.title,
+        description: input.description || null,
+        course_id: input.course_id,
+        task_type: input.task_type,
+        participation_type: input.participation_type,
+        group_size: input.group_size || 'N/A',
+        priority: input.priority || 'Medium',
+        due_date: input.due_date,
+        background_image: input.background_image || null,
+        is_private: input.is_private ?? isPrivate,
+        created_by: creator || email
+      })
+      .eq('id', input.id)
+    if (taskError) throw taskError
+
+    // Insert audit log only for public tasks
+    if (!isPrivate) {
+      const { error: logError } = await supabase
+        .from('audit_logs')
+        .insert({
+          officer_email: email,
+          action_description: actionDescription
+        })
+      if (logError) console.error('Failed to log task edit audit log:', logError.message)
+    }
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error editing task:', err)
+    return { success: false, error: err.message || 'Failed to edit task.' }
+  }
+}
+
+
 export async function toggleTaskAction(id: number, status: string, title: string) {
   try {
     const supabase = await createClient()
-
-    // 1. Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in to update tasks.' }
+      throw new Error('Unauthorized: You must be logged in.')
     }
 
-    const officerEmail = user.email || 'unknown_officer'
+    const email = user.email || 'unknown_user'
+
+    // Fetch existing task
+    const { data: existingTask, error: fetchError } = await supabase
+      .from('tasks')
+      .select('is_private, created_by')
+      .eq('id', id)
+      .single()
+    if (fetchError || !existingTask) {
+      throw new Error(fetchError?.message || 'Task not found.')
+    }
+
+    const isPrivate = existingTask.is_private
+    const creator = existingTask.created_by
+
+    if (isPrivate) {
+      if (creator !== email) {
+        throw new Error('Access Denied: You can only update your own personal tasks.')
+      }
+    } else {
+      await verifyOfficerStatus()
+    }
+
     const actionDescription = `Marked task "${title}" as ${status}.`
 
-    // 2. Update task status
+    // Update task status
     const { error: taskError } = await supabase
       .from('tasks')
       .update({ status })
       .eq('id', id)
     if (taskError) throw taskError
 
-    // 3. Insert audit log
-    const { error: logError } = await supabase
-      .from('audit_logs')
-      .insert({
-        officer_email: officerEmail,
-        action_description: actionDescription
-      })
-    if (logError) console.error('Failed to log task toggle audit log:', logError.message)
+    // Insert audit log only for public tasks
+    if (!isPrivate) {
+      const { error: logError } = await supabase
+        .from('audit_logs')
+        .insert({
+          officer_email: email,
+          action_description: actionDescription
+        })
+      if (logError) console.error('Failed to log task toggle audit log:', logError.message)
+    }
 
     revalidatePath('/')
     revalidatePath('/officer-dashboard')
@@ -344,31 +481,54 @@ export async function toggleTaskAction(id: number, status: string, title: string
 export async function deleteTaskAction(id: number, title: string) {
   try {
     const supabase = await createClient()
-
-    // 1. Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return { success: false, error: 'Unauthorized: You must be logged in to delete tasks.' }
+      throw new Error('Unauthorized: You must be logged in.')
+    }
+
+    const email = user.email || 'unknown_user'
+
+    // Fetch existing task
+    const { data: existingTask, error: fetchError } = await supabase
+      .from('tasks')
+      .select('is_private, created_by')
+      .eq('id', id)
+      .single()
+    if (fetchError || !existingTask) {
+      throw new Error(fetchError?.message || 'Task not found.')
+    }
+
+    const isPrivate = existingTask.is_private
+    const creator = existingTask.created_by
+
+    if (isPrivate) {
+      if (creator !== email) {
+        throw new Error('Access Denied: You can only delete your own personal tasks.')
+      }
+    } else {
+      await verifyOfficerStatus()
     }
 
     const officerEmail = user.email || 'unknown_officer'
     const actionDescription = `Deleted task: "${title}".`
 
-    // 2. Delete task
+    // Delete task
     const { error: taskError } = await supabase
       .from('tasks')
       .delete()
       .eq('id', id)
     if (taskError) throw taskError
 
-    // 3. Insert audit log
-    const { error: logError } = await supabase
-      .from('audit_logs')
-      .insert({
-        officer_email: officerEmail,
-        action_description: actionDescription
-      })
-    if (logError) console.error('Failed to log task deletion audit log:', logError.message)
+    // Insert audit log only for public tasks
+    if (!isPrivate) {
+      const { error: logError } = await supabase
+        .from('audit_logs')
+        .insert({
+          officer_email: officerEmail,
+          action_description: actionDescription
+        })
+      if (logError) console.error('Failed to log task deletion audit log:', logError.message)
+    }
 
     revalidatePath('/')
     revalidatePath('/officer-dashboard')
@@ -406,13 +566,8 @@ export async function addPostAction(content: string, authorName: string, color: 
 
 export async function deletePostAction(id: number) {
   try {
-    const supabase = await createClient()
-
-    // 1. Authenticate user (Only officers can delete inappropriate posts)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: 'Unauthorized: Only officers can delete posts.' }
-    }
+    // 1. Authenticate and verify officer whitelist
+    const { supabase, user } = await verifyOfficerStatus()
 
     const officerEmail = user.email || 'unknown_officer'
     const actionDescription = `Deleted post ID ${id} from Freedom Wall.`

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition, useRef } from 'react'
 import { addPostAction, deletePostAction } from '@/app/officer-dashboard/actions'
+import { Play, Pause, X, Music, AlertTriangle, PenSquare, Check, FolderOpen } from 'lucide-react'
 
 export interface SongPreview {
   title: string
@@ -160,9 +161,9 @@ function SongMiniPlayer({ song }: { song: SongPreview }) {
       </div>
       <button
         onClick={togglePlay}
-        className="size-8 shrink-0 flex items-center justify-center rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors cursor-pointer text-sm"
+        className="size-8 shrink-0 flex items-center justify-center rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors cursor-pointer"
       >
-        {playing ? '⏸' : '▶️'}
+        {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
       </button>
     </div>
   )
@@ -218,7 +219,9 @@ function SongSearchInput({ onSelect, selected, onClear }: {
           <p className="text-[10px] font-bold truncate">{selected.title}</p>
           <p className="text-[9px] text-muted-foreground truncate">{selected.artist}</p>
         </div>
-        <button onClick={onClear} className="text-xs text-muted-foreground hover:text-destructive cursor-pointer">✕</button>
+        <button onClick={onClear} className="text-muted-foreground hover:text-destructive cursor-pointer">
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
     )
   }
@@ -226,7 +229,7 @@ function SongSearchInput({ onSelect, selected, onClear }: {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">🎵</span>
+        <Music className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4" />
         <input
           type="text"
           value={query}
@@ -525,10 +528,10 @@ export function FreedomWall({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Fallback mode alert */}
       {fallbackMode && (
-        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400 leading-5">
-          ⚠️ Running in Local Fallback Mode. Posts are stored in this browser because the Supabase `freedom_posts` table is missing.
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400 leading-5 flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+          <span>Running in Local Fallback Mode. Posts are stored in this browser because the Supabase `freedom_posts` table is missing.</span>
         </div>
       )}
 
@@ -540,9 +543,19 @@ export function FreedomWall({
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="text-xs font-semibold px-4 py-2 bg-foreground text-background rounded-full hover:bg-[#383838] press-spring cursor-pointer shadow-sm"
+          className="text-xs font-semibold px-4 py-2 bg-foreground text-background rounded-full hover:bg-[#383838] press-spring cursor-pointer shadow-sm flex items-center gap-1.5"
         >
-          {showAddForm ? '✕ Close Form' : '✏️ Write a Note'}
+          {showAddForm ? (
+            <>
+              <X className="h-3.5 w-3.5" />
+              <span>Close Form</span>
+            </>
+          ) : (
+            <>
+              <PenSquare className="h-3.5 w-3.5" />
+              <span>Write a Note</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -611,7 +624,7 @@ export function FreedomWall({
                         className={`size-8 rounded-full border ${c.bg} ${c.border} flex items-center justify-center cursor-pointer transition-transform hover:scale-110 press-spring`}
                         aria-label={`Select ${c.name}`}
                       >
-                        {selectedColor === colorKey && <span className="text-[10px]">✓</span>}
+                        {selectedColor === colorKey && <Check className="h-3.5 w-3.5" />}
                       </button>
                     )
                   })}
@@ -655,9 +668,9 @@ export function FreedomWall({
 
       {/* Grid */}
       {posts.length === 0 ? (
-        <div className="bg-card border border-border rounded-2xl py-12 px-6 text-center shadow-sm">
-          <span className="text-3xl">🏜️</span>
-          <h3 className="text-sm font-bold text-foreground mt-2.5">The Wall is Empty</h3>
+        <div className="bg-card border border-border rounded-2xl py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center">
+          <FolderOpen className="h-8 w-8 text-muted-foreground/60 mb-2" />
+          <h3 className="text-sm font-bold text-foreground mt-1">The Wall is Empty</h3>
           <p className="text-xs text-muted-foreground mt-1">Be the first to post something on the wall!</p>
         </div>
       ) : (
@@ -681,10 +694,10 @@ export function FreedomWall({
                 {isOfficer && (
                   <button
                     onClick={() => handleDeletePost(post.id)}
-                    className="absolute top-2 right-2 text-xs opacity-0 hover:opacity-100 bg-black/10 dark:bg-white/10 hover:bg-destructive/20 hover:text-destructive size-6 rounded-full flex items-center justify-center transition-opacity cursor-pointer"
+                    className="absolute top-2 right-2 opacity-0 hover:opacity-100 bg-black/10 dark:bg-white/10 hover:bg-destructive/20 hover:text-destructive size-6 rounded-full flex items-center justify-center transition-opacity cursor-pointer"
                     title="Delete post"
                   >
-                    ✕
+                    <X className="h-3 w-3" />
                   </button>
                 )}
 
@@ -698,7 +711,10 @@ export function FreedomWall({
 
                 {/* Footer */}
                 <div className="flex flex-col gap-0.5 mt-3 pt-2 border-t border-black/5 dark:border-white/5">
-                  <span className="text-[10px] font-bold truncate">✍️ {post.author_name}</span>
+                  <span className="text-[10px] font-bold truncate flex items-center gap-1">
+                    <PenSquare className="h-3 w-3 text-muted-foreground" />
+                    <span>{post.author_name}</span>
+                  </span>
                   <span className="text-[9px] opacity-60">{dateStr}</span>
                 </div>
 

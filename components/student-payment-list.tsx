@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { Search, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
 
 interface Student {
   id: number
@@ -102,9 +103,7 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-border bg-card px-4 py-2 pl-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
           />
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 text-sm pointer-events-none">
-            🔍
-          </span>
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4 pointer-events-none" />
         </div>
       </div>
 
@@ -130,8 +129,9 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
         </div>
 
         {isSuspendedOrBreak && (
-          <div className="bg-destructive/5 border-b border-border px-5 py-3 sm:px-6 text-center text-xs font-semibold text-destructive">
-            ⚠️ Contributions are paused for this week due to a {statusLabel?.toLowerCase()}.
+          <div className="bg-destructive/5 border-b border-border px-5 py-3 sm:px-6 text-center text-xs font-semibold text-destructive flex items-center justify-center gap-1.5">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+            Contributions are paused for this week due to a {statusLabel?.toLowerCase()}.
           </div>
         )}
 
@@ -165,12 +165,16 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
                       <span
                         aria-label={isPaid ? `${displayName} has paid` : `${displayName} has not paid`}
                         className={isPaid
-                          ? 'flex size-7 items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground sm:size-8 sm:text-lg'
-                          : 'flex size-7 items-center justify-center rounded-full bg-muted text-lg font-medium text-muted-foreground sm:size-8 sm:text-xl'}
+                          ? 'flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground sm:size-8'
+                          : 'flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground sm:size-8'}
                         role="img"
                         style={{ transition: 'background-color 250ms var(--ease-spring-smooth), color 250ms var(--ease-spring-smooth)' }}
                       >
-                        {isPaid ? '✓' : '×'}
+                        {isPaid ? (
+                          <CheckCircle2 className="h-4 w-4 stroke-[3]" />
+                        ) : (
+                          <XCircle className="h-4 w-4 stroke-[2]" />
+                        )}
                       </span>
                     </div>
                   </li>

@@ -1,6 +1,4 @@
 import { createClient } from '@/lib/supabase-server'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { signOutAction } from '@/app/login/actions'
 import { PublicTabsContainer } from '@/components/public-tabs-container'
 
 export const dynamic = 'force-dynamic'
@@ -74,29 +72,9 @@ export default async function Page() {
     courses: coursesList.find(c => c.id === task.course_id) || null
   })) as any[]
 
-  const signOutElement = (
-    <div className="flex items-center gap-2 shrink-0">
-      <ThemeToggle />
-      <form action={signOutAction}>
-        <button
-          type="submit"
-          className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 cursor-pointer press-spring"
-        >
-          Sign Out
-        </button>
-      </form>
-    </div>
-  )
-
-  const loginElement = (
-    <div className="flex items-center gap-2 shrink-0">
-      <ThemeToggle />
-    </div>
-  )
-
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 anim-fade-slide-in">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-3xl lg:max-w-6xl flex-col gap-6">
         <PublicTabsContainer
           students={studentsList}
           payments={paymentsList}
@@ -109,8 +87,6 @@ export default async function Page() {
           tasksError={!!tasksError}
           postsError={!!postsError}
           user={user}
-          signOutElement={signOutElement}
-          loginElement={loginElement}
         />
       </div>
     </main>

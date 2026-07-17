@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
 // To add a new patch, increment CURRENT_VERSION and add a new entry at the top.
-const CURRENT_VERSION = '1.2'
+const CURRENT_VERSION = '1.3'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +18,21 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.3',
+    date: 'July 17, 2026',
+    title: 'Personal Tasks & UX Polish',
+    emoji: '🔒',
+    changes: [
+      { type: 'new', text: 'Personal (Private) Tasks — normal students can now register private tasks that are only visible to their account.' },
+      { type: 'new', text: 'Task Visibility Toggle — whitelisted officers can choose between Public and Private task visibility during creation.' },
+      { type: 'new', text: 'Sleek custom deletion warning card modals for both tasks and recent activities, replacing raw browser alerts.' },
+      { type: 'improve', text: 'Instant visual feedback overlays ("Updating...", "Deleting...") with loading spinners on active task cards.' },
+      { type: 'improve', text: 'Linear rolling loading progress indicator at the top of the tasks panel during database transactions.' },
+      { type: 'improve', text: 'Spinner and immediate "Signing out..." feedback inside sign-out triggers to remove transition delay.' },
+      { type: 'fix', text: 'Completely eliminated remaining React key prop console warnings by natively rendering layout header actions.' },
+    ],
+  },
   {
     version: '1.2',
     date: 'July 17, 2026',
@@ -124,22 +140,22 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
       >
         {/* Header */}
         <div className="relative flex items-center justify-between px-6 pt-6 pb-4 border-b border-border/60 shrink-0 bg-gradient-to-br from-primary/5 to-transparent">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 pr-4 text-left">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">📋</span>
+              <ClipboardList className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-bold text-foreground tracking-tight">Patch Notes</h2>
             </div>
             <p className="text-xs text-muted-foreground">Latest changes & improvements to Class Fund Tracker</p>
           </div>
 
-          {/* Latest version badge */}
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <span className="px-3 py-1 text-xs font-bold rounded-full bg-primary text-primary-foreground">
+          {/* Latest version badge (with pr-8 padding to prevent overlap with the close button) */}
+          <div className="flex flex-col items-end gap-1 shrink-0 pr-8">
+            <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
               v{CURRENT_VERSION} Latest
             </span>
             <button
               onClick={handleClose}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-medium"
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-medium"
             >
               Don't show again
             </button>
@@ -148,10 +164,10 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
           {/* Close X */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 size-7 flex items-center justify-center rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer press-spring text-sm"
+            className="absolute top-4 right-4 size-7 flex items-center justify-center rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer press-spring"
             aria-label="Close patch notes"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -205,9 +221,10 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
           <p className="text-[10px] text-muted-foreground">Class Fund Tracker · v{CURRENT_VERSION}</p>
           <button
             onClick={handleClose}
-            className="px-5 py-1.5 text-xs font-semibold bg-foreground text-background rounded-full hover:opacity-90 transition-opacity cursor-pointer press-spring"
+            className="px-5 py-1.5 text-xs font-semibold bg-foreground text-background rounded-full hover:opacity-90 transition-opacity cursor-pointer press-spring flex items-center gap-1"
           >
-            Got it! ✓
+            <span>Got it!</span>
+            <Check className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
@@ -231,10 +248,10 @@ export function PatchNotesButton({ className }: PatchNotesButtonProps) {
         id="patch-notes-button"
         onClick={() => setOpen(true)}
         title="View patch notes"
-        className={`size-9 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors cursor-pointer press-spring text-base ${className ?? ''}`}
+        className={`size-9 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors cursor-pointer press-spring ${className ?? ''}`}
         aria-label="Open patch notes"
       >
-        📋
+        <ClipboardList className="h-4 w-4" />
       </button>
       {open && <PatchNotesModal forceOpen={true} onClose={() => setOpen(false)} />}
     </>

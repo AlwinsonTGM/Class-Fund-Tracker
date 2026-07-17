@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
+import { Search, AlertTriangle } from 'lucide-react'
 
 interface Student {
   id: number
@@ -153,9 +154,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-border bg-card px-4 py-2 pl-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
           />
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 text-sm pointer-events-none">
-            🔍
-          </span>
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4 pointer-events-none" />
         </div>
       </div>
 
@@ -183,8 +182,9 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
         </div>
 
         {isSuspendedOrBreak && (
-          <div className="bg-destructive/5 border-b border-border px-5 py-3 sm:px-6 text-center text-xs font-semibold text-destructive">
-            ⚠️ Note: Contributions are paused for this week due to a {statusLabel?.toLowerCase()}.
+          <div className="bg-destructive/5 border-b border-border px-5 py-3 sm:px-6 text-center text-xs font-semibold text-destructive flex items-center justify-center gap-1.5">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+            Note: Contributions are paused for this week due to a {statusLabel?.toLowerCase()}.
           </div>
         )}
 

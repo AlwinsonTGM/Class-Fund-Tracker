@@ -1,41 +1,50 @@
 # Class Fund Tracker (Transparency Portal)
 
-A modern, responsive, and secure web application designed to track class fund contributions and expenses with ultimate transparency. Built with Next.js, Tailwind CSS v4, and Supabase.
+A modern, responsive, and secure web application designed to track class fund contributions, tasks, and notes with ultimate transparency. Built with Next.js, Tailwind CSS v4, and Supabase.
 
 ---
 
 ## 🚀 Key Features
 
-- **Real-Time Treasury Metrics**: Instantly computes net balances today: `Net Balance = (Paid Payments * ₱5.00) - (Total Expenses)`.
-- **Dynamic Weekly Checklists**:
-  - **Public Dashboard**: A read-only search/filter list displaying student payment checkmarks.
-  - **Officer Dashboard**: A protected portal where officers can toggle payments with **optimistic UI updates** for an instant checking feel.
-- **Data Privacy Protection**: Reconstructs and formats names as **First Name + Last Initial** (e.g. *Jimuel Bunagan A.*) on public routes, while showing **Full Roster Names** (e.g. *Abadiano, Jimuel Bunagan*) to verified officers.
-- **Pre-Registered Auth Portal**: Integrated Supabase Auth supporting Email/Password and **Google OAuth**. Includes redirect controls to terminate/logout users not pre-registered in your organization.
-- **Database-Driven Calendar Weeks**: Supports adding, editing, or deleting week ranges (Monday–Wednesday) inline. Offers suspension/health break flags to notify users when contributions are paused.
-- **Audit Logs & Recent Activity**: Tracks all actions logged by officers. Includes pagination ("Show More") to view full histories.
-- **Moderator Controls**:
-  - Allows verified moderators to inline-edit log descriptions to fix typos.
-  - Deleting an activity log entry **automatically reverses** the corresponding database transaction (deleting the linked payment check or expense record and updating balances in real-time).
-- **Persistent Dark Mode**: Premium dark mode styling using a customized obsidian-green forest palette, with flash-free head-hydration and persistence in `localStorage`.
+### 🔒 1. Google OAuth & Secure Account Whitelisting
+- **Unified Login**: Anyone can log in with their Google account.
+- **Role Isolation**: Only accounts registered in the `officers` and `moderators` tables are granted admin capabilities.
+- **Student View**: Non-officer students are limited to the public dashboard, checkbooks, and private tasks.
+
+### 🎯 2. Unified Task Dashboard & Personal Tasks (v1.3)
+- **Course & Task Badges**: Link tasks to specific courses with priority indicator borders (Urgent, High, Medium, Low).
+- **Interactive Form Preview**: A live replica task card renders in real time next to the input forms during creation.
+- **Custom Background Photos**: Pick from 6 preselected background covers or upload a custom image (restricted to `< 1MB` to save space). High-contrast overrides and dark linear overlays ensure legibility.
+- **Personal Tasks**: Standard students can create private tasks. The visibility selector is locked to **Private** for non-officers.
+- **Ownership Security**: Edit, delete, and toggle actions check if `created_by` matches the logged-in user, keeping private tasks completely secure.
+
+### 🎵 3. Freedom Wall with Music & Reactions (v1.2)
+- **Sticky Notes**: Anonymous wall posts with customizable color pads.
+- **iTunes Song Attachments**: Search any track and embed an iTunes 30-second preview player (complete with album art, play/pause controls, and interactive progress bars).
+- **Emoji Reactions**: Discord-style reaction counters. Click existing reactions to increment them, or add any of the 24 curated emojis from the palette picker.
+
+### ⚡ 4. Custom UX & Instant Feedback Loader (v1.3)
+- **Sleek Warning Modals**: Replaced raw browser `confirm()` popups with styled warning cards (fade-in/scale-up) for log deletions and task deletions.
+- **Top Rolling Loader**: A rolling progress indicator runs along the top of the tasks dashboard during database transactions.
+- **Card Loading Backdrops**: Tasks being deleted or updated display clear `Deleting...` or `Updating...` overlays immediately, removing transaction lag confusion.
+- **Sign-Out Feedback**: Sign-out buttons instantly render a spinning loader and display `Signing out...` on click.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 16 (App Router, React Server Components)
-- **Styling**: Tailwind CSS v4 (PostCSS config, CSS-driven theme variables)
-- **Database & Auth**: Supabase (PostgreSQL, Supabase Auth)
+- **Framework**: Next.js 16 (App Router, Server Actions)
+- **Styling**: Tailwind CSS v4 (CSS variables, obsidian-green dark modes)
+- **Database & Auth**: Supabase (PostgreSQL, Row Level Security)
 - **Language**: TypeScript
 
 ---
 
 ## 📂 Database Schema
 
-Make sure your Supabase PostgreSQL database is set up with the following tables:
+Set up your Supabase database with the following table schemas:
 
 ### 1. `students`
-Tracks student seat numbers and roster details.
 ```sql
 create table students (
   id bigint primary key generated always as identity,
@@ -48,7 +57,6 @@ create table students (
 ```
 
 ### 2. `payments`
-Tracks payments collected for each student and week.
 ```sql
 create table payments (
   id bigint primary key generated always as identity,
@@ -61,7 +69,6 @@ create table payments (
 ```
 
 ### 3. `expenses`
-Stores the recorded classroom expenditures.
 ```sql
 create table expenses (
   id bigint primary key generated always as identity,
@@ -73,7 +80,6 @@ create table expenses (
 ```
 
 ### 4. `weeks`
-Tracks week configurations, dates, and breaks.
 ```sql
 create table weeks (
   id bigint primary key generated always as identity,
@@ -84,7 +90,6 @@ create table weeks (
 ```
 
 ### 5. `audit_logs`
-Stores the log history for transparency audits.
 ```sql
 create table audit_logs (
   id bigint primary key generated always as identity,
@@ -95,11 +100,62 @@ create table audit_logs (
 ```
 
 ### 6. `moderators`
-Lists accounts authorized to modify calendar weeks or delete/edit activity logs.
 ```sql
 create table moderators (
   id bigint primary key generated always as identity,
   email text unique not null,
+  created_at timestamp with time zone default now() not null
+);
+```
+
+### 7. `officers`
+```sql
+create table officers (
+  id bigint primary key generated always as identity,
+  email text unique not null,
+  created_at timestamp with time zone default now() not null
+);
+```
+
+### 8. `courses`
+```sql
+create table courses (
+  id bigint primary key generated always as identity,
+  code text unique not null,
+  name text not null,
+  created_at timestamp with time zone default now() not null
+);
+```
+
+### 9. `tasks`
+```sql
+create table tasks (
+  id bigint primary key generated always as identity,
+  title text not null,
+  description text,
+  course_id bigint references courses(id) on delete set null,
+  task_type text not null,
+  participation_type text not null,
+  group_size text default 'N/A',
+  priority text default 'Medium',
+  status text default 'Pending',
+  due_date timestamp with time zone not null,
+  background_image text,
+  is_private boolean default false,
+  created_by text,
+  created_at timestamp with time zone default now() not null,
+  updated_at timestamp with time zone default now() not null
+);
+```
+
+### 10. `freedom_posts`
+```sql
+create table freedom_posts (
+  id bigint primary key generated always as identity,
+  content text not null,
+  author_name text default 'Anonymous' not null,
+  color text default 'bg-yellow-100' not null,
+  song jsonb,
   created_at timestamp with time zone default now() not null
 );
 ```
@@ -130,7 +186,6 @@ create table moderators (
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 5. **Build for Production**:
    ```bash

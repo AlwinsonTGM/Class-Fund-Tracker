@@ -27,15 +27,34 @@ export async function GET(request: Request) {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
 
       if (!userError && user) {
-        const lastSignIn = new Date(user.last_sign_in_at || '').getTime()
-        const createdAt = new Date(user.created_at || '').getTime()
-        const diffSeconds = Math.abs(lastSignIn - createdAt) / 1000
-
         console.log(`User Authenticated: ${user.email}`)
-        console.log(`lastSignIn: ${user.last_sign_in_at}, createdAt: ${user.created_at}, diff: ${diffSeconds}s`)
 
-        if (diffSeconds < 15) {
-          console.warn(`Unauthorized login attempt (not pre-registered): ${user.email}`)
+        // Verify if user email exists in moderators
+        const { data: moderator } = await supabase
+          .from('moderators')
+          .select('email')
+          .eq('email', user.email)
+          .single()
+
+        // Verify if user email exists in officers (with safety catch)
+        let isOfficer = false
+        try {
+          const { data: officer, error: offError } = await supabase
+            .from('officers')
+            .select('email')
+            .eq('email', user.email)
+            .single()
+          
+          if (!offError && officer) {
+            isOfficer = true
+          }
+        } catch (err) {
+          console.warn('Officers table query failed:', err)
+        }
+
+        // If user is neither a moderator nor an officer, deny access
+        if (!moderator && !isOfficer) {
+          console.warn(`Unauthorized login attempt (not whitelisted): ${user.email}`)
           await supabase.auth.signOut()
           return NextResponse.redirect(`${origin}/login?error=Unauthorized`)
         }

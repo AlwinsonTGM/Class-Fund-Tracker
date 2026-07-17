@@ -11,6 +11,9 @@ import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { AddExpenseModal } from '@/components/add-expense-modal'
 import { StudentPaymentList } from '@/components/student-payment-list'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
+import { Home, ClipboardList, MessageSquare, ShieldAlert, DollarSign } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { signOutAction } from '@/app/login/actions'
 
 interface OfficerTabsContainerProps {
   students: any[]
@@ -25,8 +28,6 @@ interface OfficerTabsContainerProps {
   postsError?: boolean
   isModerator: boolean
   user: any
-  signOutElement: React.ReactNode
-  themeToggleElement: React.ReactNode
 }
 
 export function OfficerTabsContainer({
@@ -41,14 +42,13 @@ export function OfficerTabsContainer({
   tasksError = false,
   postsError = false,
   isModerator,
-  user,
-  signOutElement,
-  themeToggleElement
+  user
 }: OfficerTabsContainerProps) {
   // Start on the management portal view by default
   const [activeTab, setActiveTab] = useState('portal')
   const [addTaskTrigger, setAddTaskTrigger] = useState(false)
   const [addPostTrigger, setAddPostTrigger] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   
   // Hidden button ref to trigger AddExpenseModal from BottomNav
   const addExpenseBtnRef = useRef<HTMLButtonElement>(null)
@@ -66,6 +66,13 @@ export function OfficerTabsContainer({
       addExpenseBtnRef.current.click()
     }
   }
+
+  const desktopTabs = [
+    { id: 'portal', label: 'Officer Portal', icon: <ShieldAlert className="h-4 w-4" /> },
+    { id: 'home', label: 'Student View', icon: <Home className="h-4 w-4" /> },
+    { id: 'tasks', label: 'Tasks', icon: <ClipboardList className="h-4 w-4" /> },
+    { id: 'freedom', label: 'Freedom Wall', icon: <MessageSquare className="h-4 w-4" /> }
+  ]
 
   return (
     <div className="pb-28"> {/* Extra padding bottom to prevent nav overlap */}
@@ -89,11 +96,20 @@ export function OfficerTabsContainer({
           </div>
 
           <div className="flex items-center gap-2">
-            {themeToggleElement}
+            <ThemeToggle />
             <PatchNotesButton />
 
+            {/* Direct Record Expense button for desktop */}
+            <button
+              onClick={triggerAddExpense}
+              className="hidden sm:flex text-xs font-semibold bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/25 rounded-full px-3.5 py-1.5 cursor-pointer press-spring items-center gap-1.5"
+            >
+              <DollarSign className="h-3.5 w-3.5" />
+              <span>Record Expense</span>
+            </button>
+
             {/* Render the AddExpenseModal so we can target it via click delegation */}
-            <div ref={el => {
+            <div className="hidden" ref={el => {
               if (el) {
                 const btn = el.querySelector('button')
                 if (btn) {
@@ -105,30 +121,80 @@ export function OfficerTabsContainer({
               <AddExpenseModal />
             </div>
 
-            {signOutElement}
+            <form 
+              action={signOutAction} 
+              onSubmit={() => setSigningOut(true)} 
+              className="shrink-0"
+            >
+              <button
+                type="submit"
+                disabled={signingOut}
+                className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 cursor-pointer press-spring flex items-center gap-1.5"
+              >
+                {signingOut && <span className="h-3 w-3 animate-spin rounded-full border border-destructive border-t-transparent" />}
+                <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>
+              </button>
+            </form>
           </div>
         </div>
         <p className="text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
           Logged in as <strong className="text-foreground">{user.email}</strong>. Manage payments, expenses, tasks, and posts.
         </p>
+
+        {/* Desktop Top Tab Navigation */}
+        <div className="hidden sm:flex items-center gap-1.5 p-1.5 bg-muted/60 dark:bg-muted/30 border border-border/40 rounded-2xl w-fit mt-4">
+          {desktopTabs.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  setAddTaskTrigger(false)
+                  setAddPostTrigger(false)
+                }}
+                className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 press-spring ${
+                  isActive 
+                    ? 'bg-card text-foreground shadow-sm border border-border/10' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </header>
 
       {/* Conditional Rendering Based on Active Tab */}
       <div className="anim-fade-slide-in">
         {activeTab === 'home' && (
-          <div className="flex flex-col gap-6">
-            <BalanceCard balance={netBalance} />
-            <StudentPaymentList students={students} payments={payments} weeks={weeks} />
-            <RecentActivity activities={logs} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
+            {/* Left Column: Stats & Recent Activity */}
+            <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
+              <BalanceCard balance={netBalance} />
+              <RecentActivity activities={logs} />
+            </div>
+            {/* Right Column: Student Checklist */}
+            <div className="lg:col-span-7">
+              <StudentPaymentList students={students} payments={payments} weeks={weeks} />
+            </div>
           </div>
         )}
 
         {activeTab === 'portal' && (
-          <div className="flex flex-col gap-6">
-            <BalanceCard balance={netBalance} />
-            <OfficerPaymentList students={students} initialPayments={payments} weeks={weeks} />
-            <ManageWeeksPanel weeks={weeks} />
-            <RecentActivity activities={logs} isModerator={isModerator} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
+            {/* Left Column: Stats, Manage Weeks, and Activity */}
+            <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
+              <BalanceCard balance={netBalance} />
+              <ManageWeeksPanel weeks={weeks} />
+              <RecentActivity activities={logs} isModerator={isModerator} />
+            </div>
+            {/* Right Column: Officer Student Checklist */}
+            <div className="lg:col-span-7">
+              <OfficerPaymentList students={students} initialPayments={payments} weeks={weeks} />
+            </div>
           </div>
         )}
 
@@ -140,6 +206,7 @@ export function OfficerTabsContainer({
             dbError={tasksError}
             triggerAddOpen={addTaskTrigger}
             onCloseAddTrigger={() => setAddTaskTrigger(false)}
+            user={user}
           />
         )}
 

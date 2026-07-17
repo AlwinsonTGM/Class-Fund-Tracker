@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useTransition } from 'react'
 import { deleteAuditLogAction, updateAuditLogAction } from '@/app/officer-dashboard/moderator-actions'
 import { fetchAuditLogsAction } from '@/app/officer-dashboard/actions'
+import { User, AlertTriangle } from 'lucide-react'
 
 export interface AuditLogItem {
   id: number
@@ -27,6 +28,7 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
   const [hasMore, setHasMore] = useState(activities.length >= 10)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
+  const [logToDelete, setLogToDelete] = useState<number | null>(null)
 
   // Sync state when props change
   useEffect(() => {
@@ -35,29 +37,36 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
   }, [activities])
 
   const handleDelete = (logId: number) => {
-    if (confirm('Are you sure you want to delete this activity log? This cannot be undone.')) {
-      setError(null)
-      // Trigger slide-out animation
-      setDeletingIds((prev) => new Set(prev).add(logId))
+    setError(null)
+    setLogToDelete(logId)
+  }
 
-      // Wait for animation, then remove and call server
-      setTimeout(() => {
-        setLocalActivities((prev) => prev.filter((act) => act.id !== logId))
-        setDeletingIds((prev) => {
-          const next = new Set(prev)
-          next.delete(logId)
-          return next
-        })
+  const confirmDeleteLog = () => {
+    if (logToDelete === null) return
+    const logId = logToDelete
+    setLogToDelete(null)
 
-        startTransition(async () => {
-          const result = await deleteAuditLogAction(logId)
-          if (!result.success) {
-            setError(result.error || 'Failed to delete activity.')
-            setLocalActivities(activities)
-          }
-        })
-      }, 450)
-    }
+    setError(null)
+    // Trigger slide-out animation
+    setDeletingIds((prev) => new Set(prev).add(logId))
+
+    // Wait for animation, then remove and call server
+    setTimeout(() => {
+      setLocalActivities((prev) => prev.filter((act) => act.id !== logId))
+      setDeletingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(logId)
+        return next
+      })
+
+      startTransition(async () => {
+        const result = await deleteAuditLogAction(logId)
+        if (!result.success) {
+          setError(result.error || 'Failed to delete activity.')
+          setLocalActivities(activities)
+        }
+      })
+    }, 450)
   }
 
   const handleStartEdit = (item: AuditLogItem) => {
@@ -142,8 +151,8 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
                   <li key={activity.id} className={`flex flex-col py-3 first:pt-0 last:pb-0 text-sm text-foreground gpu-accelerate ${deletingIds.has(activity.id) ? 'anim-slide-out-left overflow-hidden' : ''}`}>
                     <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
                       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                        <span className="font-semibold text-xs bg-muted px-2.5 py-0.5 rounded-full text-foreground/80 truncate max-w-[200px] sm:max-w-none">
-                          👤 {activity.officer_email}
+                        <span className="font-semibold text-xs bg-muted px-2.5 py-0.5 rounded-full text-foreground/80 truncate max-w-[200px] sm:max-w-none flex items-center gap-1">
+                          <User className="h-3 w-3 text-muted-foreground" /> {activity.officer_email}
                         </span>
                         <span className="text-[11px] font-medium text-muted-foreground">
                           {new Date(activity.created_at).toLocaleDateString(undefined, {
@@ -232,6 +241,60 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
           </div>
         )}
       </div>
+
+      {/* Custom Delete Log Confirmation Modal */}
+      {logToDelete !== null && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes modalFadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes modalScaleUp {
+              from { transform: scale(0.95); opacity: 0; }
+              to { transform: scale(1); opacity: 1; }
+            }
+            .animate-fade-in {
+              animation: modalFadeIn 0.2s forwards ease-out;
+            }
+            .animate-scale-up {
+              animation: modalScaleUp 0.2s forwards ease-out;
+            }
+          ` }} />
+          <div className="bg-card border border-border rounded-2xl p-5 max-w-sm w-full shadow-2xl flex flex-col gap-4 animate-scale-up">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Delete Activity Log?</h3>
+                <p className="text-[10px] text-muted-foreground">This action is permanent.</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Are you sure you want to delete this activity log item? This will permanently remove the record from transparency history logs.
+            </p>
+
+            <div className="flex gap-2.5 mt-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setLogToDelete(null)}
+                className="px-4 py-1.5 text-xs font-semibold border border-border bg-background rounded-full hover:bg-muted text-foreground cursor-pointer press-spring"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteLog}
+                className="px-4 py-1.5 text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-full cursor-pointer press-spring"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

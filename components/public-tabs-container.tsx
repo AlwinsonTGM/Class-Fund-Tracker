@@ -9,6 +9,9 @@ import { TasksSection, Task } from '@/components/tasks-section'
 import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { InlineLogin } from '@/components/inline-login'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
+import { Home, ClipboardList, MessageSquare, Lock } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { signOutAction } from '@/app/login/actions'
 
 interface PublicTabsContainerProps {
   students: any[]
@@ -19,11 +22,8 @@ interface PublicTabsContainerProps {
   tasks: Task[]
   posts: FreedomPost[]
   courses: any[]
-  tasksError?: boolean
   postsError?: boolean
   user: any
-  signOutElement: React.ReactNode
-  loginElement: React.ReactNode
 }
 
 export function PublicTabsContainer({
@@ -37,12 +37,11 @@ export function PublicTabsContainer({
   courses,
   tasksError = false,
   postsError = false,
-  user,
-  signOutElement,
-  loginElement
+  user
 }: PublicTabsContainerProps) {
   const [activeTab, setActiveTab] = useState('home')
   const [addPostTrigger, setAddPostTrigger] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
 
   // Read URL search params on mount to handle redirects from /login
   useEffect(() => {
@@ -66,6 +65,13 @@ export function PublicTabsContainer({
   const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount), 0)
   const netBalance = totalContributions - totalExpenses
 
+  const desktopTabs = [
+    { id: 'home', label: 'Home', icon: <Home className="h-4 w-4" /> },
+    { id: 'tasks', label: 'Tasks', icon: <ClipboardList className="h-4 w-4" /> },
+    { id: 'freedom', label: 'Freedom Wall', icon: <MessageSquare className="h-4 w-4" /> },
+    { id: 'portal', label: 'Portal', icon: <Lock className="h-4 w-4" /> }
+  ]
+
   return (
     <div className="pb-28"> {/* Extra padding bottom to prevent nav overlap */}
       {/* Auto-popup patch notes on first visit */}
@@ -81,27 +87,73 @@ export function PublicTabsContainer({
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <PatchNotesButton />
-            {user ? signOutElement : loginElement}
+            {user && (
+              <form 
+                action={signOutAction} 
+                onSubmit={() => setSigningOut(true)} 
+                className="shrink-0"
+              >
+                <button
+                  type="submit"
+                  disabled={signingOut}
+                  className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 cursor-pointer press-spring flex items-center gap-1.5"
+                >
+                  {signingOut && <span className="h-3 w-3 animate-spin rounded-full border border-destructive border-t-transparent" />}
+                  <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>
+                </button>
+              </form>
+            )}
           </div>
         </div>
         <p className="text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
           A simple overview of our class contributions and activities.
         </p>
+
+        {/* Desktop Top Tab Navigation */}
+        <div className="hidden sm:flex items-center gap-1.5 p-1.5 bg-muted/60 dark:bg-muted/30 border border-border/40 rounded-2xl w-fit mt-4">
+          {desktopTabs.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  setAddPostTrigger(false)
+                }}
+                className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 press-spring ${
+                  isActive 
+                    ? 'bg-card text-foreground shadow-sm border border-border/10' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </header>
 
       {/* Conditional Rendering Based on Active Tab */}
       <div className="anim-fade-slide-in">
         {activeTab === 'home' && (
-          <div className="flex flex-col gap-6">
-            <BalanceCard balance={netBalance} />
-            <StudentPaymentList students={students} payments={payments} weeks={weeks} />
-            <RecentActivity activities={logs} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
+            {/* Left Column: Stats & Recent Activity */}
+            <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
+              <BalanceCard balance={netBalance} />
+              <RecentActivity activities={logs} />
+            </div>
+            {/* Right Column: Student Checklist */}
+            <div className="lg:col-span-7">
+              <StudentPaymentList students={students} payments={payments} weeks={weeks} />
+            </div>
           </div>
         )}
 
         {activeTab === 'tasks' && (
-          <TasksSection initialTasks={tasks} isOfficer={false} courses={courses} dbError={tasksError} />
+          <TasksSection initialTasks={tasks} isOfficer={false} courses={courses} dbError={tasksError} user={user} />
         )}
 
         {activeTab === 'freedom' && (
