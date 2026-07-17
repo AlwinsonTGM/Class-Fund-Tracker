@@ -217,6 +217,7 @@ export function OfficerTabsContainer({
             dbError={postsError}
             triggerAddOpen={addPostTrigger}
             onCloseAddTrigger={() => setAddPostTrigger(false)}
+            user={user}
           />
         )}
       </div>

@@ -6,7 +6,7 @@ import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
 // To add a new patch, increment CURRENT_VERSION and add a new entry at the top.
-const CURRENT_VERSION = '1.3'
+const CURRENT_VERSION = '1.4'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -18,6 +18,23 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.4',
+    date: 'July 17, 2026',
+    title: 'Public KLD Sign-Up & Spam-Free Wall',
+    emoji: '🔐',
+    changes: [
+      { type: 'new', text: 'School-Restricted Public Sign-Up — any student can now create an account using their school email domain (@kld.edu.ph).' },
+      { type: 'new', text: 'Forgot Password / Reset Link — request a password reset email in the login panel, redirecting securely to a dedicated update password form.' },
+      { type: 'new', text: 'Dedicated Reset Password Form Page — custom secure route (/auth/reset-password) to enter and confirm new credentials.' },
+      { type: 'new', text: 'SignUp & Password Recovery Actions — backend server actions validating domains and requesting resets through Supabase Auth.' },
+      { type: 'new', text: 'Secure Officer Dashboard Block — added real-time database queries to verify if logged-in accounts exist in officers/moderators tables, redirecting general users to the homepage immediately.' },
+      { type: 'improve', text: 'Spam-Free Emoji Reactions — clicking an emoji reaction toggles it (adds 1 or removes 1) instead of allowing infinite spam.' },
+      { type: 'improve', text: 'Authenticated Wall Reactions — emoji reactions now require logging in first to identify users and count reactions uniquely.' },
+      { type: 'improve', text: 'Highlighted Emoji Selection — reaction chips actively highlight with a custom border and theme color matching if the user has selected it.' },
+      { type: 'improve', text: 'Multi-View Inline Login Portal — login form updated with clean tab switching for Sign In, Sign Up, and Forgot Password views.' }
+    ],
+  },
   {
     version: '1.3',
     date: 'July 17, 2026',

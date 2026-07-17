@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { BottomNav } from '@/components/bottom-nav'
 import { BalanceCard } from '@/components/balance-card'
 import { StudentPaymentList } from '@/components/student-payment-list'
@@ -9,9 +9,23 @@ import { TasksSection, Task } from '@/components/tasks-section'
 import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { InlineLogin } from '@/components/inline-login'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
-import { Home, ClipboardList, MessageSquare, Lock } from 'lucide-react'
+import { Home, ClipboardList, MessageSquare, Lock, Settings } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { signOutAction } from '@/app/login/actions'
+
+interface WeatherParticle {
+  x: number
+  y: number
+  size: number
+  speedY: number
+  speedX: number
+  opacity: number
+  sway: number
+  swaySpeed: number
+  angle?: number
+  spin?: number
+  emoji?: string
+}
 
 interface PublicTabsContainerProps {
   students: any[]
@@ -23,6 +37,7 @@ interface PublicTabsContainerProps {
   posts: FreedomPost[]
   courses: any[]
   postsError?: boolean
+  tasksError?: boolean
   user: any
 }
 
@@ -42,6 +57,143 @@ export function PublicTabsContainer({
   const [activeTab, setActiveTab] = useState('home')
   const [addPostTrigger, setAddPostTrigger] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+
+  // Customizable Canvas/Page Effects
+  const [activeEffect, setActiveEffect] = useState<'none' | 'rain' | 'snow' | 'leaves'>('none')
+  const [showSettings, setShowSettings] = useState(false)
+  const particleCanvasRef = useRef<HTMLCanvasElement>(null)
+  const particlesRef = useRef<WeatherParticle[]>([])
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+
+
+  // Falling Weather Particle Simulation rendering loop
+  useEffect(() => {
+    if (!mounted || activeEffect === 'none') {
+      const canvas = particleCanvasRef.current
+      if (canvas) {
+        const ctx = canvas.getContext('2d')
+        ctx?.clearRect(0, 0, canvas.width, canvas.height)
+      }
+      return
+    }
+
+    const canvas = particleCanvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const resizeCanvas = () => {
+      if (canvas) {
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+      }
+    }
+    window.addEventListener('resize', resizeCanvas)
+    resizeCanvas()
+
+    const count = activeEffect === 'rain' ? 120 : 60
+    const list: WeatherParticle[] = []
+    const leafEmojis = ['🍂', '🍁', '🍃', '🍀']
+    
+    for (let i = 0; i < count; i++) {
+      list.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: activeEffect === 'rain'
+          ? Math.random() * 1.5 + 0.8
+          : activeEffect === 'snow'
+          ? Math.random() * 3.5 + 1.5
+          : Math.random() * 8 + 12, // font size
+        speedY: activeEffect === 'rain'
+          ? Math.random() * 7 + 12
+          : activeEffect === 'snow'
+          ? Math.random() * 1.2 + 0.8
+          : Math.random() * 1.0 + 0.6,
+        speedX: activeEffect === 'rain'
+          ? -1.5
+          : Math.random() * 1.0 - 0.5,
+        opacity: Math.random() * 0.5 + 0.35,
+        sway: Math.random() * 100,
+        swaySpeed: Math.random() * 0.02 + 0.01,
+        angle: Math.random() * Math.PI * 2,
+        spin: Math.random() * 0.02 - 0.01,
+        emoji: activeEffect === 'leaves'
+          ? leafEmojis[Math.floor(Math.random() * leafEmojis.length)]
+          : undefined
+      })
+    }
+    particlesRef.current = list
+
+    let animationId: number
+
+    const drawParticles = () => {
+      if (!canvas || !ctx) return
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      particlesRef.current.forEach(p => {
+        p.y += p.speedY
+        
+        if (activeEffect === 'snow') {
+          p.sway += p.swaySpeed
+          p.x += Math.sin(p.sway) * 0.5
+        } else if (activeEffect === 'leaves') {
+          p.sway += p.swaySpeed
+          p.x += Math.sin(p.sway) * 0.7
+          if (p.angle !== undefined && p.spin !== undefined) {
+            p.angle += p.spin
+          }
+        } else {
+          p.x += p.speedX
+        }
+
+        // Reset particles out of bounds
+        if (p.y > canvas.height + 20 || p.x < -20 || p.x > canvas.width + 20) {
+          p.y = -20
+          p.x = Math.random() * canvas.width
+          p.opacity = Math.random() * 0.5 + 0.35
+        }
+
+        ctx.save()
+        ctx.globalAlpha = p.opacity
+
+        if (activeEffect === 'rain') {
+          ctx.strokeStyle = 'rgba(156, 163, 175, 0.45)'
+          ctx.lineWidth = p.size
+          ctx.beginPath()
+          ctx.moveTo(p.x, p.y)
+          ctx.lineTo(p.x + p.speedX * 1.5, p.y + p.speedY * 1.2)
+          ctx.stroke()
+        } else if (activeEffect === 'snow') {
+          ctx.fillStyle = '#ffffff'
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+          ctx.fill()
+        } else if (activeEffect === 'leaves' && p.emoji) {
+          ctx.translate(p.x, p.y)
+          ctx.rotate(p.angle || 0)
+          ctx.font = `${p.size}px sans-serif`
+          ctx.fillText(p.emoji, -p.size / 2, p.size / 2)
+        }
+
+        ctx.restore()
+      })
+
+      animationId = requestAnimationFrame(drawParticles)
+    }
+
+    drawParticles()
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas)
+      cancelAnimationFrame(animationId)
+    }
+  }, [activeEffect, mounted])
 
   // Read URL search params on mount to handle redirects from /login
   useEffect(() => {
@@ -73,7 +225,13 @@ export function PublicTabsContainer({
   ]
 
   return (
-    <div className="pb-28"> {/* Extra padding bottom to prevent nav overlap */}
+    <div className="pb-28 relative"> {/* Extra padding bottom to prevent nav overlap */}
+      {/* Weather Particle Simulation Overlay Canvas */}
+      <canvas
+        ref={particleCanvasRef}
+        className="fixed inset-0 w-full h-full pointer-events-none z-50"
+      />
+
       {/* Auto-popup patch notes on first visit */}
       <PatchNotesModal />
 
@@ -86,9 +244,65 @@ export function PublicTabsContainer({
               Class Fund Tracker
             </h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <ThemeToggle />
             <PatchNotesButton />
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowSettings(!showSettings)
+              }}
+              className="bg-card text-foreground border border-border hover:bg-muted size-8 rounded-full flex items-center justify-center shadow-sm cursor-pointer transition-all press-spring"
+              title="Page Effects & Background Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+
+            {/* Page Effects Settings Modal/Dropdown */}
+            {showSettings && (
+              <div 
+                className="absolute top-10 right-0 bg-white/95 dark:bg-zinc-900/95 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xl dark:shadow-2xl z-50 backdrop-blur-md text-[11px] font-sans w-56 flex flex-col gap-3.5 anim-fade-in pointer-events-auto"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-1.5">
+                  <span className="font-bold text-xs">Weather Settings 🌧️</span>
+                  <button 
+                    onClick={() => setShowSettings(false)} 
+                    className="text-muted-foreground hover:text-foreground text-[10px] font-bold cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* Falling Weather Effects */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <span className="font-bold text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Falling Weather:</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { id: 'none', label: 'None', emoji: '❌' },
+                      { id: 'rain', label: 'Rain', emoji: '🌧️' },
+                      { id: 'snow', label: 'Snow', emoji: '❄️' },
+                      { id: 'leaves', label: 'Leaves', emoji: '🍂' }
+                    ].map(eff => (
+                      <button
+                        type="button"
+                        key={eff.id}
+                        onClick={() => setActiveEffect(eff.id as any)}
+                        className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border text-[9px] font-semibold cursor-pointer transition-all ${
+                          activeEffect === eff.id
+                            ? 'ring-2 ring-primary border-primary bg-primary/5'
+                            : 'border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                        }`}
+                      >
+                        <span className="text-sm">{eff.emoji}</span>
+                        <span>{eff.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {user && (
               <form 
                 action={signOutAction} 
@@ -163,6 +377,7 @@ export function PublicTabsContainer({
             dbError={postsError}
             triggerAddOpen={addPostTrigger}
             onCloseAddTrigger={() => setAddPostTrigger(false)}
+            user={user}
           />
         )}
 

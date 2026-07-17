@@ -29,34 +29,11 @@ export async function GET(request: Request) {
       if (!userError && user) {
         console.log(`User Authenticated: ${user.email}`)
 
-        // Verify if user email exists in moderators
-        const { data: moderator } = await supabase
-          .from('moderators')
-          .select('email')
-          .eq('email', user.email)
-          .single()
-
-        // Verify if user email exists in officers (with safety catch)
-        let isOfficer = false
-        try {
-          const { data: officer, error: offError } = await supabase
-            .from('officers')
-            .select('email')
-            .eq('email', user.email)
-            .single()
-          
-          if (!offError && officer) {
-            isOfficer = true
-          }
-        } catch (err) {
-          console.warn('Officers table query failed:', err)
-        }
-
-        // If user is neither a moderator nor an officer, deny access
-        if (!moderator && !isOfficer) {
-          console.warn(`Unauthorized login attempt (not whitelisted): ${user.email}`)
+        // If user email does not end with @kld.edu.ph, sign out and reject
+        if (!user.email || !user.email.endsWith('@kld.edu.ph')) {
+          console.warn(`Blocked login from unauthorized domain: ${user.email}`)
           await supabase.auth.signOut()
-          return NextResponse.redirect(`${origin}/login?error=Unauthorized`)
+          return NextResponse.redirect(`${origin}/login?error=InvalidDomain`)
         }
       }
 

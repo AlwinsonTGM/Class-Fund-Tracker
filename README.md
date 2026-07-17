@@ -23,7 +23,13 @@ A modern, responsive, and secure web application designed to track class fund co
 - **iTunes Song Attachments**: Search any track and embed an iTunes 30-second preview player (complete with album art, play/pause controls, and interactive progress bars).
 - **Emoji Reactions**: Discord-style reaction counters. Click existing reactions to increment them, or add any of the 24 curated emojis from the palette picker.
 
-### ⚡ 4. Custom UX & Instant Feedback Loader (v1.3)
+### 🔐 4. KLD-Restricted Public Sign-Up & Spam-Free Wall Reactions (v1.4)
+- **School-Restricted Sign-Up**: Anyone with a `@kld.edu.ph` email domain can register, while others are strictly rejected.
+- **Password Recovery & Verification**: Built a secure forgot password/reset link flow directing users to a custom password reset form.
+- **Officer Dashboard Blocker**: Strict backend protection redirects non-whitelisted users away from `/officer-dashboard` to the homepage.
+- **Anti-Spam & Authenticated Wall Reactions**: Users must be logged in to react, and clicking reactions toggles the count (prevents infinite spamming), highlighting active clicks.
+
+### ⚡ 5. Custom UX & Instant Feedback Loader (v1.3)
 - **Sleek Warning Modals**: Replaced raw browser `confirm()` popups with styled warning cards (fade-in/scale-up) for log deletions and task deletions.
 - **Top Rolling Loader**: A rolling progress indicator runs along the top of the tasks dashboard during database transactions.
 - **Card Loading Backdrops**: Tasks being deleted or updated display clear `Deleting...` or `Updating...` overlays immediately, removing transaction lag confusion.

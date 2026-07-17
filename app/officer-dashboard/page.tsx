@@ -13,6 +13,31 @@ export default async function OfficerDashboardPage() {
     redirect('/login')
   }
 
+  // 1b. Enforce Whitelist Check
+  const { data: moderator } = await supabase
+    .from('moderators')
+    .select('email')
+    .eq('email', user.email)
+    .maybeSingle()
+
+  let isOfficer = false
+  try {
+    const { data: officer, error: offError } = await supabase
+      .from('officers')
+      .select('email')
+      .eq('email', user.email)
+      .maybeSingle()
+    if (!offError && officer) {
+      isOfficer = true
+    }
+  } catch (err) {
+    console.warn('Officers table query failed inside dashboard page:', err)
+  }
+
+  if (!moderator && !isOfficer) {
+    redirect('/')
+  }
+
   // 2. Fetch Data (Students, Payments, Expenses, Weeks, Moderators, Audit Logs, Tasks, Freedom Posts)
   const { data: dbStudents, error: studentsError } = await supabase
     .from('students')
