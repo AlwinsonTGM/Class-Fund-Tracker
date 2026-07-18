@@ -35,6 +35,13 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Card Loading Backdrops**: Tasks being deleted or updated display clear `Deleting...` or `Updating...` overlays immediately, removing transaction lag confusion.
 - **Sign-Out Feedback**: Sign-out buttons instantly render a spinning loader and display `Signing out...` on click.
 
+### 📚 6. Dynamic Study Hub & Custom Class Files (v1.5)
+- **Official Class Documents (Customizable)**: Officers can create and publish PDF guidelines, Markdown manuals, or write Markdown directly in the dashboard using an editor.
+- **Draggable Splitter Bar**: Desktop users can hover and drag the vertical dividing line to expand or contract the Approved Materials list width dynamically.
+- **Moderated Study Reviewers**: Students submit study material links (lesson, week, or task category) that officers review and approve/reject through a real-time moderator queue.
+- **Direct Blob Downloads**: Custom-written guides can be downloaded on-the-fly as `.md` text files from the browser.
+- **Dogie Falling Easter Egg**: Tapping the settings gear icon 10 times triggers falling animated GIFs floating gently behind all content panels.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -162,6 +169,25 @@ create table freedom_posts (
   author_name text default 'Anonymous' not null,
   color text default 'bg-yellow-100' not null,
   song jsonb,
+  created_at timestamp with time zone default now() not null
+);
+```
+
+### 11. `study_materials`
+```sql
+create table study_materials (
+  id bigint primary key generated always as identity,
+  title text not null,
+  description text,
+  link text not null,
+  category text default 'Quiz' not null,
+  study_type text default 'lesson' not null,
+  course_id bigint references courses(id) on delete set null,
+  week_number integer,
+  lesson_name text,
+  task_name text,
+  submitted_by text default 'Anonymous',
+  approved boolean default false not null,
   created_at timestamp with time zone default now() not null
 );
 ```

@@ -597,6 +597,118 @@ export async function deletePostAction(id: number) {
   }
 }
 
+// ─── Study Materials Server Actions ───
+
+export interface AddStudyMaterialInput {
+  title: string
+  description?: string
+  link: string
+  category: string
+  study_type: string
+  course_id: number | null
+  week_number?: number | null
+  lesson_name?: string | null
+  task_name?: string | null
+  submitted_by?: string
+}
+
+export async function addStudyMaterialAction(input: AddStudyMaterialInput) {
+  try {
+    const supabase = await createClient()
+
+    // Public action, anyone can submit. We force approved to false.
+    const { error: insertError } = await supabase
+      .from('study_materials')
+      .insert({
+        title: input.title,
+        description: input.description || null,
+        link: input.link,
+        category: input.category,
+        study_type: input.study_type,
+        course_id: input.course_id,
+        week_number: input.week_number || null,
+        lesson_name: input.lesson_name || null,
+        task_name: input.task_name || null,
+        submitted_by: input.submitted_by?.trim() || 'Anonymous',
+        approved: false // always require moderator approval
+      })
+
+    if (insertError) throw insertError
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error adding study material:', err)
+    return { success: false, error: err.message || 'Failed to submit study material.' }
+  }
+}
+
+export async function approveStudyMaterialAction(id: number) {
+  try {
+    // Authenticate and verify officer/moderator whitelist
+    const { supabase, user } = await verifyOfficerStatus()
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Approved study material ID ${id}.`
+
+    // Update approved state to true
+    const { error: updateError } = await supabase
+      .from('study_materials')
+      .update({ approved: true })
+      .eq('id', id)
+
+    if (updateError) throw updateError
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log study material approval:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error approving study material:', err)
+    return { success: false, error: err.message || 'Failed to approve study material.' }
+  }
+}
+
+export async function deleteStudyMaterialAction(id: number) {
+  try {
+    // Authenticate and verify officer/moderator whitelist
+    const { supabase, user } = await verifyOfficerStatus()
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Deleted study material ID ${id}.`
+
+    // Delete item
+    const { error: deleteError } = await supabase
+      .from('study_materials')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) throw deleteError
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log study material deletion:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error deleting study material:', err)
+    return { success: false, error: err.message || 'Failed to delete study material.' }
+  }
+}
+
 
 
 

@@ -5,8 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-// To add a new patch, increment CURRENT_VERSION and add a new entry at the top.
-const CURRENT_VERSION = '1.4'
+const CURRENT_VERSION = '1.5'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -18,6 +17,24 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.5',
+    date: 'July 18, 2026',
+    title: 'Customizable Study Hub & Easter Eggs',
+    emoji: '🌧️',
+    changes: [
+      { type: 'new', text: 'Custom Class Files (Officers Only) — officers can now add PDF links or write Markdown files directly within the UI, stored securely in local storage.' },
+      { type: 'new', text: 'Draggable Reviewer Panels — desktop users can now click and drag the splitter bar to dynamically resize the Approved Materials list width.' },
+      { type: 'new', text: 'Dogie Falling Easter Egg — secret interaction unlocked by tapping the settings gear 10 times, causing animated gifs to fall slowly behind everything.' },
+      { type: 'new', text: 'Direct Blob Downloads — custom-written Markdown guides can be downloaded on-the-fly as structured .md files in the browser.' },
+      { type: 'improve', text: 'Standardized 5-Button Bottom Nav — replaced mobile float quick menu with standard aligned tabs matching the active indicator slide.' },
+      { type: 'improve', text: 'Expanded Document Viewport — increased preview frame size heights to 680px for documents and 500px for reviewers, optimizing readability.' },
+      { type: 'improve', text: 'Clean Settings Response — settings dropdown click-outside checks now ignore clicks targeting the trigger gear, resolving instant close bugs.' },
+      { type: 'improve', text: 'Physics Repulsion — added repulsion forces in the Freedom Wall note physics to prevent notes from stacking directly on top of each other.' },
+      { type: 'improve', text: 'Canvas Weather ResizeObserver — replaced window resize listeners with element-bound ResizeObservers for distortion-free mobile displays.' },
+      { type: 'fix', text: 'Redundant Code & File Cleanup — merged Next configurations, deleted boilerplate SVGs, unused placeholder assets, and pnpm lock files.' }
+    ],
+  },
   {
     version: '1.4',
     date: 'July 17, 2026',

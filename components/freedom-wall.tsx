@@ -510,6 +510,25 @@ export function FreedomWall({
     }
   }, [])
 
+  // Scroll locking on body while dragging or utilizing sandbox tools to improve mobile UX
+  useEffect(() => {
+    if (typeof window !== 'undefined' && document.body) {
+      if (activeDragId !== null || isDraggingTool || activeTool !== null) {
+        document.body.style.overflow = 'hidden'
+        document.body.style.touchAction = 'none'
+      } else {
+        document.body.style.overflow = ''
+        document.body.style.touchAction = ''
+      }
+    }
+    return () => {
+      if (typeof window !== 'undefined' && document.body) {
+        document.body.style.overflow = ''
+        document.body.style.touchAction = ''
+      }
+    }
+  }, [activeDragId, isDraggingTool, activeTool])
+
 
 
   // Sync initial posts — re-attach song data from localStorage after server re-sync
@@ -983,6 +1002,47 @@ export function FreedomWall({
         hasMotion = true
       }
 
+      // Mutual Repulsion (Separation force) to keep notes spaced out and prevent them from clumping/merging
+      const repulsionRadius = 14.0 // distance in % where notes start repelling each other
+      const repulsionStrength = 0.35 // strength of the repulsion push
+      
+      for (let i = 0; i < posts.length; i++) {
+        const postA = posts[i]
+        const posA = updatedPos[postA.id] || { x: 30, y: 30 }
+        
+        for (let j = i + 1; j < posts.length; j++) {
+          const postB = posts[j]
+          const posB = updatedPos[postB.id] || { x: 30, y: 30 }
+          
+          const dx = posB.x - posA.x
+          const dy = posB.y - posA.y
+          const dist = Math.hypot(dx, dy) || 0.1
+          
+          if (dist < repulsionRadius) {
+            // Push force is stronger when they are closer
+            const force = (repulsionRadius - dist) * repulsionStrength
+            const forceX = (dx / dist) * force
+            const forceY = (dy / dist) * force
+            
+            const velA = updatedVel[postA.id] || { vx: 0, vy: 0 }
+            const velB = updatedVel[postB.id] || { vx: 0, vy: 0 }
+            
+            // Only push them if they are not the active drag note (so dragging feels responsive)
+            if (activeDragId !== postA.id) {
+              velA.vx -= forceX
+              velA.vy -= forceY
+            }
+            if (activeDragId !== postB.id) {
+              velB.vx += forceX
+              velB.vy += forceY
+            }
+            
+            updatedVel[postA.id] = velA
+            updatedVel[postB.id] = velB
+          }
+        }
+      }
+
       posts.forEach(post => {
         let pos = updatedPos[post.id] || { x: 30, y: 30 }
         let vel = updatedVel[post.id] || { vx: 0, vy: 0 }
@@ -1437,6 +1497,8 @@ export function FreedomWall({
           onClick={handleCanvasClick}
           className={`relative w-full h-[650px] bg-sky-200 dark:bg-slate-950 rounded-3xl overflow-hidden border border-border/60 shadow-inner select-none cursor-grab active:cursor-grabbing bg-cover bg-center transition-all duration-1000 bg-[url('/sky/daytime.png')] dark:bg-[url('/sky/nighttime.png')] ${
             shakeCanvas ? 'animate-[shake_0.5s_ease-in-out_infinite]' : ''
+          } ${
+            (activeDragId !== null || activeTool !== null || isDraggingTool) ? 'touch-none' : ''
           }`}
           style={
             activeBackground !== 'sky'

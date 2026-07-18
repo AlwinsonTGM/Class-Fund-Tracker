@@ -9,8 +9,9 @@ import { TasksSection, Task } from '@/components/tasks-section'
 import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { InlineLogin } from '@/components/inline-login'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
-import { Home, ClipboardList, MessageSquare, Lock, Settings } from 'lucide-react'
+import { Home, ClipboardList, MessageSquare, Lock, Settings, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { StudyHub } from '@/components/study-hub'
 import { signOutAction } from '@/app/login/actions'
 
 interface WeatherParticle {
@@ -27,6 +28,28 @@ interface WeatherParticle {
   emoji?: string
 }
 
+interface FallingDogie {
+  src: string
+  left: number
+  top: number
+  speedY: number
+  width: number
+  rotation: number
+  rotationSpeed: number
+}
+
+const DOGIE_GIFS = [
+  '/akosidogie/akosidogie.gif',
+  '/akosidogie/batute-akosidogie.gif',
+  '/akosidogie/dogietankbuild.gif',
+  '/akosidogie/dsasadas.gif',
+  '/akosidogie/meme-excitement.gif',
+  '/akosidogie/puwede.gif',
+  '/akosidogie/shelo-akosidogie.gif',
+  '/akosidogie/shh-akosidogie.gif'
+]
+
+
 interface PublicTabsContainerProps {
   students: any[]
   payments: any[]
@@ -36,8 +59,10 @@ interface PublicTabsContainerProps {
   tasks: Task[]
   posts: FreedomPost[]
   courses: any[]
+  materials: any[]
   postsError?: boolean
   tasksError?: boolean
+  materialsError?: boolean
   user: any
 }
 
@@ -50,8 +75,10 @@ export function PublicTabsContainer({
   tasks,
   posts,
   courses,
+  materials,
   tasksError = false,
   postsError = false,
+  materialsError = false,
   user
 }: PublicTabsContainerProps) {
   const [activeTab, setActiveTab] = useState('home')
@@ -65,8 +92,80 @@ export function PublicTabsContainer({
   const particlesRef = useRef<WeatherParticle[]>([])
   const [mounted, setMounted] = useState(false)
 
+  // Dogie Easter Egg states
+  const [eggClicks, setEggClicks] = useState(0)
+  const [dogieActive, setDogieActive] = useState(false)
+  const [dogies, setDogies] = useState<FallingDogie[]>([])
+
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // Dogie animation loop
+  useEffect(() => {
+    if (!dogieActive) return
+
+    const count = 12
+    const initial: FallingDogie[] = Array.from({ length: count }).map(() => ({
+      src: DOGIE_GIFS[Math.floor(Math.random() * DOGIE_GIFS.length)],
+      left: Math.random() * 90,
+      top: Math.random() * -800 - 150,
+      speedY: Math.random() * 0.4 + 0.25, // very slow falling
+      width: Math.random() * 60 + 50,
+      rotation: Math.random() * 360,
+      rotationSpeed: Math.random() * 0.3 - 0.15
+    }))
+    setDogies(initial)
+
+    let active = true
+    let lastTime = performance.now()
+
+    const update = (time: number) => {
+      if (!active) return
+      const delta = time - lastTime
+      lastTime = time
+
+      setDogies(prev => 
+        prev.map(d => {
+          let newTop = d.top + d.speedY * (delta * 0.1)
+          let newRotation = d.rotation + d.rotationSpeed * (delta * 0.1)
+          
+          if (newTop > (typeof window !== 'undefined' ? window.innerHeight : 800) + 150) {
+            newTop = -150
+            return {
+              ...d,
+              left: Math.random() * 90,
+              top: -150,
+              speedY: Math.random() * 0.4 + 0.25,
+              width: Math.random() * 60 + 50,
+              rotation: Math.random() * 360,
+              rotationSpeed: Math.random() * 0.3 - 0.15
+            }
+          }
+          return { ...d, top: newTop, rotation: newRotation }
+        })
+      )
+
+      requestAnimationFrame(update)
+    }
+
+    const animFrame = requestAnimationFrame(update)
+    return () => {
+      active = false
+      cancelAnimationFrame(animFrame)
+    }
+  }, [dogieActive])
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    function handleGlobalClick(event: MouseEvent) {
+      const target = event.target as HTMLElement
+      if (!target.closest('.weather-settings-trigger') && !target.closest('.weather-settings-dropdown')) {
+        setShowSettings(false)
+      }
+    }
+    document.addEventListener('click', handleGlobalClick)
+    return () => document.removeEventListener('click', handleGlobalClick)
   }, [])
 
 
@@ -88,14 +187,15 @@ export function PublicTabsContainer({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const resizeCanvas = () => {
-      if (canvas) {
-        canvas.width = window.innerWidth
-        canvas.height = window.innerHeight
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (canvas) {
+          canvas.width = entry.contentRect.width || canvas.clientWidth || window.innerWidth
+          canvas.height = entry.contentRect.height || canvas.clientHeight || window.innerHeight
+        }
       }
-    }
-    window.addEventListener('resize', resizeCanvas)
-    resizeCanvas()
+    })
+    resizeObserver.observe(canvas)
 
     const count = activeEffect === 'rain' ? 120 : 60
     const list: WeatherParticle[] = []
@@ -190,7 +290,7 @@ export function PublicTabsContainer({
     drawParticles()
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas)
+      resizeObserver.disconnect()
       cancelAnimationFrame(animationId)
     }
   }, [activeEffect, mounted])
@@ -220,6 +320,7 @@ export function PublicTabsContainer({
   const desktopTabs = [
     { id: 'home', label: 'Home', icon: <Home className="h-4 w-4" /> },
     { id: 'tasks', label: 'Tasks', icon: <ClipboardList className="h-4 w-4" /> },
+    { id: 'study', label: 'Study Hub', icon: <FileText className="h-4 w-4" /> },
     { id: 'freedom', label: 'Freedom Wall', icon: <MessageSquare className="h-4 w-4" /> },
     { id: 'portal', label: 'Portal', icon: <Lock className="h-4 w-4" /> }
   ]
@@ -231,6 +332,29 @@ export function PublicTabsContainer({
         ref={particleCanvasRef}
         className="fixed inset-0 w-full h-full pointer-events-none z-50"
       />
+
+      {/* Dogie Easter Egg Falling Container (rendered behind everything with z-[-10]) */}
+      {dogieActive && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-10]">
+          {dogies.map((dogie, i) => (
+            <img
+              key={i}
+              src={dogie.src}
+              style={{
+                position: 'absolute',
+                left: `${dogie.left}%`,
+                top: `${dogie.top}px`,
+                width: `${dogie.width}px`,
+                height: 'auto',
+                opacity: 0.16, // subtle watermark opacity
+                transform: `rotate(${dogie.rotation}deg)`,
+                pointerEvents: 'none',
+              }}
+              alt="easter egg"
+            />
+          ))}
+        </div>
+      )}
 
       {/* Auto-popup patch notes on first visit */}
       <PatchNotesModal />
@@ -251,8 +375,15 @@ export function PublicTabsContainer({
               onClick={(e) => {
                 e.stopPropagation()
                 setShowSettings(!showSettings)
+                setEggClicks(prev => {
+                  const next = prev + 1
+                  if (next >= 10 && !dogieActive) {
+                    setDogieActive(true)
+                  }
+                  return next
+                })
               }}
-              className="bg-card text-foreground border border-border hover:bg-muted size-8 rounded-full flex items-center justify-center shadow-sm cursor-pointer transition-all press-spring"
+              className="weather-settings-trigger bg-card text-foreground border border-border hover:bg-muted size-8 rounded-full flex items-center justify-center shadow-sm cursor-pointer transition-all press-spring"
               title="Page Effects & Background Settings"
             >
               <Settings className="h-4 w-4" />
@@ -261,7 +392,7 @@ export function PublicTabsContainer({
             {/* Page Effects Settings Modal/Dropdown */}
             {showSettings && (
               <div 
-                className="absolute top-10 right-0 bg-white/95 dark:bg-zinc-900/95 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xl dark:shadow-2xl z-50 backdrop-blur-md text-[11px] font-sans w-56 flex flex-col gap-3.5 anim-fade-in pointer-events-auto"
+                className="weather-settings-dropdown absolute top-10 right-0 bg-white/95 dark:bg-zinc-900/95 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xl dark:shadow-2xl z-50 backdrop-blur-md text-[11px] font-sans w-56 flex flex-col gap-3.5 anim-fade-in pointer-events-auto"
                 onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-1.5">
@@ -368,6 +499,17 @@ export function PublicTabsContainer({
 
         {activeTab === 'tasks' && (
           <TasksSection initialTasks={tasks} isOfficer={false} courses={courses} dbError={tasksError} user={user} />
+        )}
+
+        {activeTab === 'study' && (
+          <StudyHub
+            initialMaterials={materials}
+            courses={courses}
+            weeks={weeks}
+            tasks={tasks}
+            dbError={materialsError}
+            user={user}
+          />
         )}
 
         {activeTab === 'freedom' && (
