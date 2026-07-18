@@ -1924,7 +1924,7 @@ export function FreedomWall({
                           {/* Vintage Postcard Details */}
                           <div className="mt-4 border-t border-violet-300 dark:border-violet-700/60 pt-2 flex flex-col gap-1.5 opacity-80 select-none">
                             <div className="text-[8px] uppercase tracking-wider font-semibold opacity-60">To Address:</div>
-                            <div className="border-b border-violet-300 dark:border-violet-700/60 pb-1 text-[10px] font-mono italic truncate">BSIS Section Hub</div>
+                            <div className="border-b border-violet-300 dark:border-violet-700/60 pb-1 text-[10px] font-mono italic truncate">BSIS 201 Section Hub</div>
                             <div className="border-b border-violet-300 dark:border-violet-700/60 pb-1 text-[10px] font-mono italic truncate">Room: transparency-wall</div>
                           </div>
                         </div>

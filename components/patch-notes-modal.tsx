@@ -200,7 +200,7 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
               <ClipboardList className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-bold text-foreground tracking-tight">Patch Notes</h2>
             </div>
-            <p className="text-xs text-muted-foreground">Latest changes & improvements to BSIS Section Hub</p>
+            <p className="text-xs text-muted-foreground">Latest changes & improvements to BSIS 201 Section Hub</p>
           </div>
 
           {/* Latest version badge (with pr-8 padding to prevent overlap with the close button) */}
@@ -273,7 +273,7 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
 
         {/* Footer */}
         <div className="shrink-0 px-6 py-4 border-t border-border/60 flex items-center justify-between bg-muted/30">
-          <p className="text-[10px] text-muted-foreground">BSIS Section Hub · v{CURRENT_VERSION}</p>
+          <p className="text-[10px] text-muted-foreground">BSIS 201 Section Hub · v{CURRENT_VERSION}</p>
           <button
             onClick={handleClose}
             className="px-5 py-1.5 text-xs font-semibold bg-foreground text-background rounded-full hover:opacity-90 transition-opacity cursor-pointer press-spring flex items-center gap-1"
