@@ -6,8 +6,8 @@ import './globals.css'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Class Fund Tracker',
-  description: 'Track class fund contributions and student payment status at a glance.',
+  title: 'BSIS Section Hub',
+  description: 'Academic resources, tasks, freedom wall, and class fund tracker for BSIS 1st Semester.',
   generator: 'v0.app',
 }
 

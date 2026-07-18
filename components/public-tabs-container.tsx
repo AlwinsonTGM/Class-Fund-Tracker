@@ -363,9 +363,9 @@ export function PublicTabsContainer({
       <header className="flex flex-col gap-2 mb-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-primary">School Year 2026–2027</p>
+            <p className="text-sm font-semibold text-primary">Bachelor of Science in Information Systems • 1st Sem</p>
             <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Class Fund Tracker
+              BSIS Section Hub
             </h1>
           </div>
           <div className="flex items-center gap-2 relative">
