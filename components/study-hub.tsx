@@ -85,6 +85,7 @@ export function getEmbeddableUrl(url: string): { embedUrl: string | null; isEmbe
     
     // Google Drive Sharing Links
     if (cleanUrl.includes('drive.google.com')) {
+      // Handle /file/d/FILE_ID format
       const match = cleanUrl.match(/\/file\/d\/([^/]+)/)
       if (match && match[1]) {
         return {
@@ -93,12 +94,31 @@ export function getEmbeddableUrl(url: string): { embedUrl: string | null; isEmbe
           type: 'Google Drive'
         }
       }
+      // Handle open?id=FILE_ID format
+      const matchOpenId = cleanUrl.match(/[?&]open?id=([^&]+)/)
+      if (matchOpenId && matchOpenId[1]) {
+        return {
+          embedUrl: `https://drive.google.com/file/d/${matchOpenId[1]}/preview`,
+          isEmbeddable: true,
+          type: 'Google Drive'
+        }
+      }
+      // Handle id=FILE_ID format (for other query parameter styles)
       const matchId = cleanUrl.match(/[?&]id=([^&]+)/)
       if (matchId && matchId[1]) {
         return {
           embedUrl: `https://drive.google.com/file/d/${matchId[1]}/preview`,
           isEmbeddable: true,
           type: 'Google Drive'
+        }
+      }
+      // Handle /folders/FOLDER_ID format
+      const matchFolder = cleanUrl.match(/\/folders\/([^/?]+)/)
+      if (matchFolder && matchFolder[1]) {
+        return {
+          embedUrl: `https://drive.google.com/embeddedfolderview?id=${matchFolder[1]}#grid`,
+          isEmbeddable: true,
+          type: 'Google Drive Folder'
         }
       }
     }
@@ -767,6 +787,8 @@ export function StudyHub({
                     src={getEmbeddableUrl(selectedLocalDoc.path).embedUrl || selectedLocalDoc.path}
                     className="w-full h-full border-0 absolute inset-0 z-10"
                     title={selectedLocalDoc.title}
+                    allow="autoplay; fullscreen"
+                    allowFullScreen
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-0 bg-muted/5 gap-2">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -967,7 +989,8 @@ export function StudyHub({
                                 src={embedInfo.embedUrl}
                                 className="w-full h-full border-0 absolute inset-0 z-10"
                                 title={selectedMaterial.title}
-                                allow="autoplay"
+                                allow="autoplay; fullscreen"
+                                allowFullScreen
                               />
                               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-0 bg-muted/5 gap-2">
                                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
