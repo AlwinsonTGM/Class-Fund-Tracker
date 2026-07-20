@@ -789,6 +789,7 @@ export function StudyHub({
                     title={selectedLocalDoc.title}
                     allow="autoplay; fullscreen"
                     allowFullScreen
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-0 bg-muted/5 gap-2">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -991,6 +992,7 @@ export function StudyHub({
                                 title={selectedMaterial.title}
                                 allow="autoplay; fullscreen"
                                 allowFullScreen
+                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
                               />
                               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-0 bg-muted/5 gap-2">
                                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
