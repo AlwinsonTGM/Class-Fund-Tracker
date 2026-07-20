@@ -67,13 +67,13 @@ interface StudyHubProps {
 }
 
 interface ClassDocument {
-  id: number
+  id: string
   created_at: string
   title: string
-  document_type: 'md' | 'pdf'
-  content?: string
-  link?: string
-  submitted_by?: string
+  description?: string
+  file_url?: string
+  file_type?: string
+  uploaded_by?: string
 }
 
 // ─── Direct URL Embed Parser ──────────────────────────────────────────────────
@@ -301,13 +301,13 @@ export function StudyHub({
       const dbDocs = initialClassDocs.map(doc => ({
         id: `db_${doc.id}`,
         title: doc.title,
-        type: doc.document_type,
-        path: doc.link || '',
-        content: doc.content || undefined,
+        type: doc.file_type || 'md',
+        path: doc.file_url || '',
+        content: doc.description || undefined,
         isDefault: false,
         isDb: true,
         dbId: doc.id,
-        submittedBy: doc.submitted_by
+        uploadedBy: doc.uploaded_by
       }))
       setDocsList([...defaultDocs, ...dbDocs])
     } else {
@@ -333,17 +333,17 @@ export function StudyHub({
 
     setIsAddingDoc(true)
     
-    const isPdf = newDocType === 'pdf'
-    const linkValue = isPdf || newDocSource === 'link' ? newDocLink.trim() : undefined
-    const contentValue = !isPdf && newDocSource === 'write' ? newDocContent : undefined
+    // For now, we'll store the link as file_url and type as file_type
+    // The content is not used in the new schema
+    const fileUrl = newDocSource === 'link' ? newDocLink.trim() : undefined
+    const fileType = newDocType
 
     // Call server action to save to database
     const result = await addClassDocumentAction({
       title: newDocTitle.trim(),
-      document_type: newDocType,
-      content: contentValue,
-      link: linkValue,
-      submitted_by: user?.email || 'Anonymous'
+      description: newDocSource === 'write' ? newDocContent : undefined,
+      file_url: fileUrl,
+      file_type: fileType
     })
 
     if (result.success) {

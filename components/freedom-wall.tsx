@@ -531,7 +531,7 @@ export function FreedomWall({
 
 
 
-  // Sync initial posts — re-attach song data from localStorage after server re-sync
+  // Sync initial posts — song data now comes from database
   useEffect(() => {
     if (dbError) {
       setFallbackMode(true)
@@ -545,29 +545,10 @@ export function FreedomWall({
       }
     } else {
       setFallbackMode(false)
-      const songMap = loadSongMap()
-
-      // Check if there's a pending song to assign to the newest server post
-      try {
-        const pendingRaw = localStorage.getItem(PENDING_SONG_KEY)
-        if (pendingRaw) {
-          const pending: { content: string; author: string; song: SongPreview } = JSON.parse(pendingRaw)
-          // Find the server post that matches the pending content + author
-          const matched = initialPosts.find(
-            p => p.content === pending.content && p.author_name === pending.author
-          )
-          if (matched) {
-            songMap[matched.id] = pending.song
-            saveSongMap(songMap)
-            localStorage.removeItem(PENDING_SONG_KEY)
-          }
-        }
-      } catch { /* ignore */ }
-
-      // Attach songs from song map to posts
+      // Songs are now stored in the database, map song_data to song property
       const postsWithSongs = initialPosts.map(p => ({
         ...p,
-        song: songMap[p.id] || null
+        song: p.song_data || null
       }))
       setPosts(postsWithSongs)
     }
@@ -651,16 +632,12 @@ export function FreedomWall({
       }
 
       try {
-        // Save pending song BEFORE the server call so the sync useEffect can match it
-        if (selectedSong) {
-          localStorage.setItem(PENDING_SONG_KEY, JSON.stringify({
-            content: content.trim(),
-            author: name,
-            song: selectedSong
-          }))
-        }
-
-        const res = await addPostAction(content.trim(), name, selectedColor)
+        const res = await addPostAction({
+          content: content.trim(),
+          author_name: name,
+          color: selectedColor,
+          song_data: selectedSong || null
+        })
         if (res.success) {
           // Optimistically add to local state with song; server re-sync will re-attach properly
           const newPost: FreedomPost = {

@@ -541,7 +541,19 @@ export async function deleteTaskAction(id: number, title: string) {
 
 // ─── Freedom Wall Server Actions ───
 
-export async function addPostAction(content: string, authorName: string, color: string) {
+export interface AddPostInput {
+  content: string
+  author_name: string
+  color: string
+  song_data?: {
+    title: string
+    artist: string
+    artworkUrl: string
+    previewUrl: string
+  } | null
+}
+
+export async function addPostAction(input: AddPostInput) {
   try {
     const supabase = await createClient()
 
@@ -549,9 +561,10 @@ export async function addPostAction(content: string, authorName: string, color: 
     const { error: postError } = await supabase
       .from('freedom_posts')
       .insert({
-        content,
-        author_name: authorName.trim() || 'Anonymous',
-        color: color || 'yellow'
+        content: input.content,
+        author_name: input.author_name.trim() || 'Anonymous',
+        color: input.color || 'yellow',
+        song_data: input.song_data || null
       })
     if (postError) throw postError
 
@@ -713,10 +726,9 @@ export async function deleteStudyMaterialAction(id: number) {
 
 export interface AddClassDocumentInput {
   title: string
-  document_type: 'md' | 'pdf'
-  content?: string
-  link?: string
-  submitted_by?: string
+  description?: string
+  file_url?: string
+  file_type?: string
 }
 
 export async function addClassDocumentAction(input: AddClassDocumentInput) {
@@ -731,10 +743,10 @@ export async function addClassDocumentAction(input: AddClassDocumentInput) {
       .from('class_documents')
       .insert({
         title: input.title,
-        document_type: input.document_type,
-        content: input.content || null,
-        link: input.link || null,
-        submitted_by: input.submitted_by?.trim() || officerEmail
+        description: input.description || null,
+        file_url: input.file_url || null,
+        file_type: input.file_type || null,
+        uploaded_by: user.id
       })
 
     if (insertError) throw insertError
@@ -756,7 +768,7 @@ export async function addClassDocumentAction(input: AddClassDocumentInput) {
   }
 }
 
-export async function deleteClassDocumentAction(id: number) {
+export async function deleteClassDocumentAction(id: string) {
   try {
     // Authenticate and verify officer/moderator whitelist
     const { supabase, user } = await verifyOfficerStatus()
