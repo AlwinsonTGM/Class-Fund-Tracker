@@ -87,6 +87,11 @@ export default async function OfficerDashboardPage() {
     .select('*')
     .order('created_at', { ascending: false })
 
+  const { data: dbClassDocs, error: classDocsError } = await supabase
+    .from('class_documents')
+    .select('*')
+    .order('created_at', { ascending: false })
+
   if (studentsError) console.error('Error fetching students:', studentsError.message)
   if (paymentsError) console.error('Error fetching payments:', paymentsError.message)
   if (expensesError) console.error('Error fetching expenses:', expensesError.message)
@@ -97,6 +102,7 @@ export default async function OfficerDashboardPage() {
   if (postsError) console.error('Error fetching freedom posts:', postsError.message)
   if (coursesError) console.error('Error fetching courses:', coursesError.message)
   if (materialsError) console.error('Error fetching study materials:', materialsError.message)
+  if (classDocsError) console.error('Error fetching class documents:', classDocsError.message)
 
   const studentsList = dbStudents || []
   const paymentsList = dbPayments || []
@@ -107,6 +113,7 @@ export default async function OfficerDashboardPage() {
   const postsList = dbPosts || []
   const coursesList = dbCourses || []
   const materialsList = dbMaterials || []
+  const classDocsList = dbClassDocs || []
 
   // Perform in-memory join to bypass Supabase's relation schema cache delay
   const tasksList = (dbTasks || []).map(task => ({
@@ -130,6 +137,7 @@ export default async function OfficerDashboardPage() {
           posts={postsList}
           courses={coursesList}
           materials={materialsList}
+          classDocs={classDocsList}
           tasksError={!!tasksError}
           postsError={!!postsError}
           materialsError={!!materialsError}

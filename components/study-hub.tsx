@@ -20,7 +20,9 @@ import {
 import { 
   addStudyMaterialAction, 
   approveStudyMaterialAction, 
-  deleteStudyMaterialAction 
+  deleteStudyMaterialAction,
+  addClassDocumentAction,
+  deleteClassDocumentAction
 } from '@/app/officer-dashboard/actions'
 
 interface SongPreview {
@@ -61,6 +63,17 @@ interface StudyHubProps {
   tasks: Task[]
   dbError?: boolean
   user: any
+  initialClassDocs?: ClassDocument[]
+}
+
+interface ClassDocument {
+  id: number
+  created_at: string
+  title: string
+  document_type: 'md' | 'pdf'
+  content?: string
+  link?: string
+  submitted_by?: string
 }
 
 // ─── Direct URL Embed Parser ──────────────────────────────────────────────────
@@ -260,7 +273,8 @@ export function StudyHub({
   weeks,
   tasks,
   dbError = false,
-  user
+  user,
+  initialClassDocs = []
 }: StudyHubProps) {
   const [activeSubTab, setActiveSubTab] = useState<'docs' | 'reviewers'>('docs')
   
@@ -281,62 +295,90 @@ export function StudyHub({
   const [newDocLink, setNewDocLink] = useState('')
   const [newDocContent, setNewDocContent] = useState('')
 
-  // Load custom documents from localStorage on mount
+  // Load class documents from database on mount
   useEffect(() => {
-    const localDocsStr = localStorage.getItem('cft_local_class_docs')
-    if (localDocsStr) {
-      try {
-        const parsed = JSON.parse(localDocsStr)
-        setDocsList([...defaultDocs, ...parsed])
-      } catch {
-        setDocsList(defaultDocs)
+    if (initialClassDocs && initialClassDocs.length > 0) {
+      const dbDocs = initialClassDocs.map(doc => ({
+        id: `db_${doc.id}`,
+        title: doc.title,
+        type: doc.document_type,
+        path: doc.link || '',
+        content: doc.content || undefined,
+        isDefault: false,
+        isDb: true,
+        dbId: doc.id,
+        submittedBy: doc.submitted_by
+      }))
+      setDocsList([...defaultDocs, ...dbDocs])
+    } else {
+      // Fallback to localStorage only if no DB docs provided
+      const localDocsStr = localStorage.getItem('cft_local_class_docs')
+      if (localDocsStr) {
+        try {
+          const parsed = JSON.parse(localDocsStr)
+          setDocsList([...defaultDocs, ...parsed])
+        } catch {
+          setDocsList(defaultDocs)
+        }
       }
     }
-  }, [])
+  }, [initialClassDocs])
 
   // Handlers to Add and Delete custom documents
-  const handleAddDoc = (e: React.FormEvent) => {
+  const [isAddingDoc, setIsAddingDoc] = useState(false)
+  
+  const handleAddDoc = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newDocTitle.trim()) return
 
+    setIsAddingDoc(true)
+    
     const isPdf = newDocType === 'pdf'
-    const pathValue = isPdf || newDocSource === 'link' ? newDocLink.trim() : ''
+    const linkValue = isPdf || newDocSource === 'link' ? newDocLink.trim() : undefined
     const contentValue = !isPdf && newDocSource === 'write' ? newDocContent : undefined
 
-    const newDoc = {
-      id: 'doc_' + Date.now(),
+    // Call server action to save to database
+    const result = await addClassDocumentAction({
       title: newDocTitle.trim(),
-      type: newDocType,
-      path: pathValue,
-      content: contentValue
-    }
+      document_type: newDocType,
+      content: contentValue,
+      link: linkValue,
+      submitted_by: user?.email || 'Anonymous'
+    })
 
-    const updatedCustom = [...docsList.filter(d => !d.isDefault), newDoc]
-    localStorage.setItem('cft_local_class_docs', JSON.stringify(updatedCustom))
-    const newList = [...defaultDocs, ...updatedCustom]
-    setDocsList(newList)
-    setSelectedLocalDoc(newDoc)
-    
-    // Reset form
-    setNewDocTitle('')
-    setNewDocLink('')
-    setNewDocContent('')
-    setNewDocType('md')
-    setNewDocSource('write')
-    setShowDocModal(false)
+    if (result.success) {
+      // Reload page to fetch updated documents from database
+      window.location.reload()
+    } else {
+      alert('Failed to add document: ' + (result.error || 'Unknown error'))
+      setIsAddingDoc(false)
+    }
   }
 
-  const handleDeleteDoc = (e: React.MouseEvent, docId: string) => {
+  const handleDeleteDoc = async (e: React.MouseEvent, docId: string) => {
     e.stopPropagation()
-    if (!window.confirm('Are you sure you want to delete this class document?')) return
-
-    const updatedCustom = docsList.filter(d => !d.isDefault && d.id !== docId)
-    localStorage.setItem('cft_local_class_docs', JSON.stringify(updatedCustom))
-    const newList = [...defaultDocs, ...updatedCustom]
-    setDocsList(newList)
-
-    if (selectedLocalDoc.id === docId) {
-      setSelectedLocalDoc(newList[0])
+    
+    // Check if it's a database document
+    const doc = docsList.find(d => d.id === docId)
+    if (doc?.isDb) {
+      if (!window.confirm('Are you sure you want to delete this class document?')) return
+      
+      const result = await deleteClassDocumentAction(doc.dbId)
+      if (result.success) {
+        window.location.reload()
+      } else {
+        alert('Failed to delete document: ' + (result.error || 'Unknown error'))
+      }
+    } else {
+      // Legacy localStorage document
+      if (!window.confirm('Are you sure you want to delete this class document?')) return
+      const updatedCustom = docsList.filter(d => !d.isDefault && d.id !== docId)
+      localStorage.setItem('cft_local_class_docs', JSON.stringify(updatedCustom))
+      const newList = [...defaultDocs, ...updatedCustom]
+      setDocsList(newList)
+      if (selectedLocalDoc.id === docId) {
+        setSelectedLocalDoc(newList[0])
+      }
     }
   }
 
