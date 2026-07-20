@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.5'
+const CURRENT_VERSION = '1.6-beta'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,19 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.6-beta',
+    date: 'July 20, 2026',
+    title: '☁️ Cloud Sync Beta — Real-Time Collaboration',
+    emoji: '🔄',
+    changes: [
+      { type: 'new', text: 'Database-Backed Class Documents — class files are now stored in Supabase instead of local storage, making them visible to all users across all devices.' },
+      { type: 'new', text: 'Cloud Song Attachments — song previews attached to Freedom Wall posts are now saved to the database (song_data column), ensuring everyone hears the same tracks.' },
+      { type: 'fix', text: 'Cross-Device Synchronization — eliminated the "local-only" bug where documents and songs added on your phone were invisible to other users.' },
+      { type: 'improve', text: 'Server Actions Integration — updated addPostAction and addClassDocumentAction to store data centrally in Supabase for secure, real-time collaboration.' },
+      { type: 'improve', text: 'Schema Updates — added song_data JSONB column to freedom_posts table and restructured class_documents with proper RLS policies.' },
+    ],
+  },
   {
     version: '1.5',
     date: 'July 18, 2026',

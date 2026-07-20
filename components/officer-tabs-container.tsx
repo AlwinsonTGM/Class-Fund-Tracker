@@ -62,6 +62,7 @@ interface OfficerTabsContainerProps {
   posts: FreedomPost[]
   courses: any[]
   materials: any[]
+  classDocs?: any[]
   tasksError?: boolean
   postsError?: boolean
   materialsError?: boolean
@@ -79,6 +80,7 @@ export function OfficerTabsContainer({
   posts,
   courses,
   materials,
+  classDocs = [],
   tasksError = false,
   postsError = false,
   materialsError = false,
@@ -558,6 +560,7 @@ export function OfficerTabsContainer({
             tasks={tasks}
             dbError={materialsError}
             user={user}
+            initialClassDocs={classDocs}
           />
         )}
 

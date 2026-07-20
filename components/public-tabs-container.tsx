@@ -60,6 +60,7 @@ interface PublicTabsContainerProps {
   posts: FreedomPost[]
   courses: any[]
   materials: any[]
+  classDocs?: any[]
   postsError?: boolean
   tasksError?: boolean
   materialsError?: boolean
@@ -76,6 +77,7 @@ export function PublicTabsContainer({
   posts,
   courses,
   materials,
+  classDocs = [],
   tasksError = false,
   postsError = false,
   materialsError = false,
@@ -509,6 +511,7 @@ export function PublicTabsContainer({
             tasks={tasks}
             dbError={materialsError}
             user={user}
+            initialClassDocs={classDocs}
           />
         )}
 

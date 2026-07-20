@@ -541,7 +541,19 @@ export async function deleteTaskAction(id: number, title: string) {
 
 // ─── Freedom Wall Server Actions ───
 
-export async function addPostAction(content: string, authorName: string, color: string) {
+export interface AddPostInput {
+  content: string
+  author_name: string
+  color: string
+  song_data?: {
+    title: string
+    artist: string
+    artworkUrl: string
+    previewUrl: string
+  } | null
+}
+
+export async function addPostAction(input: AddPostInput) {
   try {
     const supabase = await createClient()
 
@@ -549,9 +561,10 @@ export async function addPostAction(content: string, authorName: string, color: 
     const { error: postError } = await supabase
       .from('freedom_posts')
       .insert({
-        content,
-        author_name: authorName.trim() || 'Anonymous',
-        color: color || 'yellow'
+        content: input.content,
+        author_name: input.author_name.trim() || 'Anonymous',
+        color: input.color || 'yellow',
+        song_data: input.song_data || null
       })
     if (postError) throw postError
 
@@ -706,6 +719,84 @@ export async function deleteStudyMaterialAction(id: number) {
   } catch (err: any) {
     console.error('Error deleting study material:', err)
     return { success: false, error: err.message || 'Failed to delete study material.' }
+  }
+}
+
+// ─── Class Documents Server Actions ───
+
+export interface AddClassDocumentInput {
+  title: string
+  description?: string
+  file_url?: string
+  file_type?: string
+}
+
+export async function addClassDocumentAction(input: AddClassDocumentInput) {
+  try {
+    // Authenticate and verify officer/moderator whitelist
+    const { supabase, user } = await verifyOfficerStatus()
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Added class document "${input.title}".`
+
+    const { error: insertError } = await supabase
+      .from('class_documents')
+      .insert({
+        title: input.title,
+        description: input.description || null,
+        file_url: input.file_url || null,
+        file_type: input.file_type || null,
+        uploaded_by: user.id
+      })
+
+    if (insertError) throw insertError
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log class document addition:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error adding class document:', err)
+    return { success: false, error: err.message || 'Failed to add class document.' }
+  }
+}
+
+export async function deleteClassDocumentAction(id: string) {
+  try {
+    // Authenticate and verify officer/moderator whitelist
+    const { supabase, user } = await verifyOfficerStatus()
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Deleted class document ID ${id}.`
+
+    const { error: deleteError } = await supabase
+      .from('class_documents')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) throw deleteError
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log class document deletion:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error deleting class document:', err)
+    return { success: false, error: err.message || 'Failed to delete class document.' }
   }
 }
 
