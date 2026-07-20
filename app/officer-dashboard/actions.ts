@@ -709,6 +709,85 @@ export async function deleteStudyMaterialAction(id: number) {
   }
 }
 
+// ─── Class Documents Server Actions ───
+
+export interface AddClassDocumentInput {
+  title: string
+  document_type: 'md' | 'pdf'
+  content?: string
+  link?: string
+  submitted_by?: string
+}
+
+export async function addClassDocumentAction(input: AddClassDocumentInput) {
+  try {
+    // Authenticate and verify officer/moderator whitelist
+    const { supabase, user } = await verifyOfficerStatus()
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Added class document "${input.title}".`
+
+    const { error: insertError } = await supabase
+      .from('class_documents')
+      .insert({
+        title: input.title,
+        document_type: input.document_type,
+        content: input.content || null,
+        link: input.link || null,
+        submitted_by: input.submitted_by?.trim() || officerEmail
+      })
+
+    if (insertError) throw insertError
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log class document addition:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error adding class document:', err)
+    return { success: false, error: err.message || 'Failed to add class document.' }
+  }
+}
+
+export async function deleteClassDocumentAction(id: number) {
+  try {
+    // Authenticate and verify officer/moderator whitelist
+    const { supabase, user } = await verifyOfficerStatus()
+
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Deleted class document ID ${id}.`
+
+    const { error: deleteError } = await supabase
+      .from('class_documents')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) throw deleteError
+
+    // Insert audit log
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log class document deletion:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error deleting class document:', err)
+    return { success: false, error: err.message || 'Failed to delete class document.' }
+  }
+}
+
 
 
 
