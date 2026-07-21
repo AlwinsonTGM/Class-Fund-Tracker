@@ -735,7 +735,7 @@ export function StudyHub({
           </div>
 
           {/* Reader Panel */}
-          <div className="md:col-span-9 bg-card border border-border rounded-3xl p-5 shadow-sm relative min-h-[680px] flex flex-col">
+          <div className="md:col-span-9 bg-card border border-border rounded-3xl p-5 shadow-sm relative min-h-[500px] md:min-h-[680px] flex flex-col">
             <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-foreground">{selectedLocalDoc.title}</h3>
@@ -762,7 +762,7 @@ export function StudyHub({
 
             <div className="flex-1 flex flex-col justify-stretch">
               {selectedLocalDoc.type === 'pdf' ? (
-                <div className="relative w-full h-[680px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
+                <div className="relative w-full h-[500px] md:h-[680px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
                   <iframe
                     src={getEmbeddableUrl(selectedLocalDoc.path).embedUrl || selectedLocalDoc.path}
                     className="w-full h-full border-0 absolute inset-0 z-10"
@@ -780,7 +780,7 @@ export function StudyHub({
                 </div>
               ) : (
                 <div 
-                  className="prose dark:prose-invert max-w-none text-foreground text-sm selection:bg-primary/20 font-normal leading-relaxed pb-4 custom-scrollbar overflow-y-auto max-h-[680px] pr-2"
+                  className="prose dark:prose-invert max-w-none text-foreground text-sm selection:bg-primary/20 font-normal leading-relaxed pb-4 custom-scrollbar overflow-y-auto max-h-[500px] md:max-h-[680px] pr-2"
                   dangerouslySetInnerHTML={{ __html: mdContent }}
                 />
               )}
@@ -925,10 +925,10 @@ export function StudyHub({
             </div>
 
             {/* List and Projection Panel */}
-            <div className="lg:col-span-9 flex flex-col md:flex-row gap-4 items-stretch relative min-h-[680px] animate-fade-in">
+            <div className="lg:col-span-9 flex flex-col gap-4 items-stretch relative min-h-[500px] md:min-h-[680px] animate-fade-in">
               
               {/* Projection Frame Viewport (Middle Panel) */}
-              <div className="flex-1 bg-card border border-border rounded-3xl p-5 shadow-sm flex flex-col justify-between">
+              <div className="flex-1 bg-card border border-border rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-0">
                 {selectedMaterial ? (
                   (() => {
                     const embedInfo = getEmbeddableUrl(selectedMaterial.link)
@@ -960,9 +960,9 @@ export function StudyHub({
                         </div>
 
                         {/* Projection Container */}
-                        <div className="flex-1 flex flex-col min-h-[500px]">
+                        <div className="flex-1 flex flex-col min-h-[300px] md:min-h-[500px] w-full">
                           {embedInfo.isEmbeddable && embedInfo.embedUrl ? (
-                            <div className={`w-full h-full rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative ${isDragging ? 'pointer-events-none' : ''}`}>
+                            <div className={`w-full h-full rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative ${isDragging ? 'pointer-events-none' : ''}`} style={{ minHeight: '300px', maxHeight: '600px' }}>
                               <iframe
                                 src={embedInfo.embedUrl}
                                 className="w-full h-full border-0 absolute inset-0 z-10"
@@ -1002,7 +1002,7 @@ export function StudyHub({
                     )
                   })()
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border/60 rounded-2xl bg-muted/10 min-h-[400px]">
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border/60 rounded-2xl bg-muted/10 min-h-[300px] md:min-h-[400px]">
                     <FileText className="h-10 w-10 opacity-30 mb-2.5" />
                     <h3 className="text-xs font-extrabold text-foreground">Select a Reviewer</h3>
                     <p className="text-[10px] max-w-xs mt-1 leading-normal">
@@ -1024,7 +1024,7 @@ export function StudyHub({
               {/* Approved Materials List Panel (Right) */}
               <div 
                 style={{ width: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${rightPanelWidth}px` : 'auto' }}
-                className="flex flex-col gap-2 max-h-[680px] overflow-y-auto pr-1.5 custom-scrollbar shrink-0 w-full md:w-auto"
+                className="flex flex-col gap-2 max-h-[500px] md:max-h-[680px] overflow-y-auto pr-1.5 custom-scrollbar shrink-0 w-full md:w-auto"
               >
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-2">Approved Materials ({filteredApproved.length})</span>
                 {filteredApproved.length === 0 ? (
