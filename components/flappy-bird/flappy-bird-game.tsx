@@ -39,7 +39,8 @@ import {
   Sun,
   Moon,
   Waves,
-  TreePine
+  TreePine,
+  Globe
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -57,6 +58,38 @@ const THEMES: ThemeOption[] = [
   { id: 'ocean', name: 'Deep Ocean' }
 ]
 
+const MULTIVERSE_VIDEOS = [
+  '/multiverse/ssstik.io_1784846702443.mp4',
+  '/multiverse/ssstik.io_@_caileng_1784846852587.mp4',
+  '/multiverse/ssstik.io_@_japhette__1784846645457.mp4',
+  '/multiverse/ssstik.io_@aveiw._.__1784846730994.mp4',
+  '/multiverse/ssstik.io_@blossom_of_shadow_edit_1784846512468.mp4',
+  '/multiverse/ssstik.io_@h0361238_1784846968392.mp4',
+  '/multiverse/ssstik.io_@javajavijoo_1784846816701.mp4',
+  '/multiverse/ssstik.io_@lu.seno_1784846888872.mp4',
+  '/multiverse/ssstik.io_@moonlitblues__1784846798057.mp4',
+  '/multiverse/ssstik.io_@paindevie26_1784846777168.mp4',
+  '/multiverse/ssstik.io_@syrelcalampiano00_1784846942159.mp4',
+  '/multiverse/ssstik.io_@unknown.man6913_1784846981285.mp4',
+  '/multiverse/ssstik.io_@whitesongs4_1784846436976.mp4',
+  '/multiverse/ssstik.io_@whitesongs4_1784846542812.mp4',
+  '/multiverse/ssstik.io_@whitesongs4_1784846680171.mp4',
+  '/multiverse/ssstik.io_@whitesongs4_1784846786537.mp4',
+  '/multiverse/ssstik.io_@whos_leyyyy_1784846666515.mp4',
+  '/multiverse/ssstik.io_@zy_mxc_1784846590404.mp4'
+]
+
+const DOGGIE_GIFS = [
+  '/akosidogie/akosidogie.gif',
+  '/akosidogie/batute-akosidogie.gif',
+  '/akosidogie/dogietankbuild.gif',
+  '/akosidogie/dsasadas.gif',
+  '/akosidogie/meme-excitement.gif',
+  '/akosidogie/puwede.gif',
+  '/akosidogie/shelo-akosidogie.gif',
+  '/akosidogie/shh-akosidogie.gif'
+]
+
 interface FlappyBirdGameProps {
   user: any
 }
@@ -66,14 +99,15 @@ interface Pipe {
   topHeight: number
   bottomHeight: number
   passed: boolean
+  skin?: 'farm' | 'night' | 'sunset' | 'ocean' | 'gold' | 'void' | 'sakura' | 'rainbow'
 }
 
 export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  // Game Mode: 'classic' (Original 90px gap) | 'zen' (Relaxing 160px gap)
-  const [gameMode, setGameMode] = useState<'classic' | 'zen'>('classic')
+  // Game Mode: 'classic' (Original 90px gap) | 'zen' (Relaxing 160px gap) | 'multiverse' (Sadness Multiverse video bg)
+  const [gameMode, setGameMode] = useState<'classic' | 'zen' | 'multiverse'>('classic')
 
   // Theme state: 'farm' | 'night' | 'sunset' | 'ocean'
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('farm')
@@ -82,9 +116,10 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   const [gameState, setGameState] = useState<'IDLE' | 'PLAYING' | 'GAMEOVER'>('IDLE')
   const [score, setScore] = useState(0)
 
-  // Dual Personal Bests
+  // Personal Bests across modes
   const [highScoreClassic, setHighScoreClassic] = useState(0)
   const [highScoreZen, setHighScoreZen] = useState(0)
+  const [highScoreMultiverse, setHighScoreMultiverse] = useState(0)
 
   const [soundEnabled, setSoundEnabled] = useState(true)
 
@@ -97,10 +132,26 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
   // Leaderboard modal state & active tab
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
-  const [leaderboardTab, setLeaderboardTab] = useState<'classic' | 'zen'>('classic')
+  const [leaderboardTab, setLeaderboardTab] = useState<'classic' | 'zen' | 'multiverse'>('classic')
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false)
   const fetchLeaderboardReqIdRef = useRef(0)
+
+  // Multiverse background video crossfade dual-slot state
+  const [videoSrcA, setVideoSrcA] = useState<string>('')
+  const [videoSrcB, setVideoSrcB] = useState<string>('')
+  const [activeVideoSlot, setActiveVideoSlot] = useState<'A' | 'B'>('A')
+  const videoRefA = useRef<HTMLVideoElement | null>(null)
+  const videoRefB = useRef<HTMLVideoElement | null>(null)
+  const isVideoTransitioningRef = useRef(false)
+  const lastVideoIndexRef = useRef<number>(-1)
+
+  // Doggie Easter Egg Pop-up state
+  const [doggiePop, setDoggiePop] = useState<{
+    src: string
+    effect: 'zoom' | 'fade'
+    id: number
+  } | null>(null)
 
   // Floating score flash
   const [scoreFlash, setScoreFlash] = useState(false)
@@ -184,6 +235,11 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         if (savedZen) {
           setHighScoreZen(parseInt(savedZen, 10))
         }
+
+        const savedMultiverse = localStorage.getItem('cft_flappy_high_score_multiverse')
+        if (savedMultiverse) {
+          setHighScoreMultiverse(parseInt(savedMultiverse, 10))
+        }
       }
     }
 
@@ -204,6 +260,126 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     }
   }, [user])
 
+  // Video Queueing & Playback Effects for Multiverse Mode
+  const getRandomVideoIndex = () => {
+    if (MULTIVERSE_VIDEOS.length <= 1) return 0
+    let nextIdx = Math.floor(Math.random() * MULTIVERSE_VIDEOS.length)
+    while (nextIdx === lastVideoIndexRef.current) {
+      nextIdx = Math.floor(Math.random() * MULTIVERSE_VIDEOS.length)
+    }
+    lastVideoIndexRef.current = nextIdx
+    return nextIdx
+  }
+
+  useEffect(() => {
+    if (gameMode === 'multiverse' && gameState === 'PLAYING' && score >= 6) {
+      if (!videoSrcA && !videoSrcB) {
+        const idx = getRandomVideoIndex()
+        setVideoSrcA(MULTIVERSE_VIDEOS[idx])
+        setActiveVideoSlot('A')
+      }
+    }
+
+    // USER REQUIREMENT: "if the user dies, stop the video and yeah reset the gameplay, go"
+    if (gameState === 'GAMEOVER') {
+      if (videoRefA.current) {
+        videoRefA.current.pause()
+        videoRefA.current.currentTime = 0
+      }
+      if (videoRefB.current) {
+        videoRefB.current.pause()
+        videoRefB.current.currentTime = 0
+      }
+      setVideoSrcA('')
+      setVideoSrcB('')
+    }
+  }, [gameMode, gameState, score])
+
+  useEffect(() => {
+    if (gameMode !== 'multiverse' || gameState !== 'PLAYING') return
+
+    if (activeVideoSlot === 'A' && videoRefA.current && videoSrcA) {
+      videoRefA.current.play().catch(() => {})
+    } else if (activeVideoSlot === 'B' && videoRefB.current && videoSrcB) {
+      videoRefB.current.play().catch(() => {})
+    }
+  }, [activeVideoSlot, videoSrcA, videoSrcB, gameMode, gameState])
+
+  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (gameState !== 'PLAYING' || gameMode !== 'multiverse') return
+    const videoEl = e.currentTarget
+    if (!videoEl.duration || isVideoTransitioningRef.current) return
+
+    if (videoEl.duration - videoEl.currentTime <= 1.5) {
+      isVideoTransitioningRef.current = true
+      const nextIdx = getRandomVideoIndex()
+      const nextUrl = MULTIVERSE_VIDEOS[nextIdx]
+
+      if (activeVideoSlot === 'A') {
+        setVideoSrcB(nextUrl)
+        setActiveVideoSlot('B')
+      } else {
+        setVideoSrcA(nextUrl)
+        setActiveVideoSlot('A')
+      }
+
+      setTimeout(() => {
+        isVideoTransitioningRef.current = false
+      }, 1500)
+    }
+  }
+
+  const handleVideoEnded = () => {
+    if (gameState !== 'PLAYING' || gameMode !== 'multiverse') return
+    if (isVideoTransitioningRef.current) return
+    const nextIdx = getRandomVideoIndex()
+    const nextUrl = MULTIVERSE_VIDEOS[nextIdx]
+
+    if (activeVideoSlot === 'A') {
+      setVideoSrcB(nextUrl)
+      setActiveVideoSlot('B')
+    } else {
+      setVideoSrcA(nextUrl)
+      setActiveVideoSlot('A')
+    }
+  }
+
+  // Doggie Pop-Up Animation Timer for Multiverse Mode
+  useEffect(() => {
+    if (gameMode !== 'multiverse' || gameState !== 'PLAYING') {
+      setDoggiePop(null)
+      return
+    }
+
+    let timeoutId: NodeJS.Timeout
+
+    const scheduleDoggie = () => {
+      const delay = Math.floor(6000 + Math.random() * 6000)
+      timeoutId = setTimeout(() => {
+        if (gameState === 'PLAYING') {
+          const randomDog = DOGGIE_GIFS[Math.floor(Math.random() * DOGGIE_GIFS.length)]
+          const randomEffect = Math.random() > 0.5 ? 'zoom' : 'fade'
+          setDoggiePop({
+            src: randomDog,
+            effect: randomEffect,
+            id: Date.now()
+          })
+
+          setTimeout(() => {
+            setDoggiePop(null)
+            scheduleDoggie()
+          }, 2800)
+        }
+      }, delay)
+    }
+
+    scheduleDoggie()
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [gameMode, gameState])
+
   // Helper to pick a random theme excluding current theme
   const getRandomTheme = (excludeTheme?: ThemeId): ThemeId => {
     const options: ThemeId[] = ['farm', 'night', 'sunset', 'ocean']
@@ -212,7 +388,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   }
 
   // Fetch Leaderboard for specific mode
-  const fetchLeaderboard = async (modeToFetch: 'classic' | 'zen' = leaderboardTab) => {
+  const fetchLeaderboard = async (modeToFetch: 'classic' | 'zen' | 'multiverse' = leaderboardTab) => {
     const currentReqId = ++fetchLeaderboardReqIdRef.current
     setIsLeaderboardLoading(true)
 
@@ -225,7 +401,11 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       if (res.success && res.data.length > 0) {
         setLeaderboardData(res.data)
       } else {
-        const localKey = modeToFetch === 'zen' ? 'cft_flappy_local_leaderboard_zen' : 'cft_flappy_local_leaderboard_classic'
+        const localKey = modeToFetch === 'zen'
+          ? 'cft_flappy_local_leaderboard_zen'
+          : modeToFetch === 'multiverse'
+          ? 'cft_flappy_local_leaderboard_multiverse'
+          : 'cft_flappy_local_leaderboard_classic'
         const localScores = typeof window !== 'undefined' ? localStorage.getItem(localKey) : null
         if (localScores) {
           try {
@@ -246,7 +426,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     }
   }
 
-  const handleLeaderboardTabChange = (tab: 'classic' | 'zen') => {
+  const handleLeaderboardTabChange = (tab: 'classic' | 'zen' | 'multiverse') => {
     if (tab === leaderboardTab && !isLeaderboardLoading) return
     setIsLeaderboardLoading(true)
     setLeaderboardTab(tab)
@@ -288,6 +468,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('cft_flappy_local_leaderboard_classic')
       localStorage.removeItem('cft_flappy_local_leaderboard_zen')
+      localStorage.removeItem('cft_flappy_local_leaderboard_multiverse')
     }
     setLeaderboardData([])
     await fetchLeaderboard(leaderboardTab)
@@ -295,17 +476,27 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
 
   // Handle score submission & deduplication
-  const handleScoreSubmit = async (finalScore: number, modeToSubmit?: 'classic' | 'zen') => {
+  const handleScoreSubmit = async (finalScore: number, modeToSubmit?: 'classic' | 'zen' | 'multiverse') => {
     if (finalScore <= 0) return
 
     const activeMode = modeToSubmit || stateRef.current.gameMode || gameMode
 
-    const currentBest = activeMode === 'zen' ? highScoreZen : highScoreClassic
+    const currentBest = activeMode === 'zen'
+      ? highScoreZen
+      : activeMode === 'multiverse'
+      ? highScoreMultiverse
+      : highScoreClassic
+
     if (finalScore > currentBest) {
       if (activeMode === 'zen') {
         setHighScoreZen(finalScore)
         if (typeof window !== 'undefined') {
           localStorage.setItem('cft_flappy_high_score_zen', finalScore.toString())
+        }
+      } else if (activeMode === 'multiverse') {
+        setHighScoreMultiverse(finalScore)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('cft_flappy_high_score_multiverse', finalScore.toString())
         }
       } else {
         setHighScoreClassic(finalScore)
@@ -321,7 +512,11 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     setSyncMode(res.mode)
 
     if (typeof window !== 'undefined') {
-      const localKey = activeMode === 'zen' ? 'cft_flappy_local_leaderboard_zen' : 'cft_flappy_local_leaderboard_classic'
+      const localKey = activeMode === 'zen'
+        ? 'cft_flappy_local_leaderboard_zen'
+        : activeMode === 'multiverse'
+        ? 'cft_flappy_local_leaderboard_multiverse'
+        : 'cft_flappy_local_leaderboard_classic'
       const existingStr = localStorage.getItem(localKey)
       let localList: LeaderboardEntry[] = []
       if (existingStr) {
@@ -377,7 +572,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   // Ref variables for the physics engine loop
   const stateRef = useRef({
     gameState: 'IDLE' as 'IDLE' | 'PLAYING' | 'GAMEOVER',
-    gameMode: 'classic' as 'classic' | 'zen',
+    gameMode: 'classic' as 'classic' | 'zen' | 'multiverse',
     theme: 'farm' as ThemeId,
     score: 0,
     birdY: 210,
@@ -456,16 +651,20 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
       const width = canvas.width
       const height = canvas.height
-      const currentPipeGap = state.gameMode === 'zen' ? 160 : 90
+      const currentPipeGap = state.gameMode === 'zen' ? 160 : state.gameMode === 'multiverse' ? 110 : 90
       const themeId = state.theme || 'farm'
+      const isMultiverseVideoActive = state.gameMode === 'multiverse' && state.score >= 6
 
       ctx.clearRect(0, 0, width, height)
 
-      // ── 1. MULTI-THEME BACKGROUND RENDERING ──
+      // ── 1. MULTI-THEME / MULTIVERSE BACKGROUND RENDERING ──
       const bgImg = imagesRef.current.bg
       const rotorImg = imagesRef.current.rotor
 
-      if (themeId === 'farm' && bgImg && bgImg.complete && bgImg.width > 0) {
+      if (isMultiverseVideoActive) {
+        // Transparent background lets HTML background video play behind canvas!
+        // No solid fill needed here
+      } else if (themeId === 'farm' && bgImg && bgImg.complete && bgImg.width > 0) {
         ctx.drawImage(bgImg, 0, 0, width, height - GROUND_HEIGHT)
         if (rotorImg && rotorImg.complete && rotorImg.width > 0) {
           ctx.save()
@@ -628,11 +827,17 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
           const bottomHeight = height - GROUND_HEIGHT - (topHeight + currentPipeGap)
 
+          const pipeSkins = ['farm', 'night', 'sunset', 'ocean', 'gold', 'void', 'sakura', 'rainbow'] as const
+          const randomSkin = state.gameMode === 'multiverse'
+            ? pipeSkins[Math.floor(Math.random() * pipeSkins.length)]
+            : undefined
+
           state.pipes.push({
             x: width + 10,
             topHeight,
             bottomHeight,
-            passed: false
+            passed: false,
+            skin: randomSkin
           })
           state.lastPipeSpawnTime = 0
         }
@@ -644,12 +849,14 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         state.pipes = state.pipes.filter(p => p.x > -80)
       }
 
-      // ── RENDER PIPES MATCHING ACTIVE THEME ──
+      // ── RENDER PIPES MATCHING ACTIVE THEME / MULTIVERSE SKINS ──
       const pipeImg = imagesRef.current.pipe
       const pipeWidth = 52
 
       state.pipes.forEach(pipe => {
-        if (themeId === 'farm' && pipeImg && pipeImg.complete && pipeImg.width > 0) {
+        const effectiveSkin = pipe.skin || themeId
+
+        if (effectiveSkin === 'farm' && pipeImg && pipeImg.complete && pipeImg.width > 0 && state.gameMode !== 'multiverse') {
           // Top Pipe (Flipped)
           ctx.save()
           ctx.translate(pipe.x + pipeWidth / 2, pipe.topHeight)
@@ -661,8 +868,8 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
           const bottomY = height - GROUND_HEIGHT - pipe.bottomHeight
           ctx.drawImage(pipeImg, pipe.x, bottomY, pipeWidth, pipe.bottomHeight)
         } else {
-          // Custom Procedural Pipe Styling per Theme
-          const drawCustomPipe = (px: number, py: number, pw: number, ph: number, isTop: boolean) => {
+          // Custom Procedural Pipe Styling per Skin / Theme
+          const drawCustomPipe = (px: number, py: number, pw: number, ph: number, isTop: boolean, skinType: string) => {
             ctx.save()
             
             let bodyGrad: CanvasGradient
@@ -670,7 +877,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
             let borderColor = '#2d5a0b'
             let highlightColor = 'rgba(255, 255, 255, 0.3)'
 
-            if (themeId === 'night') {
+            if (skinType === 'night') {
               bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
               bodyGrad.addColorStop(0, '#0f172a')
               bodyGrad.addColorStop(0.5, '#1e293b')
@@ -680,7 +887,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               highlightColor = 'rgba(0, 240, 255, 0.4)'
               ctx.shadowColor = '#00f0ff'
               ctx.shadowBlur = 8
-            } else if (themeId === 'sunset') {
+            } else if (skinType === 'sunset') {
               bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
               bodyGrad.addColorStop(0, '#7c2d12')
               bodyGrad.addColorStop(0.5, '#c2410c')
@@ -688,7 +895,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               capColor = '#f97316'
               borderColor = '#451a03'
               highlightColor = 'rgba(254, 240, 138, 0.4)'
-            } else if (themeId === 'ocean') {
+            } else if (skinType === 'ocean') {
               bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
               bodyGrad.addColorStop(0, '#0f766e')
               bodyGrad.addColorStop(0.5, '#0d9488')
@@ -696,6 +903,47 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               capColor = '#2dd4bf'
               borderColor = '#134e4a'
               highlightColor = 'rgba(153, 246, 228, 0.4)'
+            } else if (skinType === 'gold') {
+              bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
+              bodyGrad.addColorStop(0, '#78350f')
+              bodyGrad.addColorStop(0.3, '#fbbf24')
+              bodyGrad.addColorStop(0.7, '#f59e0b')
+              bodyGrad.addColorStop(1, '#78350f')
+              capColor = '#fef08a'
+              borderColor = '#b45309'
+              highlightColor = 'rgba(255, 255, 255, 0.65)'
+              ctx.shadowColor = '#fbbf24'
+              ctx.shadowBlur = 10
+            } else if (skinType === 'void') {
+              bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
+              bodyGrad.addColorStop(0, '#1e1b4b')
+              bodyGrad.addColorStop(0.5, '#4c1d95')
+              bodyGrad.addColorStop(1, '#1e1b4b')
+              capColor = '#d946ef'
+              borderColor = '#818cf8'
+              highlightColor = 'rgba(217, 70, 239, 0.5)'
+              ctx.shadowColor = '#d946ef'
+              ctx.shadowBlur = 10
+            } else if (skinType === 'sakura') {
+              bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
+              bodyGrad.addColorStop(0, '#831843')
+              bodyGrad.addColorStop(0.5, '#f472b6')
+              bodyGrad.addColorStop(1, '#831843')
+              capColor = '#fbcfe8'
+              borderColor = '#9d174d'
+              highlightColor = 'rgba(255, 255, 255, 0.6)'
+            } else if (skinType === 'rainbow') {
+              bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
+              bodyGrad.addColorStop(0, '#ef4444')
+              bodyGrad.addColorStop(0.25, '#eab308')
+              bodyGrad.addColorStop(0.5, '#22c55e')
+              bodyGrad.addColorStop(0.75, '#06b6d4')
+              bodyGrad.addColorStop(1, '#a855f7')
+              capColor = '#f43f5e'
+              borderColor = '#ffffff'
+              highlightColor = 'rgba(255, 255, 255, 0.7)'
+              ctx.shadowColor = '#3b82f6'
+              ctx.shadowBlur = 8
             } else {
               bodyGrad = ctx.createLinearGradient(px, 0, px + pw, 0)
               bodyGrad.addColorStop(0, '#53a018')
@@ -733,10 +981,10 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
           }
 
           // Top pipe
-          drawCustomPipe(pipe.x, 0, pipeWidth, pipe.topHeight, true)
+          drawCustomPipe(pipe.x, 0, pipeWidth, pipe.topHeight, true, effectiveSkin)
           // Bottom pipe
           const bottomY = height - GROUND_HEIGHT - pipe.bottomHeight
-          drawCustomPipe(pipe.x, bottomY, pipeWidth, pipe.bottomHeight, false)
+          drawCustomPipe(pipe.x, bottomY, pipeWidth, pipe.bottomHeight, false, effectiveSkin)
         }
       })
 
@@ -860,7 +1108,19 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       const groundY = height - GROUND_HEIGHT
       const landImg = imagesRef.current.land
 
-      if (themeId === 'farm' && landImg && landImg.complete && landImg.width > 0) {
+      if (isMultiverseVideoActive) {
+        const glassGrad = ctx.createLinearGradient(0, groundY, 0, height)
+        glassGrad.addColorStop(0, 'rgba(15, 23, 42, 0.75)')
+        glassGrad.addColorStop(1, 'rgba(30, 41, 59, 0.95)')
+        ctx.fillStyle = glassGrad
+        ctx.fillRect(0, groundY, width, GROUND_HEIGHT)
+        ctx.strokeStyle = '#a855f7'
+        ctx.lineWidth = 2.5
+        ctx.beginPath()
+        ctx.moveTo(0, groundY)
+        ctx.lineTo(width, groundY)
+        ctx.stroke()
+      } else if (themeId === 'farm' && landImg && landImg.complete && landImg.width > 0) {
         const landPatternWidth = 368
         for (let x = state.groundX - landPatternWidth; x < width + landPatternWidth; x += landPatternWidth) {
           ctx.drawImage(landImg, x, groundY, landPatternWidth, GROUND_HEIGHT)
@@ -1064,13 +1324,17 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     return res
   }
 
-  const openLeaderboard = (mode: 'classic' | 'zen') => {
+  const openLeaderboard = (mode: 'classic' | 'zen' | 'multiverse') => {
     setLeaderboardTab(mode)
     setIsLeaderboardOpen(true)
     fetchLeaderboard(mode)
   }
 
-  const currentHighScore = gameMode === 'zen' ? highScoreZen : highScoreClassic
+  const currentHighScore = gameMode === 'zen'
+    ? highScoreZen
+    : gameMode === 'multiverse'
+    ? highScoreMultiverse
+    : highScoreClassic
 
   // Rank assignment
   let medalText = ''
@@ -1083,6 +1347,27 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-between p-3 sm:p-6 select-none relative overflow-hidden font-sans">
+      <style jsx global>{`
+        @keyframes doggieZoom {
+          0% { transform: scale(0); opacity: 0; }
+          20% { transform: scale(1.15); opacity: 1; }
+          80% { transform: scale(1.0); opacity: 1; }
+          100% { transform: scale(0); opacity: 0; }
+        }
+        @keyframes doggieFade {
+          0% { opacity: 0; transform: scale(0.9); }
+          20% { opacity: 1; transform: scale(1); }
+          80% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.9); }
+        }
+        .animate-doggie-zoom {
+          animation: doggieZoom 2.8s ease-in-out forwards;
+        }
+        .animate-doggie-fade {
+          animation: doggieFade 2.8s ease-in-out forwards;
+        }
+      `}</style>
+
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-900/40 via-slate-950 to-slate-950 pointer-events-none" />
 
       {/* Header Bar */}
@@ -1134,6 +1419,49 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       {/* Main Arcade Frame Container */}
       <main className="relative z-10 w-full max-w-lg aspect-[4/5] max-h-[640px] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(56,189,248,0.2)] border-4 border-slate-800 bg-sky-400 flex flex-col items-center justify-center">
         
+        {/* Multiverse Video Background Layer (Active when gameMode is multiverse and score >= 6) */}
+        {gameMode === 'multiverse' && score >= 6 && (
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden bg-black transition-opacity duration-1000">
+            <video
+              ref={videoRefA}
+              src={videoSrcA}
+              playsInline
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                activeVideoSlot === 'A' ? 'opacity-100' : 'opacity-0'
+              }`}
+              onTimeUpdate={handleVideoTimeUpdate}
+              onEnded={handleVideoEnded}
+            />
+            <video
+              ref={videoRefB}
+              src={videoSrcB}
+              playsInline
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                activeVideoSlot === 'B' ? 'opacity-100' : 'opacity-0'
+              }`}
+              onTimeUpdate={handleVideoTimeUpdate}
+              onEnded={handleVideoEnded}
+            />
+            <div className="absolute inset-0 bg-black/25 pointer-events-none" />
+          </div>
+        )}
+
+        {/* Doggie Pop-up Overlay for Multiverse Mode */}
+        {gameMode === 'multiverse' && doggiePop && (
+          <div className="absolute inset-0 z-[5] pointer-events-none flex items-center justify-center overflow-hidden">
+            <img
+              key={doggiePop.id}
+              src={doggiePop.src}
+              alt="Doggie Easter Egg"
+              className={`max-w-[220px] max-h-[220px] object-contain drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)] ${
+                doggiePop.effect === 'zoom'
+                  ? 'animate-doggie-zoom'
+                  : 'animate-doggie-fade'
+              }`}
+            />
+          </div>
+        )}
+
         {/* Game Canvas */}
         <canvas
           ref={canvasRef}
@@ -1148,25 +1476,27 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
           onTouchEnd={() => {
             lastTouchTimeRef.current = performance.now()
           }}
-          className="w-full h-full cursor-pointer touch-none block"
+          className="w-full h-full cursor-pointer touch-none block relative z-10"
         />
 
         {/* Real-time In-Game Score overlay with Mode & Theme Badge */}
         {gameState === 'PLAYING' && (
-          <div className="absolute top-5 inset-x-0 pointer-events-none flex flex-col items-center gap-1.5">
+          <div className="absolute top-5 inset-x-0 pointer-events-none flex flex-col items-center gap-1.5 z-20">
             <span className={`text-5xl font-black text-white drop-shadow-[0_4px_0_#0f172a] transition-transform duration-100 ${scoreFlash ? 'scale-125 text-amber-300' : 'scale-100'}`}>
               {score}
             </span>
             <div className="flex items-center gap-1.5">
               <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm ${
-                gameMode === 'zen' 
+                gameMode === 'multiverse'
+                  ? 'bg-purple-600/90 border-purple-300 text-white backdrop-blur-sm animate-pulse'
+                  : gameMode === 'zen' 
                   ? 'bg-teal-500/90 border-teal-300 text-slate-950 backdrop-blur-sm'
                   : 'bg-amber-500/90 border-amber-300 text-slate-950 backdrop-blur-sm'
               }`}>
-                {gameMode === 'zen' ? 'ZEN MODE (160px Gap)' : 'CLASSIC MODE'}
+                {gameMode === 'multiverse' ? 'MULTIVERSE OF SADNESS' : gameMode === 'zen' ? 'ZEN MODE (160px Gap)' : 'CLASSIC MODE'}
               </span>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-900/80 border border-slate-700 text-slate-200 backdrop-blur-sm">
-                Theme: {activeThemeObj.name}
+                Theme: {gameMode === 'multiverse' ? 'Random Multiverse' : activeThemeObj.name}
               </span>
             </div>
           </div>
@@ -1188,14 +1518,14 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               e.stopPropagation()
               lastTouchTimeRef.current = performance.now()
             }}
-            className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center cursor-pointer pointer-events-auto"
+            className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center cursor-pointer pointer-events-auto z-30"
           >
             <div className="bg-amber-400 border-4 border-amber-950 px-6 py-3 rounded-2xl shadow-[0_6px_0_0_#78350f] text-amber-950 font-black text-2xl uppercase mb-3 tracking-wide flex items-center gap-2.5 animate-pulse">
               <Gamepad2 className="h-7 w-7 text-amber-950" />
               <span>FLAPPY BIRD</span>
             </div>
 
-            {/* Mode Selection Pills (Classic vs Zen) */}
+            {/* Mode Selection Pills (Classic vs Zen vs Multiverse) */}
             <div 
               onClick={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
               onTouchStart={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
@@ -1212,13 +1542,13 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                   lastUiInteractTimeRef.current = performance.now()
                   setGameMode('classic')
                 }}
-                className={`flex-1 py-2 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   gameMode === 'classic'
                     ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Flame className="h-3.5 w-3.5" />
+                <Flame className="h-3 w-3" />
                 <span>Classic</span>
               </button>
 
@@ -1233,14 +1563,35 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                   lastUiInteractTimeRef.current = performance.now()
                   setGameMode('zen')
                 }}
-                className={`flex-1 py-2 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   gameMode === 'zen'
                     ? 'bg-teal-400 text-slate-950 shadow-md scale-[1.02]'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Zen (Easy)</span>
+                <Sparkles className="h-3 w-3" />
+                <span>Zen</span>
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  lastUiInteractTimeRef.current = performance.now()
+                  setGameMode('multiverse')
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation()
+                  lastUiInteractTimeRef.current = performance.now()
+                  setGameMode('multiverse')
+                }}
+                className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  gameMode === 'multiverse'
+                    ? 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white shadow-md scale-[1.02]'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Globe className="h-3 w-3 text-purple-200" />
+                <span>Multiverse</span>
               </button>
             </div>
 
@@ -1251,7 +1602,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-2 max-w-xs w-full shadow-xl backdrop-blur-md mb-3 space-y-1.5"
             >
               <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold px-1 uppercase tracking-wider">
-                <span>Theme: {activeThemeObj.name}</span>
+                <span>Theme: {gameMode === 'multiverse' ? 'Multiverse World' : activeThemeObj.name}</span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -1286,7 +1637,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                       setCurrentTheme(th.id)
                     }}
                     className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
-                      currentTheme === th.id
+                      currentTheme === th.id && gameMode !== 'multiverse'
                         ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
                         : 'bg-slate-800 text-slate-300 hover:bg-slate-750'
                     }`}
@@ -1307,7 +1658,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 max-w-xs w-full shadow-2xl backdrop-blur-md space-y-2.5"
             >
               <p className="text-xs font-semibold text-sky-300 uppercase tracking-wider">
-                {gameMode === 'zen' ? 'Relaxing Wide Gaps (160px)' : 'Original Felgo Physics (90px)'}
+                {gameMode === 'multiverse' ? 'Sadness Videos @ 6 PTS + Randomized Pipes' : gameMode === 'zen' ? 'Relaxing Wide Gaps (160px)' : 'Original Felgo Physics (90px)'}
               </p>
 
               {/* Player Profile Handle Chip */}
@@ -1334,7 +1685,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               </div>
 
               <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>{gameMode === 'zen' ? 'Zen Best:' : 'Classic Best:'}</span>
+                <span>{gameMode === 'multiverse' ? 'Multiverse Best:' : gameMode === 'zen' ? 'Zen Best:' : 'Classic Best:'}</span>
                 <span className="font-bold text-amber-400 text-sm">{currentHighScore} PTS</span>
               </div>
             </div>
@@ -1350,7 +1701,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
           <div 
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
-            className="absolute inset-0 bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 pointer-events-auto animate-fade-in"
+            className="absolute inset-0 bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 pointer-events-auto animate-fade-in z-30"
           >
             <div className="bg-gradient-to-b from-amber-400 to-amber-500 border-4 border-amber-950 px-6 py-2 rounded-2xl shadow-[0_6px_0_0_#78350f] text-amber-950 font-black text-2xl uppercase mb-2 tracking-wider">
               GAME OVER!
@@ -1378,7 +1729,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                     lastUiInteractTimeRef.current = performance.now()
                     setGameMode('classic')
                   }}
-                  className={`flex-1 py-1.5 px-2.5 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
                     gameMode === 'classic'
                       ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
                       : 'text-slate-400 hover:text-slate-200'
@@ -1399,14 +1750,35 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                     lastUiInteractTimeRef.current = performance.now()
                     setGameMode('zen')
                   }}
-                  className={`flex-1 py-1.5 px-2.5 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
                     gameMode === 'zen'
                       ? 'bg-teal-400 text-slate-950 shadow-md scale-[1.02]'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   <Sparkles className="h-3 w-3" />
-                  <span>Zen (Easy)</span>
+                  <span>Zen</span>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameMode('multiverse')
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameMode('multiverse')
+                  }}
+                  className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    gameMode === 'multiverse'
+                      ? 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white shadow-md scale-[1.02]'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Globe className="h-3 w-3 text-purple-200" />
+                  <span>Multiverse</span>
                 </button>
               </div>
 
@@ -1425,7 +1797,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
               <div className="grid grid-cols-2 gap-3 bg-slate-850 p-2.5 rounded-2xl border border-slate-800">
                 <div className="border-r border-slate-800 pr-2">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Score ({gameMode})</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Round Score</span>
                   <span className="text-2xl font-black text-white">{score}</span>
                 </div>
                 <div className="pl-2">
@@ -1470,7 +1842,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                   className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Trophy className="h-4 w-4 text-amber-400" />
-                  <span>View {gameMode === 'zen' ? 'Zen' : 'Classic'} Leaderboard</span>
+                  <span>View {gameMode === 'zen' ? 'Zen' : gameMode === 'multiverse' ? 'Multiverse' : 'Classic'} Leaderboard</span>
                 </button>
 
                 <button
@@ -1531,7 +1903,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         entries={leaderboardData}
         mode={syncMode}
         onRefresh={() => fetchLeaderboard(leaderboardTab)}
-        userBestScore={leaderboardTab === 'zen' ? highScoreZen : highScoreClassic}
+        userBestScore={leaderboardTab === 'zen' ? highScoreZen : leaderboardTab === 'multiverse' ? highScoreMultiverse : highScoreClassic}
         playerName={playerName}
         activeModeTab={leaderboardTab}
         onTabChange={handleLeaderboardTabChange}

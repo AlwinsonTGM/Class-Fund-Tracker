@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Trophy, X, RefreshCw, Wifi, WifiOff, Award, User, Flame, Sparkles, Trash2, Loader2 } from 'lucide-react'
+import { Trophy, X, RefreshCw, Wifi, WifiOff, Award, User, Flame, Sparkles, Trash2, Loader2, Globe } from 'lucide-react'
 
 import { LeaderboardEntry } from '@/app/flappy-bird/actions'
 
@@ -13,8 +13,8 @@ interface LeaderboardModalProps {
   onRefresh: () => void
   userBestScore: number
   playerName: string
-  activeModeTab: 'classic' | 'zen'
-  onTabChange: (tab: 'classic' | 'zen') => void
+  activeModeTab: 'classic' | 'zen' | 'multiverse'
+  onTabChange: (tab: 'classic' | 'zen' | 'multiverse') => void
   onClearLeaderboard?: () => void
   isLoading?: boolean
 }
@@ -70,12 +70,12 @@ export function LeaderboardModal({
           </button>
         </div>
 
-        {/* Mode Selector Tabs (Classic vs Zen) */}
-        <div className="bg-slate-900 p-2.5 border-b border-slate-800 flex items-center justify-center gap-2 shrink-0">
+        {/* Mode Selector Tabs (Classic vs Zen vs Multiverse) */}
+        <div className="bg-slate-900 p-2 border-b border-slate-800 flex items-center justify-center gap-1.5 shrink-0">
           <button
             onClick={() => onTabChange('classic')}
             disabled={isLoading}
-            className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
               isLoading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
             } ${
               activeModeTab === 'classic'
@@ -84,17 +84,17 @@ export function LeaderboardModal({
             }`}
           >
             {isLoading && activeModeTab === 'classic' ? (
-              <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" />
             ) : (
-              <Flame className="h-4 w-4 text-amber-400" />
+              <Flame className="h-3.5 w-3.5 text-amber-400" />
             )}
-            <span>Classic Mode</span>
+            <span>Classic</span>
           </button>
 
           <button
             onClick={() => onTabChange('zen')}
             disabled={isLoading}
-            className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
               isLoading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
             } ${
               activeModeTab === 'zen'
@@ -103,11 +103,30 @@ export function LeaderboardModal({
             }`}
           >
             {isLoading && activeModeTab === 'zen' ? (
-              <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" />
             ) : (
-              <Sparkles className="h-4 w-4 text-teal-300" />
+              <Sparkles className="h-3.5 w-3.5 text-teal-300" />
             )}
-            <span>Zen Mode</span>
+            <span>Zen</span>
+          </button>
+
+          <button
+            onClick={() => onTabChange('multiverse')}
+            disabled={isLoading}
+            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
+              isLoading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+            } ${
+              activeModeTab === 'multiverse'
+                ? 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white shadow-md scale-[1.02]'
+                : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {isLoading && activeModeTab === 'multiverse' ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+            ) : (
+              <Globe className="h-3.5 w-3.5 text-purple-300 animate-pulse" />
+            )}
+            <span>Multiverse</span>
           </button>
         </div>
 

@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.8'
+const CURRENT_VERSION = '1.9'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,21 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.9',
+    date: 'July 24, 2026',
+    title: 'Multiverse of Sadness Mode & Dynamic Video Backgrounds',
+    emoji: '🌀',
+    changes: [
+      { type: 'new', text: 'Multiverse of Sadness Game Mode — introduced a brand-new Flappy Bird mode featuring dynamic background video streaming and multi-world pipe skins.' },
+      { type: 'new', text: 'Dynamic Video Crossfade Backgrounds — upon reaching 6 points in Multiverse mode, background seamlessly transitions into randomized TikTok video edits from /multiverse/ with unmuted audio and zero-gap crossfades.' },
+      { type: 'new', text: 'Doggie Easter Egg Animations — periodic background pop-ups featuring animated Doggie GIFs from /akosidogie/ with random Zoom In/Out and Fade In/Out motion effects.' },
+      { type: 'new', text: 'Multi-World Randomized Pipe Skins — each pipe pair in Multiverse mode spawns with a random skin: Farm Green, Cyberpunk Neon, Desert Sunset, Deep Ocean, Gold, Cosmic Void, Sakura Pink, or Rainbow Spectrum.' },
+      { type: 'new', text: 'Dedicated Multiverse Leaderboard — full central database & offline fallback leaderboard support with a dedicated Multiverse tab.' },
+      { type: 'fix', text: 'Game Over Score Display — updated Game Over screen score labels so Round Score is clearly distinguished from mode-specific High Scores when toggling mode pills.' },
+      { type: 'fix', text: 'Death Video Stop & Reset — background videos automatically pause and reset upon player death to ensure clean gameplay restarts.' },
+    ],
+  },
   {
     version: '1.8',
     date: 'July 24, 2026',

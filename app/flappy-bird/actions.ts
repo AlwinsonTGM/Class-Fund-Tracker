@@ -6,17 +6,17 @@ export interface LeaderboardEntry {
   id?: string
   player_name: string
   score: number
-  mode?: 'classic' | 'zen'
+  mode?: 'classic' | 'zen' | 'multiverse'
   is_guest: boolean
   user_id?: string | null
   created_at: string
 }
 
 /**
- * Fetch top 15 Flappy Bird scores from Supabase database for a specific game mode ('classic' | 'zen').
+ * Fetch top 15 Flappy Bird scores from Supabase database for a specific game mode ('classic' | 'zen' | 'multiverse').
  */
 export async function getFlappyLeaderboardAction(
-  gameMode: 'classic' | 'zen' = 'classic'
+  gameMode: 'classic' | 'zen' | 'multiverse' = 'classic'
 ): Promise<{
   success: boolean
   mode: 'online' | 'offline'
@@ -91,7 +91,7 @@ export async function submitFlappyScoreAction(
   playerName: string,
   score: number,
   isGuest: boolean = true,
-  gameMode: 'classic' | 'zen' = 'classic'
+  gameMode: 'classic' | 'zen' | 'multiverse' = 'classic'
 ): Promise<{
   success: boolean
   mode: 'online' | 'offline'

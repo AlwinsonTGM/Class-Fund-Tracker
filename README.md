@@ -52,6 +52,14 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Online Sync vs. Offline Fallback**: Real-time status indicator showing database sync status.
 - **Guest & User Handle Customization**: Authenticated users automatically save player handles, while guest players can customize their handle anytime for section rankings.
 
+### 🌀 9. Multiverse of Sadness Mode & Dynamic Video Backgrounds (v1.9)
+- **Multiverse of Sadness Mode**: High-octane Flappy Bird game mode featuring dynamic video background streaming and multi-world pipe skins.
+- **Dynamic Video Crossfading**: Reaching 6 points (`score >= 6`) unlocks randomized background video edits from `/multiverse/` with unmuted audio and zero-gap 1.5s crossfade transitions.
+- **Doggie Easter Egg Animations**: Periodic background pop-ups featuring Doggie GIFs from `/akosidogie/` with random Zoom In/Out or Fade In/Out keyframe motions.
+- **Multi-World Randomized Pipes**: Each pipe pair spawns with a random world skin (Farm Green, Cyberpunk Neon, Desert Sunset, Deep Ocean, Gold, Cosmic Void, Sakura Pink, Rainbow Spectrum).
+- **Death Video Pause & Reset**: Background videos automatically pause and reset upon player death for clean round restarts.
+- **Dedicated Multiverse Leaderboard**: Full central database & local storage fallback leaderboard support under the Multiverse tab.
+
 
 
 ### ☁️ 7. Cloud Sync, Interactive Notifications & Fluid Glass Navigation (v1.6-beta)
