@@ -351,6 +351,62 @@ export async function updateFlappyPlayerNameAction(
 }
 
 /**
+ * Fix any score records where a Zen mode score was accidentally saved under 'classic' mode.
+ */
+export async function fixMisplacedZenScoreAction(): Promise<{
+  success: boolean
+}> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) return { success: false }
+
+    const { data: classicScores } = await supabase
+      .from('flappy_bird_scores')
+      .select('id, score, player_name')
+      .eq('user_id', user.id)
+      .eq('mode', 'classic')
+
+    const { data: zenScores } = await supabase
+      .from('flappy_bird_scores')
+      .select('id, score')
+      .eq('user_id', user.id)
+      .eq('mode', 'zen')
+
+    if (classicScores && classicScores.length > 0) {
+      const bestClassic = classicScores.reduce((prev, curr) => curr.score > prev.score ? curr : prev, classicScores[0])
+      
+      const zenBestScore = zenScores && zenScores.length > 0 ? zenScores[0].score : 0
+
+      // If classic score exists and is higher than zen score (e.g. 16 vs 0), duplicate/sync to Zen
+      if (bestClassic && bestClassic.score > zenBestScore) {
+        if (zenScores && zenScores.length > 0) {
+          await supabase
+            .from('flappy_bird_scores')
+            .update({ score: bestClassic.score, created_at: new Date().toISOString() })
+            .eq('id', zenScores[0].id)
+        } else {
+          await supabase
+            .from('flappy_bird_scores')
+            .insert({
+              player_name: bestClassic.player_name,
+              score: bestClassic.score,
+              mode: 'zen',
+              is_guest: false,
+              user_id: user.id
+            })
+        }
+      }
+    }
+
+    return { success: true }
+  } catch (err) {
+    return { success: false }
+  }
+}
+
+/**
  * Clear/reset all entries in flappy_bird_scores table.
  */
 export async function clearFlappyLeaderboardAction(): Promise<{

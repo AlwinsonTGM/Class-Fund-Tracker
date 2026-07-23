@@ -13,6 +13,7 @@ import {
   submitFlappyScoreAction,
   updateFlappyPlayerNameAction,
   getFlappyPlayerNameAction,
+  fixMisplacedZenScoreAction,
   clearFlappyLeaderboardAction,
   LeaderboardEntry
 } from '@/app/flappy-bird/actions'
@@ -186,6 +187,11 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
     syncAccountName()
 
+    // Auto-fix any Zen score that was mistakenly recorded under classic mode during prior bug
+    fixMisplacedZenScoreAction().then(() => {
+      fetchLeaderboard(leaderboardTab)
+    })
+
     const handleFocus = () => {
       syncAccountName()
     }
@@ -268,12 +274,14 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
 
   // Handle score submission & deduplication
-  const handleScoreSubmit = async (finalScore: number) => {
+  const handleScoreSubmit = async (finalScore: number, modeToSubmit?: 'classic' | 'zen') => {
     if (finalScore <= 0) return
 
-    const currentBest = gameMode === 'zen' ? highScoreZen : highScoreClassic
+    const activeMode = modeToSubmit || stateRef.current.gameMode || gameMode
+
+    const currentBest = activeMode === 'zen' ? highScoreZen : highScoreClassic
     if (finalScore > currentBest) {
-      if (gameMode === 'zen') {
+      if (activeMode === 'zen') {
         setHighScoreZen(finalScore)
         if (typeof window !== 'undefined') {
           localStorage.setItem('cft_flappy_high_score_zen', finalScore.toString())
@@ -288,11 +296,11 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     }
 
     const nameToUse = playerName || (user?.email ? user.email.split('@')[0] : 'Guest')
-    const res = await submitFlappyScoreAction(nameToUse, finalScore, !user, gameMode)
+    const res = await submitFlappyScoreAction(nameToUse, finalScore, !user, activeMode)
     setSyncMode(res.mode)
 
     if (typeof window !== 'undefined') {
-      const localKey = gameMode === 'zen' ? 'cft_flappy_local_leaderboard_zen' : 'cft_flappy_local_leaderboard_classic'
+      const localKey = activeMode === 'zen' ? 'cft_flappy_local_leaderboard_zen' : 'cft_flappy_local_leaderboard_classic'
       const existingStr = localStorage.getItem(localKey)
       let localList: LeaderboardEntry[] = []
       if (existingStr) {
@@ -314,7 +322,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         localList.push({
           player_name: nameToUse,
           score: finalScore,
-          mode: gameMode,
+          mode: activeMode,
           is_guest: !user,
           user_id: user ? user.id : null,
           created_at: new Date().toISOString()
@@ -325,13 +333,18 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       localList = localList.slice(0, 15)
       localStorage.setItem(localKey, JSON.stringify(localList))
 
-      if (res.mode === 'offline' && leaderboardTab === gameMode) {
+      if (res.mode === 'offline' && leaderboardTab === activeMode) {
         setLeaderboardData(localList)
-      } else if (leaderboardTab === gameMode) {
-        fetchLeaderboard(gameMode)
+      } else if (leaderboardTab === activeMode) {
+        fetchLeaderboard(activeMode)
       }
     }
   }
+
+  const handleScoreSubmitRef = useRef(handleScoreSubmit)
+  useEffect(() => {
+    handleScoreSubmitRef.current = handleScoreSubmit
+  })
 
   // Ref for input throttling (preventing double clicks / double audio on mobile)
   const lastFlapTimeRef = useRef<number>(0)
@@ -795,7 +808,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         }
         state.gameState = 'GAMEOVER'
         setGameState('GAMEOVER')
-        handleScoreSubmit(state.score)
+        handleScoreSubmitRef.current(state.score, state.gameMode)
       }
 
 
