@@ -14,20 +14,6 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
 import { signOutAction } from '@/app/login/actions'
 
-interface WeatherParticle {
-  x: number
-  y: number
-  size: number
-  speedY: number
-  speedX: number
-  opacity: number
-  sway: number
-  swaySpeed: number
-  angle?: number
-  spin?: number
-  emoji?: string
-}
-
 interface FallingDogie {
   src: string
   left: number
@@ -87,10 +73,6 @@ export function PublicTabsContainer({
   const [addPostTrigger, setAddPostTrigger] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
 
-  // Customizable Canvas/Page Effects
-  const [activeEffect, setActiveEffect] = useState<'none' | 'rain' | 'snow' | 'leaves'>('none')
-  const particleCanvasRef = useRef<HTMLCanvasElement>(null)
-  const particlesRef = useRef<WeatherParticle[]>([])
   const [mounted, setMounted] = useState(false)
 
   // Dogie Easter Egg states
@@ -100,9 +82,6 @@ export function PublicTabsContainer({
 
   useEffect(() => {
     setMounted(true)
-    const effects: Array<'rain' | 'snow' | 'leaves'> = ['rain', 'snow', 'leaves']
-    const randomEffect = effects[Math.floor(Math.random() * effects.length)]
-    setActiveEffect(randomEffect)
   }, [])
 
   // Dogie animation loop
@@ -162,130 +141,7 @@ export function PublicTabsContainer({
 
 
 
-  // Falling Weather Particle Simulation rendering loop
-  useEffect(() => {
-    if (!mounted || activeEffect === 'none') {
-      const canvas = particleCanvasRef.current
-      if (canvas) {
-        const ctx = canvas.getContext('2d')
-        ctx?.clearRect(0, 0, canvas.width, canvas.height)
-      }
-      return
-    }
 
-    const canvas = particleCanvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (canvas) {
-          canvas.width = entry.contentRect.width || canvas.clientWidth || window.innerWidth
-          canvas.height = entry.contentRect.height || canvas.clientHeight || window.innerHeight
-        }
-      }
-    })
-    resizeObserver.observe(canvas)
-
-    const count = activeEffect === 'rain' ? 120 : 60
-    const list: WeatherParticle[] = []
-    const leafEmojis = ['🍂', '🍁', '🍃', '🍀']
-    
-    for (let i = 0; i < count; i++) {
-      list.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: activeEffect === 'rain'
-          ? Math.random() * 1.5 + 0.8
-          : activeEffect === 'snow'
-          ? Math.random() * 3.5 + 1.5
-          : Math.random() * 8 + 12, // font size
-        speedY: activeEffect === 'rain'
-          ? Math.random() * 7 + 12
-          : activeEffect === 'snow'
-          ? Math.random() * 1.2 + 0.8
-          : Math.random() * 1.0 + 0.6,
-        speedX: activeEffect === 'rain'
-          ? -1.5
-          : Math.random() * 1.0 - 0.5,
-        opacity: Math.random() * 0.5 + 0.35,
-        sway: Math.random() * 100,
-        swaySpeed: Math.random() * 0.02 + 0.01,
-        angle: Math.random() * Math.PI * 2,
-        spin: Math.random() * 0.02 - 0.01,
-        emoji: activeEffect === 'leaves'
-          ? leafEmojis[Math.floor(Math.random() * leafEmojis.length)]
-          : undefined
-      })
-    }
-    particlesRef.current = list
-
-    let animationId: number
-
-    const drawParticles = () => {
-      if (!canvas || !ctx) return
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      particlesRef.current.forEach(p => {
-        p.y += p.speedY
-        
-        if (activeEffect === 'snow') {
-          p.sway += p.swaySpeed
-          p.x += Math.sin(p.sway) * 0.5
-        } else if (activeEffect === 'leaves') {
-          p.sway += p.swaySpeed
-          p.x += Math.sin(p.sway) * 0.7
-          if (p.angle !== undefined && p.spin !== undefined) {
-            p.angle += p.spin
-          }
-        } else {
-          p.x += p.speedX
-        }
-
-        // Reset particles out of bounds
-        if (p.y > canvas.height + 20 || p.x < -20 || p.x > canvas.width + 20) {
-          p.y = -20
-          p.x = Math.random() * canvas.width
-          p.opacity = Math.random() * 0.5 + 0.35
-        }
-
-        ctx.save()
-        ctx.globalAlpha = p.opacity
-
-        if (activeEffect === 'rain') {
-          ctx.strokeStyle = 'rgba(156, 163, 175, 0.45)'
-          ctx.lineWidth = p.size
-          ctx.beginPath()
-          ctx.moveTo(p.x, p.y)
-          ctx.lineTo(p.x + p.speedX * 1.5, p.y + p.speedY * 1.2)
-          ctx.stroke()
-        } else if (activeEffect === 'snow') {
-          ctx.fillStyle = '#ffffff'
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-          ctx.fill()
-        } else if (activeEffect === 'leaves' && p.emoji) {
-          ctx.translate(p.x, p.y)
-          ctx.rotate(p.angle || 0)
-          ctx.font = `${p.size}px sans-serif`
-          ctx.fillText(p.emoji, -p.size / 2, p.size / 2)
-        }
-
-        ctx.restore()
-      })
-
-      animationId = requestAnimationFrame(drawParticles)
-    }
-
-    drawParticles()
-
-    return () => {
-      resizeObserver.disconnect()
-      cancelAnimationFrame(animationId)
-    }
-  }, [activeEffect, mounted])
 
   // Read URL search params on mount to handle redirects from /login
   useEffect(() => {
@@ -319,11 +175,6 @@ export function PublicTabsContainer({
 
   return (
     <div className="pb-28 relative"> {/* Extra padding bottom to prevent nav overlap */}
-      {/* Weather Particle Simulation Overlay Canvas */}
-      <canvas
-        ref={particleCanvasRef}
-        className="fixed inset-0 w-full h-full pointer-events-none z-50"
-      />
 
       {/* Dogie Easter Egg Falling Container (rendered behind everything with z-[-10]) */}
       {dogieActive && (

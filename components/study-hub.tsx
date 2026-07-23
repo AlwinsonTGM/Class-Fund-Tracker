@@ -785,7 +785,7 @@ export function StudyHub({
 
             <div className="flex-1 flex flex-col justify-stretch">
               {selectedLocalDoc.type === 'pdf' ? (
-                <div className="relative w-full h-[500px] md:h-[680px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
+                <div className="relative w-full h-[450px] sm:h-[550px] md:h-[720px] lg:h-[800px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20">
                   <iframe
                     src={getEmbeddableUrl(selectedLocalDoc.path).embedUrl || selectedLocalDoc.path}
                     className="w-full h-full border-0 absolute inset-0 z-10"
@@ -948,7 +948,7 @@ export function StudyHub({
             </div>
 
             {/* List and Projection Panel */}
-            <div className="lg:col-span-9 flex flex-col gap-4 items-stretch relative min-h-[500px] md:min-h-[680px] animate-fade-in">
+            <div className="lg:col-span-9 flex flex-col gap-4 items-stretch relative min-h-[450px] md:min-h-[750px] lg:min-h-[850px] animate-fade-in">
               
               {/* Projection Frame Viewport (Middle Panel) */}
               <div className="flex-1 bg-card border border-border rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-0">
@@ -983,12 +983,12 @@ export function StudyHub({
                         </div>
 
                         {/* Projection Container */}
-                        <div className="flex-1 flex flex-col min-h-[300px] md:min-h-[500px] w-full">
+                        <div className="flex-1 flex flex-col min-h-[400px] md:min-h-[700px] lg:min-h-[780px] w-full">
                           {embedInfo.isEmbeddable && embedInfo.embedUrl ? (
-                            <div className={`w-full h-full rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative ${isDragging ? 'pointer-events-none' : ''}`} style={{ minHeight: '300px', maxHeight: '600px' }}>
+                            <div className={`w-full h-[450px] sm:h-[550px] md:h-[720px] lg:h-[800px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative ${isDragging ? 'pointer-events-none' : ''}`}>
                               <iframe
                                 src={embedInfo.embedUrl}
-                                className="w-full h-full border-0 absolute inset-0 z-10"
+                                className="w-full h-full border-0 absolute inset-0 z-10 touch-auto"
                                 title={selectedMaterial.title}
                                 allow="autoplay"
                               />
