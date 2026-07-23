@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { addPostAction, deletePostAction } from '@/app/officer-dashboard/actions'
-import { Play, Pause, X, Music, AlertTriangle, PenSquare, Check, FolderOpen, Settings } from 'lucide-react'
+import { Play, Pause, X, Music, AlertTriangle, PenSquare, Check, FolderOpen } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 
 export interface SongPreview {
@@ -450,7 +450,6 @@ export function FreedomWall({
 }: FreedomWallProps) {
   const { toast } = useToast()
   const [activeBackground, setActiveBackground] = useState<'sky' | 'live1' | 'live2' | 'live3' | 'live4' | 'live5'>('sky')
-  const [showSettings, setShowSettings] = useState(false)
 
   const [posts, setPosts] = useState<FreedomPost[]>(initialPosts)
   // Scatter canvas and physics simulation are limited to the top 10 posts so invisible notes do not exist in physics world
@@ -500,6 +499,9 @@ export function FreedomWall({
 
   useEffect(() => {
     setMounted(true)
+    const backgrounds: Array<'sky' | 'live1' | 'live2' | 'live3' | 'live4' | 'live5'> = ['sky', 'live1', 'live2', 'live3', 'live4', 'live5']
+    const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)]
+    setActiveBackground(randomBg)
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
     }
@@ -1744,52 +1746,7 @@ export function FreedomWall({
             </button>
           </div>
 
-          {/* Settings Cog Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowSettings(!showSettings)
-            }}
-            className="absolute top-4 right-4 bg-white/90 dark:bg-zinc-900/90 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 size-8 rounded-full flex items-center justify-center shadow-md z-20 transition-all duration-300 press-spring cursor-pointer"
-            title="Canvas Background Settings"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
 
-          {/* Settings Dropdown Box */}
-          {showSettings && (
-            <div 
-              className="absolute top-14 right-4 bg-white/95 dark:bg-zinc-900/95 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xl dark:shadow-2xl z-30 backdrop-blur-md text-[11px] font-sans w-56 flex flex-col gap-3.5 anim-fade-in pointer-events-auto"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-1.5">
-                <span className="font-bold text-xs">Canvas Settings ⚙️</span>
-                <button 
-                  onClick={() => setShowSettings(false)} 
-                  className="text-muted-foreground hover:text-foreground text-[10px] font-bold cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-
-              {/* Background Choice */}
-              <div className="flex flex-col gap-1.5 text-left">
-                <span className="font-bold text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Live Background:</span>
-                <select 
-                  value={activeBackground} 
-                  onChange={e => setActiveBackground(e.target.value as any)}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-2 py-1.5 text-[10px] focus:outline-none cursor-pointer text-slate-800 dark:text-zinc-100"
-                >
-                  <option value="sky">🌅 Default Sky Image</option>
-                  <option value="live1">📺 Live Backdrop 1</option>
-                  <option value="live2">📺 Live Backdrop 2</option>
-                  <option value="live3">📺 Live Backdrop 3</option>
-                  <option value="live4">📺 Live Background 4</option>
-                  <option value="live5">📺 Live Background 5</option>
-                </select>
-              </div>
-            </div>
-          )}
         </div>
       ) : (
         /* Classic Grid Mode with Visual Templates */

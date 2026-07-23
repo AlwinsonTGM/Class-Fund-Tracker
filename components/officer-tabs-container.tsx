@@ -11,7 +11,7 @@ import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { AddExpenseModal } from '@/components/add-expense-modal'
 import { StudentPaymentList } from '@/components/student-payment-list'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
-import { Home, ClipboardList, MessageSquare, ShieldAlert, DollarSign, FileText, Settings } from 'lucide-react'
+import { Home, ClipboardList, MessageSquare, ShieldAlert, DollarSign, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
 import { signOutAction } from '@/app/login/actions'
@@ -95,7 +95,6 @@ export function OfficerTabsContainer({
   
   // Customizable Canvas/Page Effects
   const [activeEffect, setActiveEffect] = useState<'none' | 'rain' | 'snow' | 'leaves'>('none')
-  const [showSettings, setShowSettings] = useState(false)
   const particleCanvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<WeatherParticle[]>([])
   const [mounted, setMounted] = useState(false)
@@ -107,73 +106,9 @@ export function OfficerTabsContainer({
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  // Dogie animation loop
-  useEffect(() => {
-    if (!dogieActive) return
-
-    const count = 12
-    const initial: FallingDogie[] = Array.from({ length: count }).map(() => ({
-      src: DOGIE_GIFS[Math.floor(Math.random() * DOGIE_GIFS.length)],
-      left: Math.random() * 90,
-      top: Math.random() * -800 - 150,
-      speedY: Math.random() * 0.4 + 0.25, // very slow falling
-      width: Math.random() * 60 + 50,
-      rotation: Math.random() * 360,
-      rotationSpeed: Math.random() * 0.3 - 0.15
-    }))
-    setDogies(initial)
-
-    let active = true
-    let lastTime = performance.now()
-
-    const update = (time: number) => {
-      if (!active) return
-      const delta = time - lastTime
-      lastTime = time
-
-      setDogies(prev => 
-        prev.map(d => {
-          let newTop = d.top + d.speedY * (delta * 0.1)
-          let newRotation = d.rotation + d.rotationSpeed * (delta * 0.1)
-          
-          if (newTop > (typeof window !== 'undefined' ? window.innerHeight : 800) + 150) {
-            newTop = -150
-            return {
-              ...d,
-              left: Math.random() * 90,
-              top: -150,
-              speedY: Math.random() * 0.4 + 0.25,
-              width: Math.random() * 60 + 50,
-              rotation: Math.random() * 360,
-              rotationSpeed: Math.random() * 0.3 - 0.15
-            }
-          }
-          return { ...d, top: newTop, rotation: newRotation }
-        })
-      )
-
-      requestAnimationFrame(update)
-    }
-
-    const animFrame = requestAnimationFrame(update)
-    return () => {
-      active = false
-      cancelAnimationFrame(animFrame)
-    }
-  }, [dogieActive])
-
-  // Close settings dropdown when clicking outside
-  useEffect(() => {
-    function handleGlobalClick(event: MouseEvent) {
-      const target = event.target as HTMLElement
-      if (!target.closest('.weather-settings-trigger') && !target.closest('.weather-settings-dropdown')) {
-        setShowSettings(false)
-      }
-    }
-    document.addEventListener('click', handleGlobalClick)
-    return () => document.removeEventListener('click', handleGlobalClick)
+    const effects: Array<'rain' | 'snow' | 'leaves'> = ['rain', 'snow', 'leaves']
+    const randomEffect = effects[Math.floor(Math.random() * effects.length)]
+    setActiveEffect(randomEffect)
   }, [])
 
   // Falling Weather Particle Simulation rendering loop
@@ -378,68 +313,6 @@ export function OfficerTabsContainer({
           <div className="flex items-center gap-2 relative">
             <ThemeToggle />
             <PatchNotesButton />
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowSettings(!showSettings)
-                setEggClicks(prev => {
-                  const next = prev + 1
-                  if (next >= 10 && !dogieActive) {
-                    setDogieActive(true)
-                  }
-                  return next
-                })
-              }}
-              className="weather-settings-trigger bg-card text-foreground border border-border hover:bg-muted size-8 rounded-full flex items-center justify-center shadow-sm cursor-pointer transition-all press-spring"
-              title="Page Effects & Background Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-
-            {/* Page Effects Settings Modal/Dropdown */}
-            {showSettings && (
-              <div 
-                className="weather-settings-dropdown absolute top-10 right-0 bg-white/95 dark:bg-zinc-900/95 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xl dark:shadow-2xl z-50 backdrop-blur-md text-[11px] font-sans w-56 flex flex-col gap-3.5 anim-fade-in pointer-events-auto"
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-1.5">
-                  <span className="font-bold text-xs">Weather Settings 🌧️</span>
-                  <button 
-                    onClick={() => setShowSettings(false)} 
-                    className="text-muted-foreground hover:text-foreground text-[10px] font-bold cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-
-                {/* Falling Weather Effects */}
-                <div className="flex flex-col gap-1.5 text-left">
-                  <span className="font-bold text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Falling Weather:</span>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { id: 'none', label: 'None', emoji: '❌' },
-                      { id: 'rain', label: 'Rain', emoji: '🌧️' },
-                      { id: 'snow', label: 'Snow', emoji: '❄️' },
-                      { id: 'leaves', label: 'Leaves', emoji: '🍂' }
-                    ].map(eff => (
-                      <button
-                        type="button"
-                        key={eff.id}
-                        onClick={() => setActiveEffect(eff.id as any)}
-                        className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border text-[9px] font-semibold cursor-pointer transition-all ${
-                          activeEffect === eff.id
-                            ? 'ring-2 ring-primary border-primary bg-primary/5'
-                            : 'border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800'
-                        }`}
-                      >
-                        <span className="text-sm">{eff.emoji}</span>
-                        <span>{eff.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Direct Record Expense button for desktop */}
             <button
