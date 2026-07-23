@@ -3,6 +3,7 @@
 import React, { useState, useTransition, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { addExpenseAction } from '@/app/officer-dashboard/actions'
+import { useToast } from '@/components/ui/toast'
 
 const OFFICER_ROLES = [
   'President',
@@ -15,6 +16,7 @@ const OFFICER_ROLES = [
 ]
 
 export function AddExpenseModal() {
+  const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -50,13 +52,17 @@ export function AddExpenseModal() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!description || !amount || !officerName) {
-      setError('Please fill in all fields.')
+      const msg = 'Please fill in all fields.'
+      setError(msg)
+      toast.error(msg, 'Validation Error')
       return
     }
 
     const numAmount = parseFloat(amount)
     if (isNaN(numAmount) || numAmount <= 0) {
-      setError('Please enter a valid amount greater than 0.')
+      const msg = 'Please enter a valid amount greater than 0.'
+      setError(msg)
+      toast.error(msg, 'Validation Error')
       return
     }
 
@@ -65,14 +71,19 @@ export function AddExpenseModal() {
       try {
         const result = await addExpenseAction(description, numAmount, officerName)
         if (result && result.success) {
+          toast.success(`Recorded expense of ₱${numAmount.toFixed(2)} (${description})`, 'Expense Recorded')
           setIsOpen(false)
           setIsClosing(false)
         } else {
-          setError('Failed to record expense. Please try again.')
+          const msg = 'Failed to record expense. Please try again.'
+          setError(msg)
+          toast.error(msg, 'Expense Failed')
         }
       } catch (err: any) {
         console.error('Error adding expense:', err)
-        setError(err.message || 'An unexpected error occurred.')
+        const msg = err.message || 'An unexpected error occurred.'
+        setError(msg)
+        toast.error(msg, 'Expense Failed')
       }
     })
   }

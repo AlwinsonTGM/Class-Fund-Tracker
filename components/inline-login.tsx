@@ -2,12 +2,14 @@
 
 import React, { useState, startTransition } from 'react'
 import { loginAction, signInWithGoogleAction, signUpAction, sendResetLinkAction } from '@/app/login/actions'
+import { useToast } from '@/components/ui/toast'
 
 interface InlineLoginProps {
   onSuccess?: () => void
 }
 
 export function InlineLogin({ onSuccess }: InlineLoginProps) {
+  const { toast } = useToast()
   const [view, setView] = useState<'sign-in' | 'sign-up' | 'forgot-password'>('sign-in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,13 +26,18 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
 
       const result = await loginAction(null, formData)
       if (result && !result.success) {
-        setError(result.error || 'Failed to sign in. Please check your credentials.')
+        const msg = result.error || 'Failed to sign in. Please check your credentials.'
+        setError(msg)
+        toast.error(msg, 'Sign In Failed')
         setIsPending(false)
       } else {
+        toast.success('Signed in successfully!', 'Welcome Back')
         if (onSuccess) onSuccess()
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.')
+      const msg = err.message || 'An unexpected error occurred.'
+      setError(msg)
+      toast.error(msg, 'Sign In Failed')
       setIsPending(false)
     }
   }
@@ -43,15 +50,21 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
 
       const result = await signUpAction(null, formData)
       if (result && !result.success) {
-        setError(result.error || 'Failed to register.')
+        const msg = result.error || 'Failed to register.'
+        setError(msg)
+        toast.error(msg, 'Registration Failed')
       } else {
-        setSuccess(result.message || 'Registration successful! Please check your email to verify your account.')
+        const msg = result.message || 'Registration successful! Please check your email to verify your account.'
+        setSuccess(msg)
+        toast.success(msg, 'Account Created')
         setEmail('')
         setPassword('')
       }
       setIsPending(false)
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.')
+      const msg = err.message || 'An unexpected error occurred.'
+      setError(msg)
+      toast.error(msg, 'Registration Failed')
       setIsPending(false)
     }
   }
@@ -63,14 +76,20 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
 
       const result = await sendResetLinkAction(null, formData)
       if (result && !result.success) {
-        setError(result.error || 'Failed to send reset link.')
+        const msg = result.error || 'Failed to send reset link.'
+        setError(msg)
+        toast.error(msg, 'Reset Failed')
       } else {
-        setSuccess(result.message || 'Password reset link sent! Please check your email inbox.')
+        const msg = result.message || 'Password reset link sent! Please check your email inbox.'
+        setSuccess(msg)
+        toast.success(msg, 'Reset Link Sent')
         setEmail('')
       }
       setIsPending(false)
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.')
+      const msg = err.message || 'An unexpected error occurred.'
+      setError(msg)
+      toast.error(msg, 'Reset Failed')
       setIsPending(false)
     }
   }

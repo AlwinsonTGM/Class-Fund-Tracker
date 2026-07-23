@@ -23,6 +23,33 @@ export async function loginAction(prevState: any, formData: FormData) {
     return { success: false, error: error.message }
   }
 
+  // Check if officer or moderator to redirect appropriately
+  const { data: moderator } = await supabase
+    .from('moderators')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle()
+
+  let isOfficer = false
+  if (!moderator) {
+    try {
+      const { data: officer, error: offError } = await supabase
+        .from('officers')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle()
+      if (!offError && officer) {
+        isOfficer = true
+      }
+    } catch (err) {
+      console.warn('Officers table query failed inside loginAction:', err)
+    }
+  }
+
+  if (moderator || isOfficer) {
+    redirect('/officer-dashboard')
+  }
+
   redirect('/')
 }
 

@@ -1,7 +1,14 @@
 ```
+# Next.js / Vercel
+.next/
+.vercel/
+*.tsbuildinfo
+*.meta
+
 # Environment variables
 .env
 .env.local
+.env*.local
 *.env.*
 
 # Logs
@@ -62,4 +69,5 @@ htmlcov/
 *.Z
 *.lz
 *.lzo
+
 ```

@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import { upsertWeekAction, deleteWeekAction } from '@/app/officer-dashboard/actions'
+import { useToast } from '@/components/ui/toast'
 
 interface Week {
   id: number
@@ -15,6 +16,7 @@ interface ManageWeeksPanelProps {
 }
 
 export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
+  const { toast } = useToast()
   const [weekNumber, setWeekNumber] = useState('')
   const [dateRange, setDateRange] = useState('')
   const [status, setStatus] = useState('active')
@@ -30,11 +32,15 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
     e.preventDefault()
     const numWeek = parseInt(weekNumber)
     if (isNaN(numWeek) || numWeek <= 0) {
-      setError('Please enter a valid week number.')
+      const msg = 'Please enter a valid week number.'
+      setError(msg)
+      toast.error(msg, 'Validation Error')
       return
     }
     if (!dateRange.trim()) {
-      setError('Please enter a date range (e.g. Jul 20 – 22).')
+      const msg = 'Please enter a date range (e.g. Jul 20 – 22).'
+      setError(msg)
+      toast.error(msg, 'Validation Error')
       return
     }
 
@@ -43,12 +49,19 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
       try {
         const result = await upsertWeekAction(numWeek, dateRange.trim(), status)
         if (result && result.success) {
+          toast.success(`Week ${numWeek} configuration saved.`, 'Week Saved')
           setWeekNumber('')
           setDateRange('')
           setStatus('active')
+        } else {
+          const msg = 'Failed to save week.'
+          setError(msg)
+          toast.error(msg, 'Save Failed')
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to save week.')
+        const msg = err.message || 'Failed to save week.'
+        setError(msg)
+        toast.error(msg, 'Save Failed')
       }
     })
   }
@@ -59,8 +72,11 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
       startTransition(async () => {
         try {
           await deleteWeekAction(weekNum)
+          toast.success(`Week ${weekNum} has been deleted.`, 'Week Deleted')
         } catch (err: any) {
-          setError(err.message || 'Failed to delete week.')
+          const msg = err.message || 'Failed to delete week.'
+          setError(msg)
+          toast.error(msg, 'Deletion Failed')
         }
       })
     }
@@ -74,7 +90,9 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
 
   const saveEdit = (weekNum: number) => {
     if (!editingRange.trim()) {
-      alert('Please enter a valid date range.')
+      const msg = 'Please enter a valid date range.'
+      alert(msg)
+      toast.error(msg, 'Validation Error')
       return
     }
 
@@ -83,10 +101,17 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
       try {
         const result = await upsertWeekAction(weekNum, editingRange.trim(), editingStatus)
         if (result && result.success) {
+          toast.success(`Week ${weekNum} updated successfully.`, 'Week Updated')
           setEditingWeekNum(null)
+        } else {
+          const msg = 'Failed to update week.'
+          setError(msg)
+          toast.error(msg, 'Update Failed')
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to update week.')
+        const msg = err.message || 'Failed to update week.'
+        setError(msg)
+        toast.error(msg, 'Update Failed')
       }
     })
   }

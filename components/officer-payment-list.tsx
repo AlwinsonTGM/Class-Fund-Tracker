@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useTransition } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
 import { Search, AlertTriangle } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 interface Student {
   id: number
@@ -32,6 +33,7 @@ interface OfficerPaymentListProps {
 }
 
 export function OfficerPaymentList({ students = [], initialPayments = [], weeks = [] }: OfficerPaymentListProps) {
+  const { toast } = useToast()
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
 
   const [selectedWeek, setSelectedWeek] = useState(1)
@@ -107,13 +109,19 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
         if (!result || !result.success) {
           throw new Error('Save failed')
         }
+        toast.success(
+          `${studentName} marked as ${targetPaid ? 'Paid' : 'Unpaid'} for Week ${selectedWeek}.`,
+          'Payment Status Updated'
+        )
       } catch (err: any) {
         console.error('Error toggling payment status:', err)
         setPayments(backupPayments)
+        const msg = err.message || 'Failed to save payment status change.'
         setLocalErrors((prev) => ({
           ...prev,
-          [errorKey]: err.message || 'Failed to save changes.'
+          [errorKey]: msg
         }))
+        toast.error(msg, 'Update Failed')
       }
     })
   }

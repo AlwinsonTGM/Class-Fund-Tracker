@@ -293,7 +293,7 @@ export async function addTaskAction(input: AddTaskInput) {
     const actionDescription = `Added task: "${input.title}" (Type: ${input.task_type}, Priority: ${input.priority || 'Medium'}).`
 
     // Insert into tasks
-    const { error: taskError } = await supabase
+    const { data: newTask, error: taskError } = await supabase
       .from('tasks')
       .insert({
         title: input.title,
@@ -309,6 +309,8 @@ export async function addTaskAction(input: AddTaskInput) {
         is_private: input.is_private || false,
         created_by: email
       })
+      .select('*')
+      .single()
     if (taskError) throw taskError
 
     // Insert audit log only for public tasks
@@ -324,7 +326,7 @@ export async function addTaskAction(input: AddTaskInput) {
 
     revalidatePath('/')
     revalidatePath('/officer-dashboard')
-    return { success: true }
+    return { success: true, task: newTask }
   } catch (err: any) {
     console.error('Error adding task:', err)
     return { success: false, error: err.message || 'Failed to add task.' }

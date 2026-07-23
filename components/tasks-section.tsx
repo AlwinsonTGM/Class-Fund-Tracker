@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { addTaskAction, toggleTaskAction, deleteTaskAction, AddTaskInput, editTaskAction, EditTaskInput } from '@/app/officer-dashboard/actions'
 import { Search, Settings, CheckCircle2, ClipboardList, X, Inbox, User, Users, AlertTriangle, Plus, Check, Edit3, Lock } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 export interface Course {
   id: number
@@ -116,6 +118,8 @@ export function TasksSection({
   onCloseAddTrigger,
   user
 }: TasksSectionProps) {
+  const router = useRouter()
+  const { toast } = useToast()
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [showAddForm, setShowAddForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -264,9 +268,12 @@ export function TasksSection({
               group_size: taskInput.group_size as any,
               priority: taskInput.priority as any
             } : t))
+            toast.success(`Task "${taskInput.title}" updated successfully.`, 'Task Updated')
             resetForm()
           } else {
-            setError(res.error || 'Failed to edit task.')
+            const msg = res.error || 'Failed to edit task.'
+            setError(msg)
+            toast.error(msg, 'Task Update Failed')
           }
         } else {
           const res = await addTaskAction({
@@ -274,16 +281,27 @@ export function TasksSection({
             status: 'Pending'
           })
           if (res.success) {
-            // Re-fetch or trigger reload
+            if (res.task) {
+              const matchedCourse = courses.find(c => c.id === res.task.course_id)
+              const newTaskWithCourse: Task = {
+                ...res.task,
+                courses: matchedCourse || null
+              }
+              setTasks(prev => [newTaskWithCourse, ...prev])
+            }
+            toast.success(`Task "${taskInput.title}" created successfully.`, 'Task Created')
             resetForm()
-            window.location.reload()
+            router.refresh()
           } else {
             // If schema is missing in DB (fallback context)
             if (res.error?.includes('relation') || res.error?.includes('Column') || res.error?.includes('Could not find')) {
               setFallbackMode(true)
               saveTaskLocally(taskInput)
+              toast.success(`Task "${taskInput.title}" saved locally.`, 'Task Saved')
             } else {
-              setError(res.error || 'Failed to create task.')
+              const msg = res.error || 'Failed to create task.'
+              setError(msg)
+              toast.error(msg, 'Task Creation Failed')
             }
           }
         }
@@ -291,6 +309,7 @@ export function TasksSection({
         console.error('Failed to save task, switching to local storage', err)
         setFallbackMode(true)
         saveTaskLocally(taskInput)
+        toast.success(`Task "${taskInput.title}" saved locally.`, 'Task Saved')
       }
     })
   }
@@ -362,6 +381,7 @@ export function TasksSection({
       const updated = tasks.map(t => t.id === id ? { ...t, status: nextStatus as any } : t)
       setTasks(updated)
       localStorage.setItem('cft_fallback_tasks_v2', JSON.stringify(updated))
+      toast.success(`Task "${title}" marked as ${nextStatus}.`, 'Task Updated')
       return
     }
 
@@ -369,11 +389,17 @@ export function TasksSection({
     startTransition(async () => {
       try {
         const res = await toggleTaskAction(id, nextStatus, title)
-        if (!res.success) {
-          setError(res.error || 'Failed to update task.')
+        if (res.success) {
+          toast.success(`Task "${title}" marked as ${nextStatus}.`, 'Task Updated')
+        } else {
+          const msg = res.error || 'Failed to update task status.'
+          setError(msg)
+          toast.error(msg, 'Update Failed')
         }
       } catch (err: any) {
-        setError('Failed to toggle task.')
+        const msg = 'Failed to toggle task status.'
+        setError(msg)
+        toast.error(msg, 'Update Failed')
       } finally {
         setTogglingTaskId(null)
       }
@@ -390,6 +416,7 @@ export function TasksSection({
       const updated = tasks.filter(t => t.id !== id)
       setTasks(updated)
       localStorage.setItem('cft_fallback_tasks_v2', JSON.stringify(updated))
+      toast.success(`Task "${title}" deleted.`, 'Task Deleted')
       return
     }
 
@@ -397,11 +424,17 @@ export function TasksSection({
     startTransition(async () => {
       try {
         const res = await deleteTaskAction(id, title)
-        if (!res.success) {
-          setError(res.error || 'Failed to delete task.')
+        if (res.success) {
+          toast.success(`Task "${title}" deleted.`, 'Task Deleted')
+        } else {
+          const msg = res.error || 'Failed to delete task.'
+          setError(msg)
+          toast.error(msg, 'Deletion Failed')
         }
       } catch (err: any) {
-        setError('Failed to delete task.')
+        const msg = 'Failed to delete task.'
+        setError(msg)
+        toast.error(msg, 'Deletion Failed')
       } finally {
         setDeletingTaskId(null)
       }

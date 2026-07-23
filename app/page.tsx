@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
 import { PublicTabsContainer } from '@/components/public-tabs-container'
 
 export const dynamic = 'force-dynamic'
@@ -8,6 +9,33 @@ export default async function Page() {
 
   // 1. Get active session user
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    // Check if logged in user is an officer or moderator
+    const { data: moderator } = await supabase
+      .from('moderators')
+      .select('email')
+      .eq('email', user.email)
+      .maybeSingle()
+
+    let isOfficer = false
+    try {
+      const { data: officer, error: offError } = await supabase
+        .from('officers')
+        .select('email')
+        .eq('email', user.email)
+        .maybeSingle()
+      if (!offError && officer) {
+        isOfficer = true
+      }
+    } catch (err) {
+      console.warn('Officers table query failed inside root page:', err)
+    }
+
+    if (moderator || isOfficer) {
+      redirect('/officer-dashboard')
+    }
+  }
 
   // 2. Fetch data (Students, Payments, Expenses, Weeks, Audit Logs, Tasks, Freedom Posts)
   const { data: dbStudents, error: studentsError } = await supabase

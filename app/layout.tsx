@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
+import { ToastProvider } from '@/components/ui/toast'
 import './globals.css'
 
 const geist = Geist({ subsets: ['latin'] })
@@ -17,6 +18,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
 }
+
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -37,8 +39,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body className={`${geist.className} font-sans antialiased`}>
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <ToastProvider>
+          {children}
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </ToastProvider>
       </body>
     </html>
   )

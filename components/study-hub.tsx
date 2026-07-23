@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useTransition, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   FileText, 
   Download, 
@@ -24,6 +25,7 @@ import {
   addClassDocumentAction,
   deleteClassDocumentAction
 } from '@/app/officer-dashboard/actions'
+import { useToast } from '@/components/ui/toast'
 
 interface SongPreview {
   title: string
@@ -276,6 +278,8 @@ export function StudyHub({
   user,
   initialClassDocs = []
 }: StudyHubProps) {
+  const router = useRouter()
+  const { toast } = useToast()
   const [activeSubTab, setActiveSubTab] = useState<'docs' | 'reviewers'>('docs')
   
   // Local documents data
@@ -347,10 +351,15 @@ export function StudyHub({
     })
 
     if (result.success) {
-      // Reload page to fetch updated documents from database
-      window.location.reload()
+      toast.success(`Document "${newDocTitle.trim()}" added.`, 'Document Added')
+      router.refresh()
+      setIsAddingDoc(false)
+      setNewDocTitle('')
+      setNewDocUrl('')
+      setNewDocContent('')
     } else {
-      alert('Failed to add document: ' + (result.error || 'Unknown error'))
+      const msg = result.error || 'Failed to add document'
+      toast.error(msg, 'Document Addition Failed')
       setIsAddingDoc(false)
     }
   }
@@ -365,9 +374,11 @@ export function StudyHub({
       
       const result = await deleteClassDocumentAction(doc.dbId)
       if (result.success) {
-        window.location.reload()
+        toast.success(`Document "${doc.title}" deleted.`, 'Document Deleted')
+        router.refresh()
       } else {
-        alert('Failed to delete document: ' + (result.error || 'Unknown error'))
+        const msg = result.error || 'Failed to delete document'
+        toast.error(msg, 'Deletion Failed')
       }
     } else {
       // Legacy localStorage document
@@ -536,10 +547,13 @@ export function StudyHub({
       try {
         const res = await addStudyMaterialAction(payload)
         if (res.success) {
+          toast.success(`Reviewer material "${submitTitle.trim()}" submitted!`, 'Material Submitted')
           setSubmitSuccessMsg(true)
           resetForm()
         } else {
-          setSubmitError(res.error || 'Failed to submit.')
+          const msg = res.error || 'Failed to submit.'
+          setSubmitError(msg)
+          toast.error(msg, 'Submission Failed')
         }
       } catch (err: any) {
         console.warn('DB Insert failed, using local storage fallback', err)
@@ -551,6 +565,7 @@ export function StudyHub({
           approved: user ? true : false
         }
         saveMaterialLocally(localMat)
+        toast.success(`Reviewer material "${submitTitle.trim()}" saved locally!`, 'Material Saved')
         setSubmitSuccessMsg(true)
         resetForm()
       }
@@ -577,17 +592,21 @@ export function StudyHub({
         const updated = materials.map(m => m.id === id ? { ...m, approved: true } : m)
         setMaterials(updated)
         localStorage.setItem('cft_local_materials', JSON.stringify(updated))
+        toast.success('Study material approved.', 'Approved')
         return
       }
       try {
         const res = await approveStudyMaterialAction(id)
         if (res.success) {
           setMaterials(prev => prev.map(m => m.id === id ? { ...m, approved: true } : m))
+          toast.success('Study material approved.', 'Approved')
         } else {
-          alert(res.error || 'Failed to approve.')
+          const msg = res.error || 'Failed to approve.'
+          toast.error(msg, 'Approval Failed')
         }
       } catch (err: any) {
-        alert(err.message || 'Error occurred.')
+        const msg = err.message || 'Error occurred.'
+        toast.error(msg, 'Approval Failed')
       }
     })
   }
@@ -602,6 +621,7 @@ export function StudyHub({
         setMaterials(updated)
         localStorage.setItem('cft_local_materials', JSON.stringify(updated))
         if (selectedMaterial?.id === id) setSelectedMaterial(null)
+        toast.success('Reviewer link deleted.', 'Deleted')
         return
       }
       try {
@@ -609,11 +629,14 @@ export function StudyHub({
         if (res.success) {
           setMaterials(prev => prev.filter(m => m.id !== id))
           if (selectedMaterial?.id === id) setSelectedMaterial(null)
+          toast.success('Reviewer link deleted.', 'Deleted')
         } else {
-          alert(res.error || 'Failed to delete.')
+          const msg = res.error || 'Failed to delete.'
+          toast.error(msg, 'Deletion Failed')
         }
       } catch (err: any) {
-        alert(err.message || 'Error occurred.')
+        const msg = err.message || 'Error occurred.'
+        toast.error(msg, 'Deletion Failed')
       }
     })
   }

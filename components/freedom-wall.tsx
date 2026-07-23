@@ -4,6 +4,7 @@ import React, { useState, useEffect, useTransition, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { addPostAction, deletePostAction } from '@/app/officer-dashboard/actions'
 import { Play, Pause, X, Music, AlertTriangle, PenSquare, Check, FolderOpen, Settings } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 export interface SongPreview {
   title: string
@@ -447,6 +448,7 @@ export function FreedomWall({
   onCloseAddTrigger,
   user
 }: FreedomWallProps) {
+  const { toast } = useToast()
   const [activeBackground, setActiveBackground] = useState<'sky' | 'live1' | 'live2' | 'live3' | 'live4' | 'live5'>('sky')
   const [showSettings, setShowSettings] = useState(false)
 
@@ -649,19 +651,24 @@ export function FreedomWall({
             song: selectedSong
           }
           setPosts(prev => [newPost, ...prev])
+          toast.success('Your note has been posted to the Freedom Wall!', 'Note Posted')
           resetForm()
         } else {
           if (res.error?.includes('relation') || res.error?.includes('Could not find the table')) {
             setFallbackMode(true)
             savePostLocally(content.trim(), name, selectedColor)
+            toast.success('Note posted locally.', 'Note Posted')
           } else {
-            setError(res.error || 'Failed to add post.')
+            const msg = res.error || 'Failed to add post.'
+            setError(msg)
+            toast.error(msg, 'Post Failed')
           }
         }
       } catch (err: any) {
         console.error('Add post error, using local fallback', err)
         setFallbackMode(true)
         savePostLocally(content.trim(), name, selectedColor)
+        toast.success('Note posted locally.', 'Note Posted')
       }
     })
   }
@@ -687,6 +694,7 @@ export function FreedomWall({
         const updated = posts.filter(p => p.id !== id)
         setPosts(updated)
         localStorage.setItem('cft_fallback_posts', JSON.stringify(updated))
+        toast.success('Note removed from Freedom Wall.', 'Note Deleted')
         return
       }
 
@@ -694,12 +702,17 @@ export function FreedomWall({
         try {
           const res = await deletePostAction(id)
           if (!res.success) {
-            setError(res.error || 'Failed to delete post.')
+            const msg = res.error || 'Failed to delete post.'
+            setError(msg)
+            toast.error(msg, 'Deletion Failed')
           } else {
             setPosts(prev => prev.filter(p => p.id !== id))
+            toast.success('Note removed from Freedom Wall.', 'Note Deleted')
           }
         } catch {
-          setError('Failed to delete post.')
+          const msg = 'Failed to delete post.'
+          setError(msg)
+          toast.error(msg, 'Deletion Failed')
         }
       })
     }
@@ -1501,7 +1514,7 @@ export function FreedomWall({
             }
           `}} />
 
-          {posts.map(post => {
+          {(posts.length > 10 ? posts.slice(0, 10) : posts).map(post => {
             const theme = getPostTheme(post.color)
             const isBlue = post.color === 'blue'
             const pos = positions[post.id] || { x: 30, y: 30 }

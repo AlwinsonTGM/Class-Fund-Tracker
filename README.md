@@ -42,6 +42,17 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Direct Blob Downloads**: Custom-written guides can be downloaded on-the-fly as `.md` text files from the browser.
 - **Dogie Falling Easter Egg**: Tapping the settings gear icon 10 times triggers falling animated GIFs floating gently behind all content panels.
 
+### ☁️ 7. Cloud Sync, Interactive Notifications & Fluid Glass Navigation (v1.6-beta)
+- **Database-Backed Class Documents**: Class documents are stored centrally in Supabase, enabling real-time visibility across all devices.
+- **Cloud Song Attachments**: iTunes song previews attached to Freedom Wall posts persist in the `song_data` JSONB database column.
+- **Cross-Device Synchronization**: Eliminates "local-only" storage constraints so documents and music added on mobile display instantly on desktop.
+- **Server Actions Integration**: Centralized `addPostAction` and `addClassDocumentAction` with explicit Supabase RLS security checks.
+- **Interactive Toast Notifications**: Instant, sliding popup notifications beside the screen to inform you when changes happen.
+- **Transaction Sound Effects**: Embedded clear, premium audio indicators triggering on transactions and user activities.
+- **Freedom Wall Scatter Limits**: Optimized canvas performance by limiting floating note scatters to the 10 latest entries.
+- **Symmetrical Glass Bubble Navigation**: Re-engineered mobile navigation into a perfectly aligned liquid glass bubble capsule that is completely static when idle and slides with zero-lag spring physics.
+- **Officer Routing & Task Fixes**: Hardened officer authentication to force dashboard route loading and resolved task redirects causing "Page Not Found" screens.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -169,6 +180,7 @@ create table freedom_posts (
   author_name text default 'Anonymous' not null,
   color text default 'bg-yellow-100' not null,
   song jsonb,
+  song_data jsonb,
   created_at timestamp with time zone default now() not null
 );
 ```
@@ -188,6 +200,19 @@ create table study_materials (
   task_name text,
   submitted_by text default 'Anonymous',
   approved boolean default false not null,
+  created_at timestamp with time zone default now() not null
+);
+```
+
+### 12. `class_documents`
+```sql
+create table class_documents (
+  id bigint primary key generated always as identity,
+  title text not null,
+  document_type text default 'md' not null, -- 'md' or 'pdf'
+  content text,
+  link text,
+  submitted_by text default 'Anonymous',
   created_at timestamp with time zone default now() not null
 );
 ```

@@ -137,9 +137,20 @@ html.dark {
 
 /* ─── Liquid Glass Effects & Physics ─── */
 @keyframes liquid-flow {
-  0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-  50% { border-radius: 40% 60% 70% 30% / 50% 60% 40% 50%; }
-  100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      inset 0 1.5px 2.5px rgba(255, 255, 255, 0.5),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+      0 4px 14px rgba(46, 189, 127, 0.25);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 
+      inset 0 2px 4px rgba(255, 255, 255, 0.7),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+      0 6px 18px rgba(46, 189, 127, 0.38);
+  }
 }
 
 @keyframes shimmer-sweep {
@@ -149,7 +160,8 @@ html.dark {
 
 /* Gel-like spring curve for bouncy fluid transitions */
 .liquid-ease {
-  transition-timing-function: cubic-bezier(0.25, 1.4, 0.5, 1.15) !important;
+  will-change: transform;
+  transition: transform 380ms cubic-bezier(0.34, 1.45, 0.64, 1), background-color 300ms ease, box-shadow 300ms ease !important;
 }
 
 /* Liquid Glass Panels */
@@ -195,26 +207,34 @@ html.dark .liquid-glass {
   animation: shimmer-sweep 1200ms ease-out forwards;
 }
 
-/* Liquid Blob Active Indicator */
+/* Liquid Bubble Active Indicator — Static on Idle, Fluid Spring on Move */
 .liquid-blob {
+  border-radius: 9999px !important;
   background: linear-gradient(
     135deg,
-    rgba(22, 131, 91, 0.18) 0%,
-    rgba(46, 189, 127, 0.28) 100%
+    rgba(22, 131, 91, 0.22) 0%,
+    rgba(46, 189, 127, 0.35) 100%
   ) !important;
-  animation: liquid-flow 4s ease-in-out infinite;
-  border: 1px solid rgba(46, 189, 127, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(46, 189, 127, 0.35) !important;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.2),
-    0 0 12px 1px rgba(46, 189, 127, 0.08);
+    inset 0 1.5px 2.5px rgba(255, 255, 255, 0.5),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+    0 4px 14px rgba(46, 189, 127, 0.25) !important;
 }
 
 html.dark .liquid-blob {
   background: linear-gradient(
     135deg,
-    rgba(46, 189, 127, 0.15) 0%,
-    rgba(46, 189, 127, 0.25) 100%
+    rgba(46, 189, 127, 0.2) 0%,
+    rgba(46, 189, 127, 0.38) 100%
   ) !important;
+  border: 1px solid rgba(46, 189, 127, 0.45) !important;
+  box-shadow: 
+    inset 0 1.5px 2.5px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(46, 189, 127, 0.35) !important;
 }
 
 

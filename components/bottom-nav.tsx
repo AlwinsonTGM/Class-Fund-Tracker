@@ -52,13 +52,13 @@ export function BottomNav({
       {/* Floating Bottom Navigation Bar */}
       <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-md rounded-full p-2 z-40 flex items-center justify-between liquid-glass liquid-glass-sheen sm:hidden">
         
-        {/* Sliding Capsule Background */}
+        {/* Sliding Bubble Background — Clean, static on idle, ultra-smooth GPU spring slide */}
         <div className="absolute inset-2 pointer-events-none">
           <div
-            className="h-full rounded-full transition-all duration-300 liquid-ease liquid-blob"
+            className="h-full rounded-full liquid-ease liquid-blob"
             style={{
               width: '20%',
-              transform: `translateX(${slideIndex * 100}%) scale(0.9, 0.85)`
+              transform: `translateX(${slideIndex * 100}%)`
             }}
           />
         </div>
@@ -73,15 +73,19 @@ export function BottomNav({
               onClick={() => {
                 setActiveTab(tab.id)
               }}
-              className="relative flex items-center justify-center w-1/5 h-12 rounded-full cursor-pointer group"
+              className="relative flex flex-col items-center justify-center w-1/5 h-12 rounded-full cursor-pointer group active:scale-95 transition-transform"
             >
               <span className={`transition-all duration-300 transform ${
-                isActive ? '-translate-y-2 scale-105 filter drop-shadow-sm' : 'translate-y-0 opacity-70 group-hover:opacity-100'
+                isActive 
+                  ? '-translate-y-2 scale-110 text-primary filter drop-shadow-[0_2px_8px_rgba(46,189,127,0.3)]' 
+                  : 'translate-y-0 opacity-60 group-hover:opacity-100 group-hover:scale-105'
               }`}>
                 {tab.icon}
               </span>
-              <span className={`absolute bottom-1 text-[9px] font-bold tracking-wide transition-all duration-300 transform ${
-                isActive ? 'translate-y-0 opacity-100 text-primary' : 'translate-y-2 opacity-0 pointer-events-none'
+              <span className={`absolute bottom-1 text-[9px] font-bold tracking-wider transition-all duration-300 transform ${
+                isActive 
+                  ? 'translate-y-0 opacity-100 text-primary' 
+                  : 'translate-y-2 opacity-0 pointer-events-none'
               }`}>
                 {tab.label}
               </span>

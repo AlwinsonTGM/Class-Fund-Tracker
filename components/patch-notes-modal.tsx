@@ -19,10 +19,18 @@ interface PatchEntry {
 const PATCH_NOTES: PatchEntry[] = [
   {
     version: '1.6-beta',
-    date: 'July 20, 2026',
-    title: '☁️ Cloud Sync Beta — Real-Time Collaboration',
+    date: 'July 23, 2026',
+    title: '☁️ Cloud Sync & Fluid Glass Navigation',
     emoji: '🔄',
     changes: [
+      { type: 'new', text: 'Interactive Toast Notifications — added sliding popup notifications on the side of the screen to alert you instantly when changes happen.' },
+      { type: 'new', text: 'Transaction Sound Effects — integrated audio feedback for transactions and user activities to make interactions more engaging.' },
+      { type: 'improve', text: 'Freedom Wall Optimization — limited floating notes to the 10 latest entries to enhance performance on low-end and mobile devices.' },
+      { type: 'improve', text: 'Symmetrical Liquid Glass Navigation — refined mobile bottom navigation capsule into a perfectly rounded glass bubble with top specular highlights.' },
+      { type: 'improve', text: 'Static Idle Posture — removed continuous asymmetrical morphing keyframes for a clean, stable idle state.' },
+      { type: 'fix', text: 'Zero-Lag Tab Sliding — eliminated state-delay hitches for instant, responsive GPU hardware-accelerated tab transitions.' },
+      { type: 'fix', text: 'Officer Authentication Route Protection — forced authenticated officers to load the Officer Dashboard directly rather than landing on the normal dashboard.' },
+      { type: 'fix', text: 'Task Creation Redirects — fixed a routing issue where adding a task occasionally redirected to a "Page Not Found" screen.' },
       { type: 'new', text: 'Database-Backed Class Documents — class files are now stored in Supabase instead of local storage, making them visible to all users across all devices.' },
       { type: 'new', text: 'Cloud Song Attachments — song previews attached to Freedom Wall posts are now saved to the database (song_data column), ensuring everyone hears the same tracks.' },
       { type: 'fix', text: 'Cross-Device Synchronization — eliminated the "local-only" bug where documents and songs added on your phone were invisible to other users.' },
