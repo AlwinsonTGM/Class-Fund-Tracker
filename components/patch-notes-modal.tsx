@@ -18,7 +18,7 @@ interface PatchEntry {
 
 const PATCH_NOTES: PatchEntry[] = [
   {
-    version: '1.6-beta',
+    version: '1.6',
     date: 'July 23, 2026',
     title: '☁️ Cloud Sync & Fluid Glass Navigation',
     emoji: '🔄',

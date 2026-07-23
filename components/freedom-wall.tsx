@@ -470,6 +470,7 @@ export function FreedomWall({
   const [focusedRect, setFocusedRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const [isZoomed, setIsZoomed] = useState(false)
   const [activeDragId, setActiveDragId] = useState<number | null>(null)
+  const activeDragIdRef = useRef<number | null>(null)
   const [draggedDistance, setDraggedDistance] = useState(0)
   const [viewportSize, setViewportSize] = useState({ w: 1000, h: 800 })
   const [mounted, setMounted] = useState(false)
@@ -824,9 +825,10 @@ export function FreedomWall({
 
     e.preventDefault()
     setActiveDragId(postId)
+    activeDragIdRef.current = postId
     setDraggedDistance(0)
 
-    const currentPos = positions[postId] || { x: 30, y: 30 }
+    const currentPos = positionsRef.current[postId] || positions[postId] || { x: 30, y: 30 }
     dragStartRef.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -839,7 +841,7 @@ export function FreedomWall({
   }
 
   const handlePointerMove = (e: React.PointerEvent, postId: number) => {
-    if (activeDragId !== postId || !dragStartRef.current || !canvasRef.current) return
+    if (activeDragIdRef.current !== postId || !dragStartRef.current || !canvasRef.current) return
 
     const canvasRect = canvasRef.current.getBoundingClientRect()
     const dragInfo = dragStartRef.current
@@ -856,6 +858,19 @@ export function FreedomWall({
     const newX = Math.max(2, Math.min(88, dragInfo.startPosX + deltaXPercent))
     const newY = Math.max(2, Math.min(85, dragInfo.startPosY + deltaYPercent))
 
+    // Update positionsRef & zero out velocity so physics engine doesn't fight the user's drag or snap back
+    positionsRef.current[postId] = { x: newX, y: newY }
+    if (velocitiesRef.current[postId]) {
+      velocitiesRef.current[postId] = { vx: 0, vy: 0 }
+    }
+
+    // Direct DOM manipulation for fast rendering
+    const el = cardRefs.current[postId]
+    if (el) {
+      el.style.left = `${newX}%`
+      el.style.top = `${newY}%`
+    }
+
     setPositions(prev => {
       const updated = {
         ...prev,
@@ -867,8 +882,9 @@ export function FreedomWall({
   }
 
   const handlePointerUp = (e: React.PointerEvent, postId: number) => {
-    if (activeDragId === postId) {
+    if (activeDragIdRef.current === postId) {
       setActiveDragId(null)
+      activeDragIdRef.current = null
       dragStartRef.current = null
       const element = e.currentTarget as HTMLElement
       try {
@@ -1018,11 +1034,11 @@ export function FreedomWall({
             const velB = updatedVel[postB.id] || { vx: 0, vy: 0 }
             
             // Only push them if they are not the active drag note (so dragging feels responsive)
-            if (activeDragId !== postA.id) {
+            if (activeDragIdRef.current !== postA.id) {
               velA.vx -= forceX
               velA.vy -= forceY
             }
-            if (activeDragId !== postB.id) {
+            if (activeDragIdRef.current !== postB.id) {
               velB.vx += forceX
               velB.vy += forceY
             }
@@ -1034,6 +1050,9 @@ export function FreedomWall({
       }
 
       posts.forEach(post => {
+        // Skip physics velocity movement for the post currently being dragged
+        if (activeDragIdRef.current === post.id) return
+
         let pos = updatedPos[post.id] || { x: 30, y: 30 }
         let vel = updatedVel[post.id] || { vx: 0, vy: 0 }
 
@@ -1514,7 +1533,7 @@ export function FreedomWall({
             }
           `}} />
 
-          {(posts.length > 10 ? posts.slice(0, 10) : posts).map(post => {
+          {posts.map(post => {
             const theme = getPostTheme(post.color)
             const isBlue = post.color === 'blue'
             const pos = positions[post.id] || { x: 30, y: 30 }
