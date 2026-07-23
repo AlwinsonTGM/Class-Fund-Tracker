@@ -31,7 +31,8 @@ export function LeaderboardModal({
 
   return (
     <div className="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="bg-card text-card-foreground border border-border rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="bg-card text-card-foreground border border-border rounded-3xl shadow-2xl max-w-lg w-full h-[600px] max-h-[85vh] overflow-hidden flex flex-col">
+
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 p-5 text-slate-950 flex items-center justify-between shrink-0 shadow-md">
           <div className="flex items-center gap-3">
@@ -127,13 +128,14 @@ export function LeaderboardModal({
         </div>
 
         {/* Leaderboard Table List */}
-        <div className="p-5 overflow-y-auto space-y-2 flex-1">
+        <div className="p-5 overflow-y-auto space-y-2 flex-1 flex flex-col">
           {entries.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-xs space-y-2">
+            <div className="text-center my-auto py-10 text-muted-foreground text-xs space-y-2">
               <Award className="h-8 w-8 mx-auto opacity-40" />
               <p>No high scores recorded yet for {activeModeTab === 'zen' ? 'Zen Mode' : 'Classic Mode'}.</p>
               <p className="text-[10px]">Be the first to set a record!</p>
             </div>
+
           ) : (
             entries.map((entry, index) => {
               let rankBadge = `#${index + 1}`

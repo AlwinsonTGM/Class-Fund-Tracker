@@ -176,3 +176,52 @@ export async function submitFlappyScoreAction(
   }
 }
 
+/**
+ * Update player_name across all existing flappy_bird_scores records for the active user or matching guest name.
+ */
+export async function updateFlappyPlayerNameAction(
+  oldName: string,
+  newName: string
+): Promise<{
+  success: boolean
+  message: string
+}> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      // Update by authenticated user ID
+      const { error } = await supabase
+        .from('flappy_bird_scores')
+        .update({ player_name: newName })
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.warn('Failed to update authenticated user flappy name:', error.message)
+      }
+    } else if (oldName && oldName.trim() !== '') {
+      // Update guest matching old handle
+      const { error } = await supabase
+        .from('flappy_bird_scores')
+        .update({ player_name: newName })
+        .ilike('player_name', oldName.trim())
+
+      if (error) {
+        console.warn('Failed to update guest flappy name:', error.message)
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Player name updated successfully.'
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || 'Error updating player name.'
+    }
+  }
+}
+
+

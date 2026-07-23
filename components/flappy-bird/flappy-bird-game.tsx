@@ -11,6 +11,7 @@ import {
 import {
   getFlappyLeaderboardAction,
   submitFlappyScoreAction,
+  updateFlappyPlayerNameAction,
   LeaderboardEntry
 } from '@/app/flappy-bird/actions'
 import { UsernameModal } from './username-modal'
@@ -261,6 +262,10 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       }
     }
   }
+
+  // Ref for input throttling (preventing double clicks / double audio on mobile)
+  const lastFlapTimeRef = useRef<number>(0)
+  const lastTouchTimeRef = useRef<number>(0)
 
   // Ref variables for the physics engine loop
   const stateRef = useRef({
@@ -817,9 +822,20 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     }
   }, [soundEnabled, imagesLoaded])
 
-  // Handle Input
-  const handleFlap = () => {
+  // Handle Input with source differentiation (touch vs click vs keyboard)
+  const handleFlap = (source: 'touch' | 'click' | 'keyboard' = 'click') => {
     if (isUsernameModalOpen || isLeaderboardOpen) return
+
+    const now = performance.now()
+
+    // If input is a mouse click, drop it if touch activity occurred recently (prevents touch-release synthesized click)
+    if (source === 'click' && now - lastTouchTimeRef.current < 600) {
+      return
+    }
+
+    // Rapid double trigger guard for same-source events
+    if (now - lastFlapTimeRef.current < 40) return
+    lastFlapTimeRef.current = now
 
     const FLAP_IMPULSE = -320.0
 
@@ -844,7 +860,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         e.preventDefault()
-        handleFlap()
+        handleFlap('keyboard')
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -883,11 +899,40 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     }
   }
 
-  const handleSavePlayerName = (newName: string) => {
+  const handleSavePlayerName = async (newName: string) => {
+    const oldName = playerName
     setPlayerName(newName)
     if (typeof window !== 'undefined') {
       localStorage.setItem('cft_flappy_player_name', newName)
+
+      // Update matching local storage leaderboard entries
+      ;['cft_flappy_local_leaderboard_classic', 'cft_flappy_local_leaderboard_zen'].forEach((key) => {
+        const stored = localStorage.getItem(key)
+        if (stored) {
+          try {
+            const list: LeaderboardEntry[] = JSON.parse(stored)
+            let updated = false
+            list.forEach((entry) => {
+              const matchesUser = user && entry.user_id === user.id
+              const matchesGuest = !user && (entry.player_name || '').trim().toLowerCase() === (oldName || '').trim().toLowerCase()
+              if (matchesUser || matchesGuest) {
+                entry.player_name = newName
+                updated = true
+              }
+            })
+            if (updated) {
+              localStorage.setItem(key, JSON.stringify(list))
+            }
+          } catch (e) {}
+        }
+      })
     }
+
+    // Call server action to update player_name in database
+    await updateFlappyPlayerNameAction(oldName, newName)
+
+    // Instantly refresh active leaderboard state so changes reflect immediately
+    fetchLeaderboard(leaderboardTab)
   }
 
   const openLeaderboard = (mode: 'classic' | 'zen') => {
@@ -965,10 +1010,14 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
           ref={canvasRef}
           width={400}
           height={500}
-          onClick={handleFlap}
+          onClick={() => handleFlap('click')}
           onTouchStart={(e) => {
             e.preventDefault()
-            handleFlap()
+            lastTouchTimeRef.current = performance.now()
+            handleFlap('touch')
+          }}
+          onTouchEnd={() => {
+            lastTouchTimeRef.current = performance.now()
           }}
           className="w-full h-full cursor-pointer touch-none block"
         />
@@ -997,7 +1046,14 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         {/* Start Game / Idle Menu Overlay */}
         {gameState === 'IDLE' && (
           <div 
-            onClick={handleFlap}
+            onClick={() => handleFlap('click')}
+            onTouchStart={() => {
+              lastTouchTimeRef.current = performance.now()
+              handleFlap('touch')
+            }}
+            onTouchEnd={() => {
+              lastTouchTimeRef.current = performance.now()
+            }}
             className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center cursor-pointer pointer-events-auto"
           >
             <div className="bg-amber-400 border-4 border-amber-950 px-6 py-3 rounded-2xl shadow-[0_6px_0_0_#78350f] text-amber-950 font-black text-2xl uppercase mb-3 tracking-wide flex items-center gap-2.5 animate-pulse">
