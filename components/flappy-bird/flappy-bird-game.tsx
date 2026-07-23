@@ -14,7 +14,6 @@ import {
   updateFlappyPlayerNameAction,
   getFlappyPlayerNameAction,
   fixMisplacedZenScoreAction,
-  clearFlappyLeaderboardAction,
   LeaderboardEntry
 } from '@/app/flappy-bird/actions'
 import { supabase } from '@/lib/supabase'
@@ -462,17 +461,6 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       supabase.removeChannel(channel)
     }
   }, [leaderboardTab, user])
-
-  const handleClearLeaderboard = async () => {
-    await clearFlappyLeaderboardAction()
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('cft_flappy_local_leaderboard_classic')
-      localStorage.removeItem('cft_flappy_local_leaderboard_zen')
-      localStorage.removeItem('cft_flappy_local_leaderboard_multiverse')
-    }
-    setLeaderboardData([])
-    await fetchLeaderboard(leaderboardTab)
-  }
 
 
   // Handle score submission & deduplication
@@ -1907,7 +1895,6 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         playerName={playerName}
         activeModeTab={leaderboardTab}
         onTabChange={handleLeaderboardTabChange}
-        onClearLeaderboard={handleClearLeaderboard}
         isLoading={isLeaderboardLoading}
       />
 

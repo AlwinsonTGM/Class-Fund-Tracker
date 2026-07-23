@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Trophy, X, RefreshCw, Wifi, WifiOff, Award, User, Flame, Sparkles, Trash2, Loader2, Globe } from 'lucide-react'
+import React from 'react'
+import { Trophy, X, RefreshCw, Wifi, WifiOff, Award, User, Flame, Sparkles, Loader2, Globe } from 'lucide-react'
 
 import { LeaderboardEntry } from '@/app/flappy-bird/actions'
 
@@ -15,7 +15,6 @@ interface LeaderboardModalProps {
   playerName: string
   activeModeTab: 'classic' | 'zen' | 'multiverse'
   onTabChange: (tab: 'classic' | 'zen' | 'multiverse') => void
-  onClearLeaderboard?: () => void
   isLoading?: boolean
 }
 
@@ -29,22 +28,9 @@ export function LeaderboardModal({
   playerName,
   activeModeTab,
   onTabChange,
-  onClearLeaderboard,
   isLoading = false
 }: LeaderboardModalProps) {
-  const [isClearing, setIsClearing] = useState(false)
-
   if (!isOpen) return null
-
-  const handleClear = async () => {
-    if (confirm('Are you sure you want to reset/clear all leaderboard scores? This cannot be undone.')) {
-      setIsClearing(true)
-      if (onClearLeaderboard) {
-        await onClearLeaderboard()
-      }
-      setIsClearing(false)
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
@@ -160,18 +146,6 @@ export function LeaderboardModal({
               <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
-
-            {onClearLeaderboard && (
-              <button
-                onClick={handleClear}
-                disabled={isClearing || isLoading}
-                className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer disabled:opacity-50"
-                title="Clear table"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Clear Table</span>
-              </button>
-            )}
           </div>
         </div>
 

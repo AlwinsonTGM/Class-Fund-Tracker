@@ -406,39 +406,7 @@ export async function fixMisplacedZenScoreAction(): Promise<{
   }
 }
 
-/**
- * Clear/reset all entries in flappy_bird_scores table.
- */
-export async function clearFlappyLeaderboardAction(): Promise<{
-  success: boolean
-  message: string
-}> {
-  try {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('flappy_bird_scores')
-      .delete()
-      .gte('score', 0)
 
-    if (error) {
-      console.warn('Failed to clear flappy_bird_scores table:', error.message)
-      return {
-        success: false,
-        message: error.message
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Leaderboard cleared successfully.'
-    }
-  } catch (err: any) {
-    return {
-      success: false,
-      message: err?.message || 'Server error clearing leaderboard.'
-    }
-  }
-}
 
 
 
