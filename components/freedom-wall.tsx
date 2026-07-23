@@ -453,6 +453,8 @@ export function FreedomWall({
   const [showSettings, setShowSettings] = useState(false)
 
   const [posts, setPosts] = useState<FreedomPost[]>(initialPosts)
+  // Scatter canvas and physics simulation are limited to the top 10 posts so invisible notes do not exist in physics world
+  const activePosts = posts.length > 10 ? posts.slice(0, 10) : posts
   const [showAddForm, setShowAddForm] = useState(false)
   const [content, setContent] = useState('')
   const [authorName, setAuthorName] = useState('')
@@ -569,7 +571,7 @@ export function FreedomWall({
       let updated = { ...savedPos }
       let changed = false
       
-      posts.forEach(p => {
+      activePosts.forEach(p => {
         if (!updated[p.id]) {
           // Scattered positioning:
           // X: 5% to 75%
@@ -586,7 +588,7 @@ export function FreedomWall({
       if (!isSimulating.current) {
         positionsRef.current = updated
         // Initialize velocities
-        posts.forEach(p => {
+        activePosts.forEach(p => {
           if (!velocitiesRef.current[p.id]) {
             velocitiesRef.current[p.id] = { vx: 0, vy: 0 }
           }
@@ -957,7 +959,7 @@ export function FreedomWall({
 
       // If magnet is active, pull notes toward it
       if (currentTool === 'magnet' && currentToolPos) {
-        posts.forEach(post => {
+        activePosts.forEach(post => {
           const pos = updatedPos[post.id] || { x: 30, y: 30 }
           const vel = updatedVel[post.id] || { vx: 0, vy: 0 }
           
@@ -982,7 +984,7 @@ export function FreedomWall({
 
       // If tornado is active, orbit pull notes in a tight circular vortex
       if (currentTool === 'tornado' && currentToolPos) {
-        posts.forEach(post => {
+        activePosts.forEach(post => {
           const pos = updatedPos[post.id] || { x: 30, y: 30 }
           const vel = updatedVel[post.id] || { vx: 0, vy: 0 }
           
@@ -1012,12 +1014,12 @@ export function FreedomWall({
       const repulsionRadius = 14.0 // distance in % where notes start repelling each other
       const repulsionStrength = 0.35 // strength of the repulsion push
       
-      for (let i = 0; i < posts.length; i++) {
-        const postA = posts[i]
+      for (let i = 0; i < activePosts.length; i++) {
+        const postA = activePosts[i]
         const posA = updatedPos[postA.id] || { x: 30, y: 30 }
         
-        for (let j = i + 1; j < posts.length; j++) {
-          const postB = posts[j]
+        for (let j = i + 1; j < activePosts.length; j++) {
+          const postB = activePosts[j]
           const posB = updatedPos[postB.id] || { x: 30, y: 30 }
           
           const dx = posB.x - posA.x
@@ -1049,7 +1051,7 @@ export function FreedomWall({
         }
       }
 
-      posts.forEach(post => {
+      activePosts.forEach(post => {
         // Skip physics velocity movement for the post currently being dragged
         if (activeDragIdRef.current === post.id) return
 
@@ -1201,7 +1203,7 @@ export function FreedomWall({
           setShakeCanvas(true)
 
           const bombLoc = bombLocationRef.current || currentToolPos
-          posts.forEach(post => {
+          activePosts.forEach(post => {
             const pos = positionsRef.current[post.id] || { x: 30, y: 30 }
             const vel = velocitiesRef.current[post.id] || { vx: 0, vy: 0 }
             
@@ -1236,7 +1238,7 @@ export function FreedomWall({
       // Magnet and tornado slide back to place, notes glide on ice
       const releaseLoc = currentToolPos || { x: 50, y: 50 }
       
-      posts.forEach(post => {
+      activePosts.forEach(post => {
         const pos = positionsRef.current[post.id] || { x: 30, y: 30 }
         const vel = velocitiesRef.current[post.id] || { vx: 0, vy: 0 }
         
@@ -1262,7 +1264,7 @@ export function FreedomWall({
     // If the selected tool is already active, turn it off and scatter notes outwards
     if (activeToolRef.current === tool) {
       const releaseLoc = toolPosRef.current || { x: 50, y: 50 }
-      posts.forEach(post => {
+      activePosts.forEach(post => {
         const pos = positionsRef.current[post.id] || { x: 30, y: 30 }
         const vel = velocitiesRef.current[post.id] || { vx: 0, vy: 0 }
         
@@ -1308,7 +1310,7 @@ export function FreedomWall({
       e.stopPropagation()
       
       const releaseLoc = toolPosRef.current || { x: 50, y: 50 }
-      posts.forEach(post => {
+      activePosts.forEach(post => {
         const pos = positionsRef.current[post.id] || { x: 30, y: 30 }
         const vel = velocitiesRef.current[post.id] || { vx: 0, vy: 0 }
         
@@ -1533,7 +1535,7 @@ export function FreedomWall({
             }
           `}} />
 
-          {posts.map(post => {
+          {activePosts.map(post => {
             const theme = getPostTheme(post.color)
             const isBlue = post.color === 'blue'
             const pos = positions[post.id] || { x: 30, y: 30 }
