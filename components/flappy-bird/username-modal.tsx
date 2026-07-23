@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { User, LogIn, Check, Edit2, ShieldAlert, Gamepad2 } from 'lucide-react'
+import { User, LogIn, Check, Edit2, ShieldAlert, Gamepad2, Loader2 } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 interface UsernameModalProps {
   user: any
   currentName: string
-  onSaveName: (name: string) => void
+  onSaveName: (name: string) => Promise<{ success: boolean; message: string }> | void
   onClose: () => void
   isOpen: boolean
 }
@@ -19,6 +20,8 @@ export function UsernameModal({
   isOpen
 }: UsernameModalProps) {
   const [nameInput, setNameInput] = useState(currentName)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     setNameInput(currentName)
@@ -26,11 +29,31 @@ export function UsernameModal({
 
   if (!isOpen) return null
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = nameInput.trim() || (user ? user.email.split('@')[0] : 'Guest')
-    onSaveName(trimmed)
-    onClose()
+
+    if (trimmed.toLowerCase() === currentName.trim().toLowerCase()) {
+      onClose()
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const res = await onSaveName(trimmed)
+      if (res && !res.success) {
+        toast.error(res.message, 'Name Unavailable')
+      } else if (res && res.success) {
+        toast.success(res.message || 'Username successfully updated!', 'Profile Updated')
+        onClose()
+      } else {
+        onClose()
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update username.', 'Error')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -90,7 +113,8 @@ export function UsernameModal({
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 placeholder="Enter player name..."
-                className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all disabled:opacity-50"
                 required
               />
               <Edit2 className="absolute right-3.5 top-3 h-4 w-4 text-muted-foreground pointer-events-none opacity-60" />
@@ -101,16 +125,27 @@ export function UsernameModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold rounded-xl border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-xs font-semibold rounded-xl border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 transition-colors shadow-md flex items-center gap-1.5 cursor-pointer press-spring"
+              disabled={isSubmitting}
+              className="px-5 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 transition-colors shadow-md flex items-center gap-1.5 cursor-pointer press-spring disabled:opacity-50"
             >
-              <Check className="h-4 w-4" />
-              <span>Save & Continue</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Checking...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span>Save & Continue</span>
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -118,3 +153,4 @@ export function UsernameModal({
     </div>
   )
 }
+

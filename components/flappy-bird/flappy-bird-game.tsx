@@ -12,6 +12,7 @@ import {
   getFlappyLeaderboardAction,
   submitFlappyScoreAction,
   updateFlappyPlayerNameAction,
+  getFlappyPlayerNameAction,
   clearFlappyLeaderboardAction,
   LeaderboardEntry
 } from '@/app/flappy-bird/actions'
@@ -141,29 +142,57 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     })
   }, [])
 
-  // Initialize Player Name & Personal Bests from localStorage / User
+  // Initialize Player Name & Personal Bests from localStorage / Supabase User Account
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedName = localStorage.getItem('cft_flappy_player_name')
-      if (savedName) {
-        setPlayerName(savedName)
-      } else if (user?.email) {
-        const defaultName = user.email.split('@')[0]
-        setPlayerName(defaultName)
-        localStorage.setItem('cft_flappy_player_name', defaultName)
-      } else {
-        setPlayerName('Guest_' + Math.floor(1000 + Math.random() * 9000))
+    const syncAccountName = async () => {
+      if (user) {
+        const res = await getFlappyPlayerNameAction()
+        if (res.success && res.playerName) {
+          setPlayerName(res.playerName)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('cft_flappy_player_name', res.playerName)
+          }
+        } else if (typeof window !== 'undefined') {
+          const savedName = localStorage.getItem('cft_flappy_player_name')
+          if (savedName) {
+            setPlayerName(savedName)
+          } else if (user?.email) {
+            const defaultName = user.email.split('@')[0]
+            setPlayerName(defaultName)
+            localStorage.setItem('cft_flappy_player_name', defaultName)
+          }
+        }
+      } else if (typeof window !== 'undefined') {
+        const savedName = localStorage.getItem('cft_flappy_player_name')
+        if (savedName) {
+          setPlayerName(savedName)
+        } else {
+          setPlayerName('Guest_' + Math.floor(1000 + Math.random() * 9000))
+        }
       }
 
-      const savedClassic = localStorage.getItem('cft_flappy_high_score_classic') || localStorage.getItem('cft_flappy_high_score')
-      if (savedClassic) {
-        setHighScoreClassic(parseInt(savedClassic, 10))
-      }
+      if (typeof window !== 'undefined') {
+        const savedClassic = localStorage.getItem('cft_flappy_high_score_classic') || localStorage.getItem('cft_flappy_high_score')
+        if (savedClassic) {
+          setHighScoreClassic(parseInt(savedClassic, 10))
+        }
 
-      const savedZen = localStorage.getItem('cft_flappy_high_score_zen')
-      if (savedZen) {
-        setHighScoreZen(parseInt(savedZen, 10))
+        const savedZen = localStorage.getItem('cft_flappy_high_score_zen')
+        if (savedZen) {
+          setHighScoreZen(parseInt(savedZen, 10))
+        }
       }
+    }
+
+    syncAccountName()
+
+    const handleFocus = () => {
+      syncAccountName()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      window.removeEventListener('focus', handleFocus)
     }
   }, [user])
 
@@ -199,14 +228,25 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   useEffect(() => {
     fetchLeaderboard(leaderboardTab)
 
-    // Subscribe to real-time database updates for leaderboard scores
+    // Subscribe to real-time database updates for leaderboard scores & user profile updates
     const channel = supabase
       .channel('flappy_bird_scores_realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'flappy_bird_scores' },
-        () => {
+        async () => {
           fetchLeaderboard(leaderboardTab)
+
+          // Sync user's player name if changed on another device
+          if (user) {
+            const res = await getFlappyPlayerNameAction()
+            if (res.success && res.playerName) {
+              setPlayerName(res.playerName)
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('cft_flappy_player_name', res.playerName)
+              }
+            }
+          }
         }
       )
       .subscribe()
@@ -214,7 +254,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [leaderboardTab])
+  }, [leaderboardTab, user])
 
   const handleClearLeaderboard = async () => {
     await clearFlappyLeaderboardAction()
@@ -947,8 +987,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   }
 
 
-  const handleSavePlayerName = async (newName: string) => {
+  const handleSavePlayerName = async (newName: string): Promise<{ success: boolean; message: string }> => {
     const oldName = playerName
+
+    // Call server action to update player_name in database & check for duplicates
+    const res = await updateFlappyPlayerNameAction(oldName, newName)
+
+    if (!res.success) {
+      return res
+    }
+
     setPlayerName(newName)
     if (typeof window !== 'undefined') {
       localStorage.setItem('cft_flappy_player_name', newName)
@@ -976,11 +1024,10 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       })
     }
 
-    // Call server action to update player_name in database
-    await updateFlappyPlayerNameAction(oldName, newName)
-
     // Instantly refresh active leaderboard state so changes reflect immediately
     fetchLeaderboard(leaderboardTab)
+
+    return res
   }
 
   const openLeaderboard = (mode: 'classic' | 'zen') => {

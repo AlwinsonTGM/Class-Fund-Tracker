@@ -192,7 +192,48 @@ export async function submitFlappyScoreAction(
 }
 
 /**
+ * Get the latest player_name for the active authenticated user from DB or auth metadata.
+ */
+export async function getFlappyPlayerNameAction(): Promise<{
+  success: boolean
+  playerName: string | null
+}> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, playerName: null }
+    }
+
+    // 1. Check user metadata first
+    const metaName = user.user_metadata?.player_name || user.user_metadata?.custom_username
+    if (metaName && typeof metaName === 'string' && metaName.trim()) {
+      return { success: true, playerName: metaName.trim() }
+    }
+
+    // 2. Query flappy_bird_scores table for user's latest player_name
+    const { data: scoreRecords } = await supabase
+      .from('flappy_bird_scores')
+      .select('player_name')
+      .eq('user_id', user.id)
+      .limit(1)
+
+    if (scoreRecords && scoreRecords.length > 0 && scoreRecords[0].player_name) {
+      return { success: true, playerName: scoreRecords[0].player_name }
+    }
+
+    // Fallback to email prefix
+    const emailPrefix = user.email ? user.email.split('@')[0] : null
+    return { success: true, playerName: emailPrefix }
+  } catch (err) {
+    return { success: false, playerName: null }
+  }
+}
+
+/**
  * Update player_name across all existing flappy_bird_scores records for the active user or matching guest name.
+ * Checks for duplicate usernames on the leaderboard first.
  */
 export async function updateFlappyPlayerNameAction(
   oldName: string,
@@ -205,31 +246,101 @@ export async function updateFlappyPlayerNameAction(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    const trimmedNew = (newName || '').trim()
+    const trimmedOld = (oldName || '').trim()
+
+    if (!trimmedNew) {
+      return {
+        success: false,
+        message: 'Username cannot be empty.'
+      }
+    }
+
+    if (trimmedNew.length < 2) {
+      return {
+        success: false,
+        message: 'Username must be at least 2 characters long.'
+      }
+    }
+
+    if (trimmedNew.length > 20) {
+      return {
+        success: false,
+        message: 'Username cannot exceed 20 characters.'
+      }
+    }
+
+    // 1. Check for duplicate username in leaderboard (case-insensitive)
+    const { data: existingScores, error: checkError } = await supabase
+      .from('flappy_bird_scores')
+      .select('id, player_name, user_id')
+      .ilike('player_name', trimmedNew)
+
+    if (checkError) {
+      console.warn('Error checking existing username:', checkError.message)
+    }
+
+    if (existingScores && existingScores.length > 0) {
+      if (user) {
+        // For authenticated user: Check if any existing entry belongs to a DIFFERENT user or a guest
+        const isDuplicate = existingScores.some(
+          (entry) => !entry.user_id || entry.user_id !== user.id
+        )
+        if (isDuplicate) {
+          return {
+            success: false,
+            message: `The username "${trimmedNew}" is already taken by another player on the leaderboard. Please choose a different name.`
+          }
+        }
+      } else {
+        // For guest user: Check if any entry exists with matching name
+        const isDuplicate = existingScores.some(
+          (entry) => entry.player_name.toLowerCase() === trimmedNew.toLowerCase() &&
+                     entry.player_name.toLowerCase() !== trimmedOld.toLowerCase()
+        )
+        if (isDuplicate) {
+          return {
+            success: false,
+            message: `The username "${trimmedNew}" is already taken by another player on the leaderboard. Please choose a different name.`
+          }
+        }
+      }
+    }
+
+    // 2. Perform the update
     if (user) {
       // Update by authenticated user ID
-      const { error } = await supabase
+      const { error: updateErr } = await supabase
         .from('flappy_bird_scores')
-        .update({ player_name: newName.trim() })
+        .update({ player_name: trimmedNew })
         .eq('user_id', user.id)
 
-      if (error) {
-        console.warn('Failed to update authenticated user flappy name:', error.message)
+      if (updateErr) {
+        console.warn('Failed to update authenticated user flappy name:', updateErr.message)
       }
-    } else if (oldName && oldName.trim() !== '') {
-      // Update guest matching old handle
-      const { error } = await supabase
-        .from('flappy_bird_scores')
-        .update({ player_name: newName.trim() })
-        .ilike('player_name', oldName.trim())
 
-      if (error) {
-        console.warn('Failed to update guest flappy name:', error.message)
+      // Sync user_metadata in Supabase Auth so name persists across sessions/devices
+      const { error: metaErr } = await supabase.auth.updateUser({
+        data: { player_name: trimmedNew, custom_username: trimmedNew }
+      })
+      if (metaErr) {
+        console.warn('Failed to update user metadata:', metaErr.message)
+      }
+    } else if (trimmedOld) {
+      // Update guest matching old handle
+      const { error: guestErr } = await supabase
+        .from('flappy_bird_scores')
+        .update({ player_name: trimmedNew })
+        .ilike('player_name', trimmedOld)
+
+      if (guestErr) {
+        console.warn('Failed to update guest flappy name:', guestErr.message)
       }
     }
 
     return {
       success: true,
-      message: 'Player name updated successfully.'
+      message: 'Username successfully updated!'
     }
   } catch (err: any) {
     return {
