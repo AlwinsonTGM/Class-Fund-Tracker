@@ -99,6 +99,8 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
   const [leaderboardTab, setLeaderboardTab] = useState<'classic' | 'zen'>('classic')
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false)
+  const fetchLeaderboardReqIdRef = useRef(0)
 
   // Floating score flash
   const [scoreFlash, setScoreFlash] = useState(false)
@@ -211,24 +213,43 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
   // Fetch Leaderboard for specific mode
   const fetchLeaderboard = async (modeToFetch: 'classic' | 'zen' = leaderboardTab) => {
-    const res = await getFlappyLeaderboardAction(modeToFetch)
-    setSyncMode(res.mode)
+    const currentReqId = ++fetchLeaderboardReqIdRef.current
+    setIsLeaderboardLoading(true)
 
-    if (res.success && res.data.length > 0) {
-      setLeaderboardData(res.data)
-    } else {
-      const localKey = modeToFetch === 'zen' ? 'cft_flappy_local_leaderboard_zen' : 'cft_flappy_local_leaderboard_classic'
-      const localScores = typeof window !== 'undefined' ? localStorage.getItem(localKey) : null
-      if (localScores) {
-        try {
-          setLeaderboardData(JSON.parse(localScores))
-        } catch (e) {
+    try {
+      const res = await getFlappyLeaderboardAction(modeToFetch)
+      if (currentReqId !== fetchLeaderboardReqIdRef.current) return
+
+      setSyncMode(res.mode)
+
+      if (res.success && res.data.length > 0) {
+        setLeaderboardData(res.data)
+      } else {
+        const localKey = modeToFetch === 'zen' ? 'cft_flappy_local_leaderboard_zen' : 'cft_flappy_local_leaderboard_classic'
+        const localScores = typeof window !== 'undefined' ? localStorage.getItem(localKey) : null
+        if (localScores) {
+          try {
+            setLeaderboardData(JSON.parse(localScores))
+          } catch (e) {
+            setLeaderboardData([])
+          }
+        } else {
           setLeaderboardData([])
         }
-      } else {
-        setLeaderboardData([])
+      }
+    } catch (e) {
+      console.error('Failed to fetch leaderboard:', e)
+    } finally {
+      if (currentReqId === fetchLeaderboardReqIdRef.current) {
+        setIsLeaderboardLoading(false)
       }
     }
+  }
+
+  const handleLeaderboardTabChange = (tab: 'classic' | 'zen') => {
+    if (tab === leaderboardTab && !isLeaderboardLoading) return
+    setIsLeaderboardLoading(true)
+    setLeaderboardTab(tab)
   }
 
   useEffect(() => {
@@ -1513,8 +1534,9 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         userBestScore={leaderboardTab === 'zen' ? highScoreZen : highScoreClassic}
         playerName={playerName}
         activeModeTab={leaderboardTab}
-        onTabChange={(tab) => setLeaderboardTab(tab)}
+        onTabChange={handleLeaderboardTabChange}
         onClearLeaderboard={handleClearLeaderboard}
+        isLoading={isLeaderboardLoading}
       />
 
     </div>

@@ -24,6 +24,7 @@ const PATCH_NOTES: PatchEntry[] = [
     emoji: '🏆',
     changes: [
       { type: 'new', text: 'Realtime Leaderboard Synchronization — live updates stream automatically across all active sessions whenever a high score is set.' },
+      { type: 'fix', text: 'Leaderboard Mode Switch Loading Screen — added a dedicated loading screen and button locks during mode transitions (Classic ↔ Zen) to prevent rapid switch spamming.' },
       { type: 'fix', text: 'Supabase Score Updates & RLS Policies — fixed missing UPDATE RLS policies on flappy_bird_scores, resolving silent score update failures and duplicate rows.' },
       { type: 'fix', text: 'Mobile Game Over Input Protection — fixed an issue on mobile where tapping Game Over buttons would restart games unintentionally, adding touch event propagation guards and input cooldowns.' },
       { type: 'new', text: 'Leaderboard Table Reset — added a Clear Table server action and interactive modal button to reset score entries.' },
