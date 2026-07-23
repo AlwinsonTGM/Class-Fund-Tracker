@@ -12,8 +12,11 @@ import {
   getFlappyLeaderboardAction,
   submitFlappyScoreAction,
   updateFlappyPlayerNameAction,
+  clearFlappyLeaderboardAction,
   LeaderboardEntry
 } from '@/app/flappy-bird/actions'
+import { supabase } from '@/lib/supabase'
+
 import { UsernameModal } from './username-modal'
 import { LeaderboardModal } from './leaderboard-modal'
 import {
@@ -195,7 +198,34 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
   useEffect(() => {
     fetchLeaderboard(leaderboardTab)
+
+    // Subscribe to real-time database updates for leaderboard scores
+    const channel = supabase
+      .channel('flappy_bird_scores_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'flappy_bird_scores' },
+        () => {
+          fetchLeaderboard(leaderboardTab)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [leaderboardTab])
+
+  const handleClearLeaderboard = async () => {
+    await clearFlappyLeaderboardAction()
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('cft_flappy_local_leaderboard_classic')
+      localStorage.removeItem('cft_flappy_local_leaderboard_zen')
+    }
+    setLeaderboardData([])
+    await fetchLeaderboard(leaderboardTab)
+  }
+
 
   // Handle score submission & deduplication
   const handleScoreSubmit = async (finalScore: number) => {
@@ -266,6 +296,9 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   // Ref for input throttling (preventing double clicks / double audio on mobile)
   const lastFlapTimeRef = useRef<number>(0)
   const lastTouchTimeRef = useRef<number>(0)
+  const gameOverTimeRef = useRef<number>(0)
+  const lastUiInteractTimeRef = useRef<number>(0)
+
 
   // Ref variables for the physics engine loop
   const stateRef = useRef({
@@ -715,6 +748,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       }
 
       function triggerGameOver() {
+        gameOverTimeRef.current = performance.now()
         if (soundEnabled) {
           playHitSound()
           setTimeout(() => playDieSound(), 120)
@@ -723,6 +757,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         setGameState('GAMEOVER')
         handleScoreSubmit(state.score)
       }
+
 
       // ── 4. RENDER BIRD SPRITE ──
       ctx.save()
@@ -828,6 +863,12 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
     const now = performance.now()
 
+    // 450ms cooldown after Game Over to prevent accidental tap restarts from lingering gameplay inputs
+    if (now - gameOverTimeRef.current < 450) return
+
+    // 450ms cooldown after interacting with UI cards or buttons to prevent synthesized clicks from triggering flap
+    if (now - lastUiInteractTimeRef.current < 450) return
+
     // If input is a mouse click, drop it if touch activity occurred recently (prevents touch-release synthesized click)
     if (source === 'click' && now - lastTouchTimeRef.current < 600) {
       return
@@ -869,6 +910,12 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
   const restartGame = () => {
     if (!canvasRef.current) return
+    const now = performance.now()
+
+    // Ignore restart if Game Over triggered less than 350ms ago
+    if (now - gameOverTimeRef.current < 350) return
+    lastUiInteractTimeRef.current = now
+
     const height = canvasRef.current.height
     
     // Pick a new random theme for every new game
@@ -898,6 +945,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       playFlapSound()
     }
   }
+
 
   const handleSavePlayerName = async (newName: string) => {
     const oldName = playerName
@@ -1046,12 +1094,17 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         {/* Start Game / Idle Menu Overlay */}
         {gameState === 'IDLE' && (
           <div 
-            onClick={() => handleFlap('click')}
-            onTouchStart={() => {
+            onClick={(e) => {
+              e.stopPropagation()
+              handleFlap('click')
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation()
               lastTouchTimeRef.current = performance.now()
               handleFlap('touch')
             }}
-            onTouchEnd={() => {
+            onTouchEnd={(e) => {
+              e.stopPropagation()
               lastTouchTimeRef.current = performance.now()
             }}
             className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center cursor-pointer pointer-events-auto"
@@ -1063,11 +1116,21 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
             {/* Mode Selection Pills (Classic vs Zen) */}
             <div 
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+              onTouchStart={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
               className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-1.5 flex items-center justify-center gap-1 mb-3 shadow-xl backdrop-blur-md max-w-xs w-full"
             >
               <button
-                onClick={() => setGameMode('classic')}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  lastUiInteractTimeRef.current = performance.now()
+                  setGameMode('classic')
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation()
+                  lastUiInteractTimeRef.current = performance.now()
+                  setGameMode('classic')
+                }}
                 className={`flex-1 py-2 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   gameMode === 'classic'
                     ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
@@ -1079,7 +1142,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               </button>
 
               <button
-                onClick={() => setGameMode('zen')}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  lastUiInteractTimeRef.current = performance.now()
+                  setGameMode('zen')
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation()
+                  lastUiInteractTimeRef.current = performance.now()
+                  setGameMode('zen')
+                }}
                 className={`flex-1 py-2 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   gameMode === 'zen'
                     ? 'bg-teal-400 text-slate-950 shadow-md scale-[1.02]'
@@ -1093,13 +1165,23 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
             {/* Theme Selector Pills */}
             <div 
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+              onTouchStart={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
               className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-2 max-w-xs w-full shadow-xl backdrop-blur-md mb-3 space-y-1.5"
             >
               <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold px-1 uppercase tracking-wider">
                 <span>Theme: {activeThemeObj.name}</span>
                 <button
-                  onClick={() => setCurrentTheme(getRandomTheme(currentTheme))}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setCurrentTheme(getRandomTheme(currentTheme))
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setCurrentTheme(getRandomTheme(currentTheme))
+                  }}
                   className="flex items-center gap-1 text-amber-400 hover:underline cursor-pointer"
                   title="Randomize Theme"
                 >
@@ -1112,7 +1194,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 {THEMES.map((th) => (
                   <button
                     key={th.id}
-                    onClick={() => setCurrentTheme(th.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      lastUiInteractTimeRef.current = performance.now()
+                      setCurrentTheme(th.id)
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation()
+                      lastUiInteractTimeRef.current = performance.now()
+                      setCurrentTheme(th.id)
+                    }}
                     className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                       currentTheme === th.id
                         ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
@@ -1129,7 +1220,11 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
               </div>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 max-w-xs w-full shadow-2xl backdrop-blur-md space-y-2.5">
+            <div 
+              onClick={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+              onTouchStart={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+              className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 max-w-xs w-full shadow-2xl backdrop-blur-md space-y-2.5"
+            >
               <p className="text-xs font-semibold text-sky-300 uppercase tracking-wider">
                 {gameMode === 'zen' ? 'Relaxing Wide Gaps (160px)' : 'Original Felgo Physics (90px)'}
               </p>
@@ -1143,6 +1238,12 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setIsUsernameModalOpen(true)
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
                     setIsUsernameModalOpen(true)
                   }}
                   className="text-[11px] font-semibold text-amber-400 hover:underline cursor-pointer"
@@ -1165,19 +1266,37 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
         {/* Game Over Screen Overlay */}
         {gameState === 'GAMEOVER' && (
-          <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 pointer-events-auto animate-fade-in">
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="absolute inset-0 bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 pointer-events-auto animate-fade-in"
+          >
             <div className="bg-gradient-to-b from-amber-400 to-amber-500 border-4 border-amber-950 px-6 py-2 rounded-2xl shadow-[0_6px_0_0_#78350f] text-amber-950 font-black text-2xl uppercase mb-2 tracking-wider">
               GAME OVER!
             </div>
 
-            <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 max-w-xs w-full shadow-2xl space-y-2.5 text-center">
+            <div 
+              onClick={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+              onTouchStart={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+              className="bg-slate-900 border-2 border-slate-700 rounded-3xl p-5 max-w-xs w-full shadow-2xl space-y-2.5 text-center"
+            >
               {/* Mode Selection Pills on Game Over */}
               <div 
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
+                onTouchStart={(e) => { e.stopPropagation(); lastUiInteractTimeRef.current = performance.now(); }}
                 className="bg-slate-950/80 border border-slate-700/80 rounded-2xl p-1 flex items-center justify-center gap-1 shadow-inner backdrop-blur-md w-full"
               >
                 <button
-                  onClick={() => setGameMode('classic')}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameMode('classic')
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameMode('classic')
+                  }}
                   className={`flex-1 py-1.5 px-2.5 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
                     gameMode === 'classic'
                       ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
@@ -1189,7 +1308,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 </button>
 
                 <button
-                  onClick={() => setGameMode('zen')}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameMode('zen')
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameMode('zen')
+                  }}
                   className={`flex-1 py-1.5 px-2.5 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
                     gameMode === 'zen'
                       ? 'bg-teal-400 text-slate-950 shadow-md scale-[1.02]'
@@ -1231,7 +1359,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
               <div className="flex flex-col gap-2 pt-1">
                 <button
-                  onClick={restartGame}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    restartGame()
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    restartGame()
+                  }}
                   className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-[0_4px_0_0_#b45309] hover:shadow-[0_2px_0_0_#b45309] hover:translate-y-0.5 cursor-pointer press-spring flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -1239,7 +1376,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 </button>
 
                 <button
-                  onClick={() => openLeaderboard(gameMode)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    openLeaderboard(gameMode)
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    openLeaderboard(gameMode)
+                  }}
                   className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Trophy className="h-4 w-4 text-amber-400" />
@@ -1247,7 +1393,16 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 </button>
 
                 <button
-                  onClick={() => setGameState('IDLE')}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameState('IDLE')
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation()
+                    lastUiInteractTimeRef.current = performance.now()
+                    setGameState('IDLE')
+                  }}
                   className="w-full py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-semibold text-[11px] transition-colors flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <Home className="h-3.5 w-3.5" />
@@ -1257,6 +1412,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
             </div>
           </div>
         )}
+
       </main>
 
       {/* Footer Controls */}
@@ -1298,7 +1454,9 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
         playerName={playerName}
         activeModeTab={leaderboardTab}
         onTabChange={(tab) => setLeaderboardTab(tab)}
+        onClearLeaderboard={handleClearLeaderboard}
       />
+
     </div>
   )
 }

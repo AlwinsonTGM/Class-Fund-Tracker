@@ -40,15 +40,18 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Database-Backed Class Documents & Song Attachments**: Stored centrally in Supabase for cross-device sync.
 - **Liquid Glass Navigation Bar**: Refined bottom nav capsule into a rounded liquid glass pill with specular highlights.
 
-### 🎮 8. Flappy Bird Arcade, Multi-Theme & Global Leaderboard (v1.7)
+### 🎮 8. Flappy Bird Arcade, Multi-Theme & Realtime Leaderboard (v1.8)
 - **Flappy Bird Mini-Game**: Built with an HTML5 Canvas engine implementing original gravity, flap physics, and infinite parallax scrolling.
 - **Multi-Theme Canvas Environments**: Features 4 distinct visual themes (Classic Farm, Cyberpunk Night, Desert Sunset, Deep Ocean) with custom sky gradients, environment silhouettes, glowing neon grid lines, and thematic pipe designs.
 - **Automatic Theme Randomization**: Every new game round automatically picks a fresh visual theme, with a manual theme selector on the start menu.
+- **Realtime Global Leaderboard (v1.8)**: Live synchronization streaming high scores in real time across all open sessions via Supabase Realtime postgres_changes.
+- **Mobile Touch Input Protection (v1.8)**: Prevents accidental restarts on touchscreens using input cooldowns (`gameOverTimeRef`) and strict event propagation blocks (`e.stopPropagation()`) on container overlays.
+- **Leaderboard Table Reset (v1.8)**: Added a Clear Table server action and interactive modal reset button to wipe old score entries.
 - **Game Over Mode Switching**: Switch seamlessly between Classic and Zen modes after dying or return to the main menu directly on the Game Over screen.
-- **High Score Overwrites & Deduplication**: Scores are automatically overwritten on personal bests and deduplicated per player on global Supabase and local storage leaderboards.
 - **Synthesized Retro Audio**: Web Audio API synthesized sound effects for flap, score chime, hit thud, and falling whistle drop death.
 - **Online Sync vs. Offline Fallback**: Real-time status indicator showing database sync status.
 - **Guest & User Handle Customization**: Authenticated users automatically save player handles, while guest players can customize their handle anytime for section rankings.
+
 
 
 ### ☁️ 7. Cloud Sync, Interactive Notifications & Fluid Glass Navigation (v1.6-beta)

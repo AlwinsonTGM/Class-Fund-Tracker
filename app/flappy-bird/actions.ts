@@ -85,6 +85,7 @@ export async function getFlappyLeaderboardAction(
 /**
  * Submit high score to Supabase database with game mode.
  * Overwrites / updates previous high score if new score is higher.
+ * Also cleans up duplicate records for the same player.
  */
 export async function submitFlappyScoreAction(
   playerName: string,
@@ -99,18 +100,18 @@ export async function submitFlappyScoreAction(
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    const nameToStore = playerName || (user?.email ? user.email.split('@')[0] : 'Guest')
+    const trimmedName = (playerName || '').trim() || (user?.email ? user.email.split('@')[0] : 'Guest')
 
     // Check for existing score entry for this player and mode
     let existingQuery = supabase
       .from('flappy_bird_scores')
-      .select('id, score')
+      .select('id, score, player_name')
       .eq('mode', gameMode)
 
     if (user) {
       existingQuery = existingQuery.eq('user_id', user.id)
     } else {
-      existingQuery = existingQuery.ilike('player_name', nameToStore)
+      existingQuery = existingQuery.ilike('player_name', trimmedName)
     }
 
     const { data: existingRecords } = await existingQuery
@@ -119,33 +120,47 @@ export async function submitFlappyScoreAction(
       const bestRecord = existingRecords.reduce((prev, curr) => curr.score > prev.score ? curr : prev, existingRecords[0])
       
       if (score > bestRecord.score) {
-        // Attempt to update the existing high score record
+        // Update the existing high score record with higher score
         const { error: updateErr } = await supabase
           .from('flappy_bird_scores')
           .update({
-            player_name: nameToStore,
+            player_name: trimmedName,
             score: score,
             created_at: new Date().toISOString()
           })
           .eq('id', bestRecord.id)
 
         if (updateErr) {
-          // Fallback to insert if update is blocked by RLS
+          console.warn('Supabase update warning, falling back to insert:', updateErr.message)
           await supabase.from('flappy_bird_scores').insert({
-            player_name: nameToStore,
+            player_name: trimmedName,
             score: score,
             mode: gameMode,
             is_guest: user ? false : isGuest,
             user_id: user ? user.id : null
           })
         }
+      } else {
+        // Keep higher score, but update player handle if changed
+        if (bestRecord.player_name !== trimmedName) {
+          await supabase
+            .from('flappy_bird_scores')
+            .update({ player_name: trimmedName })
+            .eq('id', bestRecord.id)
+        }
+      }
+
+      // Remove any duplicate records for this player & mode to keep DB clean
+      const extraIds = existingRecords.filter(r => r.id !== bestRecord.id).map(r => r.id)
+      if (extraIds.length > 0) {
+        await supabase.from('flappy_bird_scores').delete().in('id', extraIds)
       }
     } else {
       // Insert new score entry
       const { error: insertErr } = await supabase
         .from('flappy_bird_scores')
         .insert({
-          player_name: nameToStore,
+          player_name: trimmedName,
           score: score,
           mode: gameMode,
           is_guest: user ? false : isGuest,
@@ -194,7 +209,7 @@ export async function updateFlappyPlayerNameAction(
       // Update by authenticated user ID
       const { error } = await supabase
         .from('flappy_bird_scores')
-        .update({ player_name: newName })
+        .update({ player_name: newName.trim() })
         .eq('user_id', user.id)
 
       if (error) {
@@ -204,7 +219,7 @@ export async function updateFlappyPlayerNameAction(
       // Update guest matching old handle
       const { error } = await supabase
         .from('flappy_bird_scores')
-        .update({ player_name: newName })
+        .update({ player_name: newName.trim() })
         .ilike('player_name', oldName.trim())
 
       if (error) {
@@ -223,5 +238,40 @@ export async function updateFlappyPlayerNameAction(
     }
   }
 }
+
+/**
+ * Clear/reset all entries in flappy_bird_scores table.
+ */
+export async function clearFlappyLeaderboardAction(): Promise<{
+  success: boolean
+  message: string
+}> {
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('flappy_bird_scores')
+      .delete()
+      .gte('score', 0)
+
+    if (error) {
+      console.warn('Failed to clear flappy_bird_scores table:', error.message)
+      return {
+        success: false,
+        message: error.message
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Leaderboard cleared successfully.'
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || 'Server error clearing leaderboard.'
+    }
+  }
+}
+
 
 

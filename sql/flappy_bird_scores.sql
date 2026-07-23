@@ -13,14 +13,35 @@ CREATE TABLE IF NOT EXISTS public.flappy_bird_scores (
 ALTER TABLE public.flappy_bird_scores ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to leaderboard
+DROP POLICY IF EXISTS "Allow public read access to flappy_bird_scores" ON public.flappy_bird_scores;
 CREATE POLICY "Allow public read access to flappy_bird_scores"
   ON public.flappy_bird_scores
   FOR SELECT
   USING (true);
 
--- Allow anyone (authenticated or anon guest) to insert high scores
+-- Allow public insert to flappy_bird_scores
+DROP POLICY IF EXISTS "Allow public insert to flappy_bird_scores" ON public.flappy_bird_scores;
 CREATE POLICY "Allow public insert to flappy_bird_scores"
   ON public.flappy_bird_scores
   FOR INSERT
   WITH CHECK (true);
+
+-- Allow public update to flappy_bird_scores
+DROP POLICY IF EXISTS "Allow public update to flappy_bird_scores" ON public.flappy_bird_scores;
+CREATE POLICY "Allow public update to flappy_bird_scores"
+  ON public.flappy_bird_scores
+  FOR UPDATE
+  USING (true)
+  WITH CHECK (true);
+
+-- Allow public delete to flappy_bird_scores (for clearing/resetting table)
+DROP POLICY IF EXISTS "Allow public delete to flappy_bird_scores" ON public.flappy_bird_scores;
+CREATE POLICY "Allow public delete to flappy_bird_scores"
+  ON public.flappy_bird_scores
+  FOR DELETE
+  USING (true);
+
+-- Enable Realtime for flappy_bird_scores table
+ALTER PUBLICATION supabase_realtime ADD TABLE public.flappy_bird_scores;
+
 

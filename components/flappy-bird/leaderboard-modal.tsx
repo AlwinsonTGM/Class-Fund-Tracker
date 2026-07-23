@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
-import { Trophy, X, RefreshCw, Wifi, WifiOff, Award, User, Flame, Sparkles } from 'lucide-react'
+import React, { useState } from 'react'
+import { Trophy, X, RefreshCw, Wifi, WifiOff, Award, User, Flame, Sparkles, Trash2 } from 'lucide-react'
+
 import { LeaderboardEntry } from '@/app/flappy-bird/actions'
 
 interface LeaderboardModalProps {
@@ -14,6 +15,7 @@ interface LeaderboardModalProps {
   playerName: string
   activeModeTab: 'classic' | 'zen'
   onTabChange: (tab: 'classic' | 'zen') => void
+  onClearLeaderboard?: () => void
 }
 
 export function LeaderboardModal({
@@ -25,9 +27,22 @@ export function LeaderboardModal({
   userBestScore,
   playerName,
   activeModeTab,
-  onTabChange
+  onTabChange,
+  onClearLeaderboard
 }: LeaderboardModalProps) {
+  const [isClearing, setIsClearing] = useState(false)
+
   if (!isOpen) return null
+
+  const handleClear = async () => {
+    if (confirm('Are you sure you want to reset/clear all leaderboard scores? This cannot be undone.')) {
+      setIsClearing(true)
+      if (onClearLeaderboard) {
+        await onClearLeaderboard()
+      }
+      setIsClearing(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
@@ -100,14 +115,28 @@ export function LeaderboardModal({
             )}
           </div>
 
-          <button
-            onClick={onRefresh}
-            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            title="Refresh rankings"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>Refresh</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onRefresh}
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="Refresh rankings"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Refresh</span>
+            </button>
+
+            {onClearLeaderboard && (
+              <button
+                onClick={handleClear}
+                disabled={isClearing}
+                className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer disabled:opacity-50"
+                title="Clear table"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Clear Table</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* User Best Score Box for Selected Mode */}
@@ -196,4 +225,5 @@ export function LeaderboardModal({
     </div>
   )
 }
+
 

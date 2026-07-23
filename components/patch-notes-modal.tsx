@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.7'
+const CURRENT_VERSION = '1.8'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -18,8 +18,21 @@ interface PatchEntry {
 
 const PATCH_NOTES: PatchEntry[] = [
   {
+    version: '1.8',
+    date: 'July 24, 2026',
+    title: 'Realtime Leaderboard & Mobile Control Polish',
+    emoji: '🏆',
+    changes: [
+      { type: 'new', text: 'Realtime Leaderboard Synchronization — live updates stream automatically across all active sessions whenever a high score is set.' },
+      { type: 'fix', text: 'Supabase Score Updates & RLS Policies — fixed missing UPDATE RLS policies on flappy_bird_scores, resolving silent score update failures and duplicate rows.' },
+      { type: 'fix', text: 'Mobile Game Over Input Protection — fixed an issue on mobile where tapping Game Over buttons would restart games unintentionally, adding touch event propagation guards and input cooldowns.' },
+      { type: 'new', text: 'Leaderboard Table Reset — added a Clear Table server action and interactive modal button to reset score entries.' },
+    ],
+  },
+  {
     version: '1.7',
     date: 'July 23, 2026',
+
     title: 'Flappy Bird Arcade, Multi-Theme & Leaderboard Upgrades',
     emoji: '🎮',
     changes: [
