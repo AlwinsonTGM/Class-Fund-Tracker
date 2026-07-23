@@ -35,12 +35,21 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Card Loading Backdrops**: Tasks being deleted or updated display clear `Deleting...` or `Updating...` overlays immediately, removing transaction lag confusion.
 - **Sign-Out Feedback**: Sign-out buttons instantly render a spinning loader and display `Signing out...` on click.
 
-### 📚 6. Dynamic Study Hub & Custom Class Files (v1.5)
-- **Official Class Documents (Customizable)**: Officers can create and publish PDF guidelines, Markdown manuals, or write Markdown directly in the dashboard using an editor.
-- **Draggable Splitter Bar**: Desktop users can hover and drag the vertical dividing line to expand or contract the Approved Materials list width dynamically.
-- **Moderated Study Reviewers**: Students submit study material links (lesson, week, or task category) that officers review and approve/reject through a real-time moderator queue.
-- **Direct Blob Downloads**: Custom-written guides can be downloaded on-the-fly as `.md` text files from the browser.
-- **Dogie Falling Easter Egg**: Tapping the settings gear icon 10 times triggers falling animated GIFs floating gently behind all content panels.
+### ☁️ 7. Cloud Sync & Fluid Glass Navigation (v1.6)
+- **Interactive Toast Notifications**: Instant sliding alert cards notify users of live transactions.
+- **Database-Backed Class Documents & Song Attachments**: Stored centrally in Supabase for cross-device sync.
+- **Liquid Glass Navigation Bar**: Refined bottom nav capsule into a rounded liquid glass pill with specular highlights.
+
+### 🎮 8. Flappy Bird Arcade, Multi-Theme & Global Leaderboard (v1.7)
+- **Flappy Bird Mini-Game**: Built with an HTML5 Canvas engine implementing original gravity, flap physics, and infinite parallax scrolling.
+- **Multi-Theme Canvas Environments**: Features 4 distinct visual themes (Classic Farm, Cyberpunk Night, Desert Sunset, Deep Ocean) with custom sky gradients, environment silhouettes, glowing neon grid lines, and thematic pipe designs.
+- **Automatic Theme Randomization**: Every new game round automatically picks a fresh visual theme, with a manual theme selector on the start menu.
+- **Game Over Mode Switching**: Switch seamlessly between Classic and Zen modes after dying or return to the main menu directly on the Game Over screen.
+- **High Score Overwrites & Deduplication**: Scores are automatically overwritten on personal bests and deduplicated per player on global Supabase and local storage leaderboards.
+- **Synthesized Retro Audio**: Web Audio API synthesized sound effects for flap, score chime, hit thud, and falling whistle drop death.
+- **Online Sync vs. Offline Fallback**: Real-time status indicator showing database sync status.
+- **Guest & User Handle Customization**: Authenticated users automatically save player handles, while guest players can customize their handle anytime for section rankings.
+
 
 ### ☁️ 7. Cloud Sync, Interactive Notifications & Fluid Glass Navigation (v1.6-beta)
 - **Database-Backed Class Documents**: Class documents are stored centrally in Supabase, enabling real-time visibility across all devices.

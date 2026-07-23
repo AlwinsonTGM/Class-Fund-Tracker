@@ -11,6 +11,7 @@ import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { AddExpenseModal } from '@/components/add-expense-modal'
 import { StudentPaymentList } from '@/components/student-payment-list'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
+import { BirdButton } from '@/components/flappy-bird/bird-button'
 import { Home, ClipboardList, MessageSquare, ShieldAlert, DollarSign, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
@@ -164,6 +165,7 @@ export function OfficerTabsContainer({
           <div className="flex items-center gap-2 relative">
             <ThemeToggle />
             <PatchNotesButton />
+            <BirdButton />
 
             {/* Direct Record Expense button for desktop */}
             <button

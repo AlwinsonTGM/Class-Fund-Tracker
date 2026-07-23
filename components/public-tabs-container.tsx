@@ -9,6 +9,7 @@ import { TasksSection, Task } from '@/components/tasks-section'
 import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { InlineLogin } from '@/components/inline-login'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
+import { BirdButton } from '@/components/flappy-bird/bird-button'
 import { Home, ClipboardList, MessageSquare, Lock, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
@@ -214,6 +215,7 @@ export function PublicTabsContainer({
           <div className="flex items-center gap-2 relative">
             <ThemeToggle />
             <PatchNotesButton />
+            <BirdButton />
 
             {user && (
               <form 

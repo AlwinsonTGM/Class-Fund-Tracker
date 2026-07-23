@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.6-beta'
+const CURRENT_VERSION = '1.7'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,22 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.7',
+    date: 'July 23, 2026',
+    title: 'Flappy Bird Arcade, Multi-Theme & Leaderboard Upgrades',
+    emoji: '🎮',
+    changes: [
+      { type: 'new', text: 'Flappy Bird Arcade Mini-Game — integrated a full HTML5 Canvas Flappy Bird game with original gravity, flap physics, and infinite parallax scrolling background.' },
+      { type: 'new', text: 'Multi-Theme Environmental Rendering — experience 4 distinct visual themes (Classic Farm, Cyberpunk Night, Desert Sunset, Deep Ocean) with custom sky gradients, environment silhouettes, glowing neon grid lines, and thematic pipe designs.' },
+      { type: 'new', text: 'Automatic Theme Randomization — every new game round automatically picks a fresh visual theme, with a manual theme selector available on the start menu.' },
+      { type: 'fix', text: 'Game Over Mode Switching — fixed an issue where players could not change game modes (Classic vs Zen) after dying, adding mode toggle pills and a Main Menu option directly on the Game Over screen.' },
+      { type: 'fix', text: 'Leaderboard Score Overwriting & Deduplication — high scores are now automatically overwritten on new personal bests and deduplicated per player to prevent duplicate leaderboard entries.' },
+      { type: 'improve', text: 'Consistent UI & Refrained Emojis — replaced raw emojis across Flappy Bird UI with clean Lucide vector icons and styled rank badges.' },
+      { type: 'new', text: 'Online Sync & Offline Fallback Indicator — real-time status mark displaying database connection status.' },
+      { type: 'new', text: 'Guest & User Account Handles — signed-in users automatically save custom display handles, while guest players can customize their handle anytime.' },
+    ],
+  },
   {
     version: '1.6',
     date: 'July 23, 2026',
