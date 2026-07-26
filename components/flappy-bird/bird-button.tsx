@@ -27,7 +27,7 @@ export function BirdButton({ className }: BirdButtonProps) {
         id="flappy-bird-button"
         onClick={handleClick}
         title="Play Flappy Bird Arcade!"
-        className={`size-9 flex items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 transition-all cursor-pointer press-spring relative group shadow-sm ${className ?? ''}`}
+        className={`size-9 sm:size-10 flex items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 transition-all cursor-pointer press-spring relative group shadow-sm ${className ?? ''}`}
         aria-label="Play Flappy Bird"
       >
         <Gamepad2 className="h-4 w-4 text-amber-500 group-hover:scale-110 transition-transform duration-200" />

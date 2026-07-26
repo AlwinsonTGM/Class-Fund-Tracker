@@ -1,0 +1,105 @@
+'use client'
+
+import React from 'react'
+import { ExternalLink, Trash2, HelpCircle } from 'lucide-react'
+import { StudyMaterial, Course, UserType } from './types'
+import { getEmbeddableUrl } from './utils'
+
+export interface EmbedViewerModalProps {
+  selectedMaterial: StudyMaterial | null
+  courses: Course[]
+  user?: UserType | null
+  isDragging?: boolean
+  onDeleteMaterial: (id: number) => void
+}
+
+export function EmbedViewerModal({
+  selectedMaterial,
+  courses,
+  user,
+  isDragging = false,
+  onDeleteMaterial
+}: EmbedViewerModalProps) {
+  if (!selectedMaterial) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border/60 rounded-2xl bg-muted/10 min-h-[300px] md:min-h-[400px]">
+        <div className="h-10 w-10 opacity-30 mb-2.5 flex items-center justify-center">📄</div>
+        <h3 className="text-xs font-extrabold text-foreground">Select a Reviewer</h3>
+        <p className="text-[10px] max-w-xs mt-1 leading-normal">
+          Click on any material on the right to project it here. Google Drive files and PDFs will display inside our embed viewer!
+        </p>
+      </div>
+    )
+  }
+
+  const embedInfo = getEmbeddableUrl(selectedMaterial.link)
+  const course = courses.find(c => c.id === selectedMaterial.course_id)
+
+  return (
+    <div className="flex flex-col h-full justify-between gap-4">
+      {/* Header Details */}
+      <div className="flex items-start justify-between border-b border-border/40 pb-3 gap-2">
+        <div className="min-w-0">
+          <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">{selectedMaterial.category} Reviewer</span>
+          <h3 className="text-sm font-extrabold text-foreground truncate mt-1">{selectedMaterial.title}</h3>
+          <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground font-semibold flex-wrap">
+            <span>Submitted by: <strong>{selectedMaterial.submitted_by}</strong></span>
+            <span>•</span>
+            {course && <span>Course: <strong>{course.code}</strong></span>}
+          </div>
+        </div>
+        
+        {/* Moderator Action */}
+        {user && (
+          <button
+            onClick={() => onDeleteMaterial(selectedMaterial.id)}
+            className="size-11 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded-full cursor-pointer transition-colors"
+            title="Delete reviewer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Projection Container */}
+      <div className="flex-1 flex flex-col min-h-[400px] md:min-h-[700px] lg:min-h-[780px] w-full">
+        {embedInfo.isEmbeddable && embedInfo.embedUrl ? (
+          <div className={`w-full h-[450px] sm:h-[550px] md:h-[720px] lg:h-[800px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative ${isDragging ? 'pointer-events-none' : ''}`}>
+            <iframe
+              src={embedInfo.embedUrl}
+              className="w-full h-full border-0 absolute inset-0 z-10 touch-auto"
+              title={selectedMaterial.title}
+              allow="autoplay"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-0 bg-muted/5 gap-2">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-[10px] text-slate-400">Loading {embedInfo.type} projection frame...</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 border border-border/60 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center bg-muted/25">
+            <HelpCircle className="h-10 w-10 text-muted-foreground/45 mb-2.5" />
+            <h4 className="text-xs font-bold text-foreground">Link Cannot Be Embedded Directly</h4>
+            <p className="text-[10px] text-muted-foreground max-w-xs mt-1 leading-normal">
+              This link ({embedInfo.type}) cannot be previewed inside the webpage because the site owner restricts embedded framing. Click the button below to open and access the material.
+            </p>
+            <code className="bg-muted px-2 py-1 border border-border rounded-xl font-mono text-[9px] mt-3 select-all max-w-[200px] truncate">{selectedMaterial.link}</code>
+          </div>
+        )}
+      </div>
+
+      {/* Link Redirect Footer */}
+      <div className="flex items-center gap-2.5 pt-3 border-t border-border/40">
+        <a
+          href={selectedMaterial.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 min-h-[44px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-2xl py-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Open Reviewer & Download 📥
+        </a>
+      </div>
+    </div>
+  )
+}

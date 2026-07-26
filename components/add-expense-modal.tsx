@@ -105,7 +105,7 @@ export function AddExpenseModal() {
           <button
             onClick={handleClose}
             disabled={isPending}
-            className="text-muted-foreground hover:text-foreground text-lg cursor-pointer size-8 flex items-center justify-center rounded-full hover:bg-muted/80 transition-colors"
+            className="text-muted-foreground hover:text-foreground text-lg cursor-pointer size-11 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/80 transition-colors"
             aria-label="Close modal"
           >
             ✕
@@ -134,7 +134,7 @@ export function AddExpenseModal() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Whiteboard markers, cleaning materials"
-              className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 min-h-[44px] text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
             />
           </div>
 
@@ -152,7 +152,7 @@ export function AddExpenseModal() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 min-h-[44px] text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function AddExpenseModal() {
               disabled={isPending}
               value={officerName}
               onChange={(e) => setOfficerName(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm text-foreground focus:border-primary focus:outline-none transition-colors cursor-pointer"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 min-h-[44px] text-sm text-foreground focus:border-primary focus:outline-none transition-colors cursor-pointer"
             >
               {OFFICER_ROLES.map((role) => (
                 <option key={role} value={role}>
@@ -178,19 +178,19 @@ export function AddExpenseModal() {
           </div>
 
           {/* Actions Footer */}
-          <div className="flex items-center justify-end gap-3 mt-4">
+          <div className="flex flex-col-reverse xs:flex-row items-center justify-end gap-2.5 mt-4">
             <button
               type="button"
               onClick={handleClose}
               disabled={isPending}
-              className="px-4 py-2 text-sm font-semibold border border-border hover:bg-muted rounded-full text-foreground cursor-pointer disabled:opacity-50 press-spring"
+              className="w-full xs:w-auto min-h-[44px] px-4 py-2.5 text-sm font-semibold border border-border hover:bg-muted rounded-full text-foreground cursor-pointer disabled:opacity-50 flex items-center justify-center press-spring"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-5 py-2 text-sm font-semibold bg-foreground hover:bg-[#383838] rounded-full text-background cursor-pointer disabled:opacity-50 flex items-center gap-1.5 press-spring"
+              className="w-full xs:w-auto min-h-[44px] px-5 py-2.5 text-sm font-semibold bg-foreground hover:bg-[#383838] rounded-full text-background cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 press-spring"
             >
               {isPending ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
@@ -208,7 +208,7 @@ export function AddExpenseModal() {
       {/* Trigger Button */}
       <button
         onClick={handleOpen}
-        className="shrink-0 text-xs font-semibold text-background bg-foreground hover:bg-[#383838] border border-transparent rounded-full px-4 py-2 cursor-pointer shadow-sm hover:shadow-md flex items-center gap-1.5 press-spring"
+        className="shrink-0 text-xs font-semibold text-background bg-foreground hover:bg-[#383838] border border-transparent rounded-full px-4 py-2.5 min-h-[44px] cursor-pointer shadow-sm hover:shadow-md inline-flex items-center justify-center gap-1.5 press-spring"
       >
         <span>➕</span> Add Expense
       </button>

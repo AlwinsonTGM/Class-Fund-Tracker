@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
-import { Search, AlertTriangle } from 'lucide-react'
+import { Search, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 
 interface Student {
@@ -38,6 +38,8 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
 
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
+  const [isExpanded, setIsExpanded] = useState(false)
   const [payments, setPayments] = useState<Payment[]>(initialPayments)
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({})
   const [isPending, startTransition] = useTransition()
@@ -61,7 +63,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const isSuspendedOrBreak = activeWeek ? activeWeek.status !== 'active' : false
   const statusLabel = activeWeek?.status === 'suspended' ? 'Suspended' : activeWeek?.status === 'break' ? 'Health Break' : null
 
-  // Filter students based on search query (searching using the full name formatted)
+  // Filter students based on search query
   const filteredStudents = students.filter((student) => {
     const fullName = student.last_name
       ? `${student.last_name}, ${student.first_name}`.toLowerCase()
@@ -69,10 +71,25 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
     return fullName.includes(searchQuery.toLowerCase())
   })
 
-  // Calculate stats for the selected week
-  const paidCountForWeek = filteredStudents.filter((student) =>
-    payments.some((p) => p.student_id === student.id && p.week_number === selectedWeek && p.status === 'paid')
-  ).length
+  // Helper check for payment status
+  const isStudentPaid = (studentId: number) =>
+    payments.some((p) => p.student_id === studentId && p.week_number === selectedWeek && p.status === 'paid')
+
+  // Calculate status counts
+  const totalStudents = filteredStudents.length
+  const paidStudentsCount = filteredStudents.filter((s) => isStudentPaid(s.id)).length
+  const unpaidStudentsCount = totalStudents - paidStudentsCount
+
+  // Filter based on status filter chip
+  const displayedStudents = filteredStudents.filter((student) => {
+    const isPaid = isStudentPaid(student.id)
+    if (statusFilter === 'paid') return isPaid
+    if (statusFilter === 'unpaid') return !isPaid
+    return true
+  })
+
+  // Limit visible items unless expanded
+  const visibleStudents = isExpanded ? displayedStudents : displayedStudents.slice(0, 15)
 
   // Toggle function
   const handleToggle = async (studentId: number, studentName: string, currentlyPaid: boolean) => {
@@ -90,7 +107,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
     let backupPayments = [...payments]
     if (targetPaid) {
       const optPayment: Payment = {
-        id: Date.now(), // temporary id
+        id: Date.now(),
         student_id: studentId,
         week_number: selectedWeek,
         status: 'paid'
@@ -142,7 +159,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
               id="officer-week-select"
               value={selectedWeek}
               onChange={(e) => setSelectedWeek(Number(e.target.value))}
-              className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground focus:border-primary focus:outline-none transition-colors cursor-pointer"
+              className="rounded-xl border border-border bg-card px-4 py-2.5 min-h-[44px] text-sm font-medium text-foreground focus:border-primary focus:outline-none transition-colors cursor-pointer"
             >
               {sortedWeeks.map((w) => (
                 <option key={w.id} value={w.week_number}>
@@ -160,7 +177,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
             placeholder="Search students..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-4 py-2 pl-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
+            className="w-full rounded-xl border border-border bg-card px-4 py-2.5 min-h-[44px] pl-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
           />
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4 pointer-events-none" />
         </div>
@@ -168,25 +185,64 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
 
       {/* Checklist Card */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div className="flex items-end justify-between gap-4 border-b border-border px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-primary">
-                Week {selectedWeek} {dateRangeText && `(${dateRangeText})`}
-              </p>
-              {statusLabel && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/10">
-                  {statusLabel}
-                </span>
-              )}
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:px-6">
+          <div className="flex flex-col xs:flex-row xs:items-end justify-between gap-2.5">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-primary">
+                  Week {selectedWeek} {dateRangeText && `(${dateRangeText})`}
+                </p>
+                {statusLabel && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/10">
+                    {statusLabel}
+                  </span>
+                )}
+              </div>
+              <h2 id="officer-checklist-heading" className="text-xl font-semibold tracking-tight text-card-foreground">
+                Officer Student Checklist
+              </h2>
             </div>
-            <h2 id="officer-checklist-heading" className="text-xl font-semibold tracking-tight text-card-foreground">
-              Officer Student Checklist
-            </h2>
+            <p className="text-sm font-medium text-muted-foreground">
+              {paidStudentsCount} of {totalStudents} paid
+            </p>
           </div>
-          <p className="text-sm font-medium text-muted-foreground">
-            {paidCountForWeek} of {filteredStudents.length} paid
-          </p>
+
+          {/* Status Filter Quick Chips */}
+          <div className="flex items-center gap-1.5 p-1 bg-muted/40 rounded-xl border border-border/40 w-full xs:w-fit overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+                statusFilter === 'all'
+                  ? 'bg-card text-foreground shadow-sm border border-border/20'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              All ({totalStudents})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('unpaid')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+                statusFilter === 'unpaid'
+                  ? 'bg-card text-destructive shadow-sm border border-destructive/20'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Unpaid ({unpaidStudentsCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('paid')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+                statusFilter === 'paid'
+                  ? 'bg-card text-primary shadow-sm border border-primary/20'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Paid ({paidStudentsCount})
+            </button>
+          </div>
         </div>
 
         {isSuspendedOrBreak && (
@@ -196,22 +252,19 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
           </div>
         )}
 
-        {filteredStudents.length === 0 ? (
+        {displayedStudents.length === 0 ? (
           <div className="flex min-h-24 items-center justify-center p-6 text-center text-sm text-muted-foreground">
-            {searchQuery ? 'No students match your search.' : 'No students found.'}
+            {searchQuery ? 'No students match your search.' : `No ${statusFilter !== 'all' ? statusFilter : ''} students found.`}
           </div>
         ) : (
-          <div className="max-h-[640px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="overflow-y-auto sm:max-h-[640px] pr-1 custom-scrollbar">
             <ul aria-label="Student checklists" className="divide-y divide-border">
-              {filteredStudents.map((student) => {
-                // Format name as: "Last Name, First Name" for officer checking
+              {visibleStudents.map((student) => {
                 const fullName = student.last_name
                   ? `${student.last_name}, ${student.first_name}`
                   : student.first_name
 
-                const isPaid = payments.some(
-                  (p) => p.student_id === student.id && p.week_number === selectedWeek && p.status === 'paid'
-                )
+                const isPaid = isStudentPaid(student.id)
                 const errorKey = `${student.id}-${selectedWeek}`
                 const hasError = localErrors[errorKey]
 
@@ -222,7 +275,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                     style={{
                       transition: 'background-color 200ms var(--ease-swift)',
                       animation: `stagger-in 400ms var(--ease-spring-smooth) both`,
-                      animationDelay: `${Math.min(filteredStudents.indexOf(student) * 20, 300)}ms`
+                      animationDelay: `${Math.min(visibleStudents.indexOf(student) * 20, 300)}ms`
                     }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -238,7 +291,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <label className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 cursor-pointer select-none p-1">
                         <span className="hidden text-sm text-muted-foreground sm:inline">
                           {isPaid ? 'Paid' : 'Unpaid'}
                         </span>
@@ -268,6 +321,28 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                 )
               })}
             </ul>
+
+            {displayedStudents.length > 15 && (
+              <div className="p-3 border-t border-border flex justify-center bg-card">
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="min-h-[44px] px-5 py-2.5 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full transition-colors cursor-pointer press-spring flex items-center justify-center gap-1.5"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      <span>Collapse List (Show Top 15)</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      <span>Show All {displayedStudents.length} Students</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

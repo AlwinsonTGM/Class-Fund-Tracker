@@ -60,6 +60,30 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Death Video Pause & Reset**: Background videos automatically pause and reset upon player death for clean round restarts.
 - **Dedicated Multiverse Leaderboard**: Full central database & local storage fallback leaderboard support under the Multiverse tab.
 
+### 💳 10. Digital Receipts, Financial Audit Reports & Mobile Ergonomics Overhaul (v1.10)
+- **Digital Proof of Payment Uploads**: Students can submit screenshot proof of payment (GCash/Maya receipts) with reference numbers when paying weekly dues.
+- **Officer Receipt Approval Queue**: Whitelisted officers on `/officer-dashboard` receive a dedicated approval queue featuring receipt image previews, zoom modals, status filters, and 1-click Approve/Reject actions.
+- **Exportable Financial Audit Reports**: 1-click RFC 4180-compliant CSV exports for collection matrices and expense logs, alongside printable PDF financial summary statements.
+- **Mobile Responsiveness & Ergonomics**: Dynamic typography hierarchy, responsive line-heights, text wrapping, and compact container padding across 320px–480px viewports with zero horizontal scrolling.
+- **Mobile Tab Scroll Reset & Fatigue Prevention**: Instant vertical scroll reset upon tab switching in bottom navigation and top tab bars, eliminating scroll overshoot across sections.
+- **Sleek Button Sizing & Touch Ergonomics**: Refined button heights, icon controls, and filter chips for clean visual proportion while enforcing accessible touch targets.
+- **Nav Bar Rapid Switch Fix**: Fixed horizontal container scroll race conditions when spamming navigation tabs, ensuring smooth instant tab transitions without tab bouncing.
+- **Freedom Wall Hydration & Layout Fixes**: Resolved React 19 hydration mismatch error in `FreedomPostCard` and upgraded theme initializer in `app/layout.tsx` to Next.js `Script` (`beforeInteractive`).
+- **Officer Dashboard Header Toolbar**: Reorganized header action buttons into clean toolbar flex groups, fixing orphaned button placement on mobile displays.
+- **Component Refactoring & Dynamic Imports**: Decomposed monolithic components into sub-components under `components/` with `next/dynamic` lazy loading for optimized bundle sizes.
+
+### 📱 11. Mobile Officer Ergonomics, Slide-Over Sidebar & Header Refactoring (v1.11)
+- **Officer Sidebar Menu Drawer**: Added a slide-over navigation drawer providing single-tap access to officer tools, financial audit exports, expense recording, theme preferences, and sign out.
+- **Spacious Dashboard Header**: Restored full unscrolled header layout with prominent left-aligned "Officer Dashboard" heading and portal subtitle.
+- **Logical Toolbar Grouping**: Organized essential financial actions (Financial Audit Report & Record Expense) on the left side, and settings/extras (Flappy Bird arcade game, Patch Notes, Theme Toggle, Sidebar Drawer) on the right side.
+- **Compact Mobile Logo Buttons**: Optimized Record Expense and Financial Audit Report buttons to sleek circular logo icon buttons on mobile screens with hold/hover tooltips.
+- **Hysteresis Anti-Flicker Scroll**: Resolved sticky header scroll oscillation by implementing a hysteresis scroll threshold (> 45px enter, < 10px exit).
+- **Sticky Bar Mobile Alignment**: Fixed scrolled sticky bar layout so the Officer Dashboard title and action icons remain aligned horizontally on a single row without truncation or layout shifts.
+- **Streamlined Recent Activity Padding**: Reduced button heights and vertical whitespace across activity log items and load more actions.
+- **Freedom Wall Cleanliness**: Removed local reaction palette UI while preserving 100% of post content, author details, song previews, and database models.
+- **Future Mobile Optimizations Notice**: Prominently stated in release notes that the interface will further be optimized for mobile viewports across upcoming updates.
+
+
 
 
 ### ☁️ 7. Cloud Sync, Interactive Notifications & Fluid Glass Navigation (v1.6-beta)

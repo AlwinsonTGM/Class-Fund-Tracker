@@ -32,7 +32,7 @@ export function ThemeToggle() {
     <button
       onClick={toggleTheme}
       aria-label={`Toggle to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      className={`flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted/80 cursor-pointer text-base shadow-sm select-none press-spring ${
+      className={`flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted/80 cursor-pointer text-base shadow-sm select-none press-spring ${
         isAnimating ? 'anim-theme-spin' : ''
       }`}
       style={{ transition: 'background-color 200ms var(--ease-swift), border-color 200ms var(--ease-swift)' }}

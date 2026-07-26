@@ -49,7 +49,7 @@ export function LeaderboardModal({
           </div>
           <button
             onClick={onClose}
-            className="size-8 rounded-full bg-slate-950/15 hover:bg-slate-950/30 flex items-center justify-center transition-colors cursor-pointer text-slate-950"
+            className="size-11 min-h-[44px] min-w-[44px] rounded-full bg-slate-950/15 hover:bg-slate-950/30 flex items-center justify-center transition-colors cursor-pointer text-slate-950"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -61,7 +61,7 @@ export function LeaderboardModal({
           <button
             onClick={() => onTabChange('classic')}
             disabled={isLoading}
-            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
+            className={`flex-1 min-h-[44px] py-2.5 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
               isLoading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
             } ${
               activeModeTab === 'classic'
@@ -80,7 +80,7 @@ export function LeaderboardModal({
           <button
             onClick={() => onTabChange('zen')}
             disabled={isLoading}
-            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
+            className={`flex-1 min-h-[44px] py-2.5 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
               isLoading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
             } ${
               activeModeTab === 'zen'
@@ -99,7 +99,7 @@ export function LeaderboardModal({
           <button
             onClick={() => onTabChange('multiverse')}
             disabled={isLoading}
-            className={`flex-1 py-2 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
+            className={`flex-1 min-h-[44px] py-2.5 px-2.5 rounded-xl font-bold text-[11px] flex items-center justify-center gap-1 transition-all ${
               isLoading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
             } ${
               activeModeTab === 'multiverse'
@@ -265,7 +265,7 @@ export function LeaderboardModal({
         <div className="p-4 bg-muted/40 border-t border-border flex justify-end shrink-0">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-foreground text-background text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-foreground text-background text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center"
           >
             Close
           </button>

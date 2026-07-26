@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.9'
+const CURRENT_VERSION = '1.11'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,42 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.11',
+    date: 'July 27, 2026',
+    title: 'Mobile Officer Ergonomics, Slide-Over Sidebar & Header Refactoring',
+    emoji: '📱',
+    changes: [
+      { type: 'new', text: 'Officer Sidebar Menu Drawer — added a slide-over navigation drawer providing single-tap access to officer tools, financial audit exports, expense recording, theme preferences, and sign out.' },
+      { type: 'improve', text: 'Spacious Dashboard Header — restored full unscrolled header layout with prominent left-aligned "Officer Dashboard" heading and portal subtitle.' },
+      { type: 'improve', text: 'Logical Toolbar Grouping — organized essential financial actions (Financial Audit Report & Record Expense) on the left side, and settings/extras (Flappy Bird arcade game, Patch Notes, Theme Toggle, Sidebar Drawer) on the right side.' },
+      { type: 'improve', text: 'Compact Mobile Logo Buttons — optimized Record Expense and Financial Audit Report buttons to sleek circular logo icon buttons on mobile screens with hold/hover tooltips.' },
+      { type: 'fix', text: 'Hysteresis Anti-Flicker Scroll — resolved sticky header scroll oscillation by implementing a hysteresis scroll threshold (> 45px enter, < 10px exit).' },
+      { type: 'fix', text: 'Sticky Bar Mobile Alignment — fixed scrolled sticky bar layout so the Officer Dashboard title and action icons remain aligned horizontally on a single row without truncation or layout shifts.' },
+      { type: 'improve', text: 'Streamlined Recent Activity Padding — reduced button heights and vertical whitespace across activity log items and load more actions.' },
+      { type: 'improve', text: 'Freedom Wall Cleanliness — removed local reaction palette UI while preserving 100% of post content, author details, song previews, and database models.' },
+      { type: 'improve', text: 'Future Mobile Optimizations Notice — the interface will further be optimized for mobile viewports across upcoming updates.' },
+    ],
+  },
+  {
+    version: '1.10',
+    date: 'July 26, 2026',
+    title: 'Digital Payment Receipts, Financial Audit Reports & Mobile Ergonomics Overhaul',
+    emoji: '💳',
+    changes: [
+      { type: 'new', text: 'Digital Proof of Payment Uploads — students can upload screenshot proof of payment (GCash/Maya receipts) with reference numbers when submitting weekly dues.' },
+      { type: 'new', text: 'Officer Receipt Approval Queue — whitelisted officers on /officer-dashboard receive a pending receipts queue with image preview, zoom modal, and 1-click Approve or Reject actions.' },
+      { type: 'new', text: 'Exportable Financial Audit Reports — 1-click RFC 4180-compliant CSV exports for payment matrices/history and printable PDF financial statements summarizing fund balances.' },
+      { type: 'improve', text: 'Mobile Responsiveness & Container Layouts — dynamic typography scaling, line heights, text wrapping, and compact container padding across 320px–480px viewports with zero horizontal overflow.' },
+      { type: 'improve', text: 'Mobile Tab Scroll Reset & Fatigue Prevention — instant vertical scroll reset upon tab switching in bottom navigation and top tab bars, eliminating scroll overshoot across sections.' },
+      { type: 'improve', text: 'Sleek Button Sizing & Touch Ergonomics — refined button heights, icon controls, and filter chips for clean visual proportion while enforcing accessible touch targets.' },
+      { type: 'fix', text: 'Nav Bar Rapid Switch Glitch — fixed horizontal container scroll race condition when spamming navigation tabs, ensuring smooth instant tab transitions.' },
+      { type: 'fix', text: 'Freedom Wall Hydration Mismatch — resolved React 19 hydration mismatch error in FreedomPostCard by safely deferring localStorage reaction loads until post-mount.' },
+      { type: 'fix', text: 'Root Layout Script Warning — upgraded theme initializer script in app/layout.tsx to Next.js Script (beforeInteractive) strategy.' },
+      { type: 'fix', text: 'Officer Dashboard Header Toolbar — reorganized header action buttons into clean toolbar flex groups, eliminating orphaned Sign Out button placement on mobile.' },
+      { type: 'improve', text: 'Component Refactoring & Dynamic Imports — split monolithic components into sub-components with next/dynamic lazy loading for improved initial page load performance.' },
+    ],
+  },
   {
     version: '1.9',
     date: 'July 24, 2026',
@@ -260,7 +296,7 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative flex items-center justify-between px-6 pt-6 pb-4 border-b border-border/60 shrink-0 bg-gradient-to-br from-primary/5 to-transparent">
+        <div className="relative flex items-center justify-between px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b border-border/60 shrink-0 bg-gradient-to-br from-primary/5 to-transparent">
           <div className="flex flex-col gap-1 pr-4 text-left">
             <div className="flex items-center gap-2">
               <ClipboardList className="h-5 w-5 text-primary" />
@@ -285,7 +321,7 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
           {/* Close X */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 size-7 flex items-center justify-center rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer press-spring"
+            className="absolute top-4 right-4 size-11 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer press-spring"
             aria-label="Close patch notes"
           >
             <X className="h-4 w-4" />
@@ -293,14 +329,14 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6">
           {PATCH_NOTES.map((patch, patchIdx) => (
             <div key={patch.version} className="flex flex-col gap-3">
               {/* Version header */}
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{patch.emoji}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-start gap-3">
+                <span className="text-xl shrink-0 mt-0.5">{patch.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded border ${
                       patchIdx === 0
                         ? 'bg-primary/10 text-primary border-primary/20'
@@ -308,22 +344,22 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
                     }`}>
                       v{patch.version}
                     </span>
-                    <h3 className="text-sm font-bold text-foreground">{patch.title}</h3>
-                    <span className="text-[10px] text-muted-foreground ml-auto">{patch.date}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground shrink-0">{patch.date}</span>
                   </div>
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground leading-snug">{patch.title}</h3>
                 </div>
               </div>
 
               {/* Change list */}
-              <ul className="flex flex-col gap-1.5 pl-9">
+              <ul className="flex flex-col gap-2 pl-2 sm:pl-9">
                 {patch.changes.map((change, i) => {
                   const style = TYPE_STYLES[change.type]
                   return (
-                    <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground leading-relaxed">
+                    <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
                       <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 text-[9px] font-bold border rounded uppercase ${style.class}`}>
                         {style.label}
                       </span>
-                      <span>{change.text}</span>
+                      <span className="flex-1 min-w-0">{change.text}</span>
                     </li>
                   )
                 })}
@@ -338,11 +374,11 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 px-6 py-4 border-t border-border/60 flex items-center justify-between bg-muted/30">
+        <div className="shrink-0 px-4 py-3 sm:px-6 sm:py-4 border-t border-border/60 flex items-center justify-between bg-muted/30">
           <p className="text-[10px] text-muted-foreground">BSIS 201 Section Hub · v{CURRENT_VERSION}</p>
           <button
             onClick={handleClose}
-            className="px-5 py-1.5 text-xs font-semibold bg-foreground text-background rounded-full hover:opacity-90 transition-opacity cursor-pointer press-spring flex items-center gap-1"
+            className="px-4 py-2 text-xs font-semibold bg-foreground text-background rounded-full hover:opacity-90 transition-opacity cursor-pointer press-spring flex items-center justify-center gap-1"
           >
             <span>Got it!</span>
             <Check className="h-3.5 w-3.5" />
@@ -369,7 +405,7 @@ export function PatchNotesButton({ className }: PatchNotesButtonProps) {
         id="patch-notes-button"
         onClick={() => setOpen(true)}
         title="View patch notes"
-        className={`size-9 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors cursor-pointer press-spring ${className ?? ''}`}
+        className={`size-9 sm:size-10 flex items-center justify-center rounded-full border border-border hover:bg-muted transition-colors cursor-pointer press-spring ${className ?? ''}`}
         aria-label="Open patch notes"
       >
         <ClipboardList className="h-4 w-4" />

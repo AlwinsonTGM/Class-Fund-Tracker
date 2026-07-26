@@ -15,6 +15,10 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
 import { signOutAction } from '@/app/login/actions'
 
+import type { User } from '@supabase/supabase-js'
+import { AuditLogItem } from '@/components/recent-activity'
+import { Course, StudyMaterial, ClassDocument } from '@/components/study-hub/types'
+
 interface FallingDogie {
   src: string
   left: number
@@ -36,22 +40,57 @@ const DOGIE_GIFS = [
   '/akosidogie/shh-akosidogie.gif'
 ]
 
+export interface ContainerStudent {
+  id: number
+  first_name: string
+  last_name: string | null
+  seat_number: number
+  student_id_number?: string
+}
+
+export interface ContainerPayment {
+  id: number
+  student_id: number
+  week_number: number
+  status: string
+  amount?: number
+  paid_at?: string | null
+  created_at?: string
+  receipt_id?: number | null
+}
+
+export interface ContainerWeek {
+  id: number
+  week_number: number
+  date_range: string
+  status: string
+  [key: string]: unknown
+}
+
+export interface ContainerExpense {
+  id: number
+  description: string
+  amount: number
+  recorded_by?: string
+  category?: string
+  created_at?: string
+}
 
 interface PublicTabsContainerProps {
-  students: any[]
-  payments: any[]
-  weeks: any[]
-  expenses: any[]
-  logs: any[]
+  students: ContainerStudent[]
+  payments: ContainerPayment[]
+  weeks: ContainerWeek[]
+  expenses: ContainerExpense[]
+  logs: AuditLogItem[]
   tasks: Task[]
   posts: FreedomPost[]
-  courses: any[]
-  materials: any[]
-  classDocs?: any[]
+  courses: Course[]
+  materials: StudyMaterial[]
+  classDocs?: ClassDocument[]
   postsError?: boolean
   tasksError?: boolean
   materialsError?: boolean
-  user: any
+  user: User | null
 }
 
 export function PublicTabsContainer({
@@ -76,6 +115,16 @@ export function PublicTabsContainer({
 
   const [mounted, setMounted] = useState(false)
 
+  // Scroll snap container refs and state for mobile swipe synchronization
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const isProgrammaticScroll = useRef(false)
+  const tabOrder = ['home', 'tasks', 'study', 'freedom', 'portal']
+  const activeTabRef = useRef(activeTab)
+
+  useEffect(() => {
+    activeTabRef.current = activeTab
+  }, [activeTab])
+
   // Dogie Easter Egg states
   const [eggClicks, setEggClicks] = useState(0)
   const [dogieActive, setDogieActive] = useState(false)
@@ -94,7 +143,7 @@ export function PublicTabsContainer({
       src: DOGIE_GIFS[Math.floor(Math.random() * DOGIE_GIFS.length)],
       left: Math.random() * 90,
       top: Math.random() * -800 - 150,
-      speedY: Math.random() * 0.4 + 0.25, // very slow falling
+      speedY: Math.random() * 0.4 + 0.25,
       width: Math.random() * 60 + 50,
       rotation: Math.random() * 360,
       rotationSpeed: Math.random() * 0.3 - 0.15
@@ -109,11 +158,11 @@ export function PublicTabsContainer({
       const delta = time - lastTime
       lastTime = time
 
-      setDogies(prev => 
+      setDogies(prev =>
         prev.map(d => {
           let newTop = d.top + d.speedY * (delta * 0.1)
           let newRotation = d.rotation + d.rotationSpeed * (delta * 0.1)
-          
+
           if (newTop > (typeof window !== 'undefined' ? window.innerHeight : 800) + 150) {
             newTop = -150
             return {
@@ -140,10 +189,6 @@ export function PublicTabsContainer({
     }
   }, [dogieActive])
 
-
-
-
-
   // Read URL search params on mount to handle redirects from /login
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -161,6 +206,42 @@ export function PublicTabsContainer({
     }
   }, [activeTab, user])
 
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Sync scroll position when activeTab changes programmatically
+  useEffect(() => {
+    const index = tabOrder.indexOf(activeTab)
+    if (index !== -1 && scrollContainerRef.current) {
+      const width = scrollContainerRef.current.clientWidth
+      if (width > 0) {
+        const targetLeft = index * width
+        if (Math.abs(scrollContainerRef.current.scrollLeft - targetLeft) > 5) {
+          if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current)
+          }
+          isProgrammaticScroll.current = true
+          scrollContainerRef.current.scrollTo({ left: targetLeft, behavior: 'instant' })
+          scrollTimeoutRef.current = setTimeout(() => {
+            isProgrammaticScroll.current = false
+          }, 200)
+        }
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [activeTab])
+
+  const handleContainerScroll = () => {
+    if (isProgrammaticScroll.current || !scrollContainerRef.current) return
+    const { scrollLeft, clientWidth } = scrollContainerRef.current
+    if (clientWidth === 0) return
+    const newIndex = Math.round(scrollLeft / clientWidth)
+    if (tabOrder[newIndex] && tabOrder[newIndex] !== activeTabRef.current) {
+      setActiveTab(tabOrder[newIndex])
+    }
+  }
+
   // Calculate stats
   const totalContributions = payments.filter(p => p.status === 'paid').length * 5
   const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount), 0)
@@ -175,9 +256,8 @@ export function PublicTabsContainer({
   ]
 
   return (
-    <div className="pb-28 relative"> {/* Extra padding bottom to prevent nav overlap */}
-
-      {/* Dogie Easter Egg Falling Container (rendered behind everything with z-[-10]) */}
+    <div className="pb-28 relative">
+      {/* Dogie Easter Egg Falling Container */}
       {dogieActive && (
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-10]">
           {dogies.map((dogie, i) => (
@@ -190,7 +270,7 @@ export function PublicTabsContainer({
                 top: `${dogie.top}px`,
                 width: `${dogie.width}px`,
                 height: 'auto',
-                opacity: 0.16, // subtle watermark opacity
+                opacity: 0.16,
                 transform: `rotate(${dogie.rotation}deg)`,
                 pointerEvents: 'none',
               }}
@@ -203,19 +283,21 @@ export function PublicTabsContainer({
       {/* Auto-popup patch notes on first visit */}
       <PatchNotesModal />
 
-      {/* Header */}
-      <header className="flex flex-col gap-2 mb-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      {/* Sticky / Docked Quick Nav Header on Mobile */}
+      <header className="sticky top-0 z-30 -mx-3 px-3 py-3 bg-background/80 backdrop-blur-md border-b border-border/40 sm:relative sm:top-auto sm:z-auto sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none mb-6 transition-all flex flex-col gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-primary">Bachelor of Science in Information Systems • BSIS 201</p>
-            <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <p className="text-xs sm:text-sm font-semibold text-primary">Bachelor of Science in Information Systems • BSIS 201</p>
+            <h1 className="text-balance text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
               BSIS 201 Section Hub
             </h1>
           </div>
-          <div className="flex items-center gap-2 relative">
-            <ThemeToggle />
-            <PatchNotesButton />
-            <BirdButton />
+          <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <ThemeToggle />
+              <PatchNotesButton />
+              <BirdButton />
+            </div>
 
             {user && (
               <form 
@@ -226,7 +308,7 @@ export function PublicTabsContainer({
                 <button
                   type="submit"
                   disabled={signingOut}
-                  className="text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full px-3 py-1.5 cursor-pointer press-spring flex items-center gap-1.5"
+                  className="px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full cursor-pointer press-spring flex items-center justify-center gap-1.5"
                 >
                   {signingOut && <span className="h-3 w-3 animate-spin rounded-full border border-destructive border-t-transparent" />}
                   <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>
@@ -240,7 +322,7 @@ export function PublicTabsContainer({
         </p>
 
         {/* Desktop Top Tab Navigation */}
-        <div className="hidden sm:flex items-center gap-1.5 p-1.5 bg-muted/60 dark:bg-muted/30 border border-border/40 rounded-2xl w-fit mt-4">
+        <div className="hidden sm:flex items-center gap-1.5 p-1 bg-muted/60 dark:bg-muted/30 border border-border/40 rounded-2xl w-fit mt-4">
           {desktopTabs.map((tab) => {
             const isActive = activeTab === tab.id
             return (
@@ -250,7 +332,7 @@ export function PublicTabsContainer({
                   setActiveTab(tab.id)
                   setAddPostTrigger(false)
                 }}
-                className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 press-spring ${
+                className={`px-3.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 press-spring ${
                   isActive 
                     ? 'bg-card text-foreground shadow-sm border border-border/10' 
                     : 'text-muted-foreground hover:text-foreground'
@@ -264,9 +346,14 @@ export function PublicTabsContainer({
         </div>
       </header>
 
-      {/* Conditional Rendering Based on Active Tab */}
-      <div className="anim-fade-slide-in">
-        {activeTab === 'home' && (
+      {/* Horizontal CSS Scroll-Snap Container on Mobile (`< sm`), Block layout on Desktop (`>= sm`) */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleContainerScroll}
+        className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none sm:block [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      >
+        {/* Tab Pane 1: Home */}
+        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'home' ? 'sm:block' : 'sm:hidden'}`}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
             {/* Left Column: Stats & Recent Activity */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
@@ -278,13 +365,15 @@ export function PublicTabsContainer({
               <StudentPaymentList students={students} payments={payments} weeks={weeks} />
             </div>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'tasks' && (
+        {/* Tab Pane 2: Tasks */}
+        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'tasks' ? 'sm:block' : 'sm:hidden'}`}>
           <TasksSection initialTasks={tasks} isOfficer={false} courses={courses} dbError={tasksError} user={user} />
-        )}
+        </div>
 
-        {activeTab === 'study' && (
+        {/* Tab Pane 3: Study Hub */}
+        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'study' ? 'sm:block' : 'sm:hidden'}`}>
           <StudyHub
             initialMaterials={materials}
             courses={courses}
@@ -294,9 +383,10 @@ export function PublicTabsContainer({
             user={user}
             initialClassDocs={classDocs}
           />
-        )}
+        </div>
 
-        {activeTab === 'freedom' && (
+        {/* Tab Pane 4: Freedom Wall */}
+        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'freedom' ? 'sm:block' : 'sm:hidden'}`}>
           <FreedomWall
             initialPosts={posts}
             isOfficer={false}
@@ -305,18 +395,19 @@ export function PublicTabsContainer({
             onCloseAddTrigger={() => setAddPostTrigger(false)}
             user={user}
           />
-        )}
+        </div>
 
-        {activeTab === 'portal' && !user && (
-          <InlineLogin />
-        )}
-
-        {activeTab === 'portal' && user && (
-          <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-sm font-semibold text-muted-foreground">Redirecting to Officer Portal...</p>
-          </div>
-        )}
+        {/* Tab Pane 5: Portal */}
+        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'portal' ? 'sm:block' : 'sm:hidden'}`}>
+          {!user ? (
+            <InlineLogin />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-sm font-semibold text-muted-foreground">Redirecting to Officer Portal...</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Dedicated spacer to prevent BottomNav overlapping lowest scrollable content */}

@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
+import Script from 'next/script'
 import { ToastProvider } from '@/components/ui/toast'
 import './globals.css'
 
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="bg-background" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <script
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {

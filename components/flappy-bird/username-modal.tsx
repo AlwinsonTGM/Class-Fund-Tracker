@@ -126,14 +126,14 @@ export function UsernameModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-semibold rounded-xl border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer disabled:opacity-50"
+              className="min-h-[44px] px-4 py-2.5 text-xs font-semibold rounded-xl border border-border hover:bg-muted text-muted-foreground transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 transition-colors shadow-md flex items-center gap-1.5 cursor-pointer press-spring disabled:opacity-50"
+              className="min-h-[44px] px-5 py-2.5 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 transition-colors shadow-md flex items-center justify-center gap-1.5 cursor-pointer press-spring disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

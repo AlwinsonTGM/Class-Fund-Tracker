@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import { PublicTabsContainer } from '@/components/public-tabs-container'
+import { ScrollToTopButton } from '@/components/scroll-to-top-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,7 +117,7 @@ export default async function Page() {
   })) as any[]
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 anim-fade-slide-in">
+    <main className="min-h-screen bg-background px-3 py-4 sm:px-6 sm:py-12 anim-fade-slide-in">
       <div className="mx-auto flex w-full max-w-3xl lg:max-w-6xl flex-col gap-6">
         <PublicTabsContainer
           students={studentsList}
@@ -135,6 +136,7 @@ export default async function Page() {
           user={user}
         />
       </div>
+      <ScrollToTopButton />
     </main>
   )
 }

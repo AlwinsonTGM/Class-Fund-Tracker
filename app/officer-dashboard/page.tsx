@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import { OfficerTabsContainer } from '@/components/officer-tabs-container'
+import { ScrollToTopButton } from '@/components/scroll-to-top-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,6 +93,11 @@ export default async function OfficerDashboardPage() {
     .select('*')
     .order('created_at', { ascending: false })
 
+  const { data: dbReceipts, error: receiptsError } = await supabase
+    .from('payment_receipts')
+    .select('*')
+    .order('created_at', { ascending: false })
+
   if (studentsError) console.error('Error fetching students:', studentsError.message)
   if (paymentsError) console.error('Error fetching payments:', paymentsError.message)
   if (expensesError) console.error('Error fetching expenses:', expensesError.message)
@@ -103,6 +109,7 @@ export default async function OfficerDashboardPage() {
   if (coursesError) console.error('Error fetching courses:', coursesError.message)
   if (materialsError) console.error('Error fetching study materials:', materialsError.message)
   if (classDocsError) console.error('Error fetching class documents:', classDocsError.message)
+  if (receiptsError) console.error('Error fetching payment receipts:', receiptsError.message)
 
   const studentsList = dbStudents || []
   const paymentsList = dbPayments || []
@@ -114,6 +121,7 @@ export default async function OfficerDashboardPage() {
   const coursesList = dbCourses || []
   const materialsList = dbMaterials || []
   const classDocsList = dbClassDocs || []
+  const receiptsList = dbReceipts || []
 
   // Perform in-memory join to bypass Supabase's relation schema cache delay
   const tasksList = (dbTasks || []).map(task => ({
@@ -125,7 +133,7 @@ export default async function OfficerDashboardPage() {
   const isModerator = moderatorsList.some((m) => m.email === user.email)
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 anim-fade-slide-in">
+    <main className="min-h-screen bg-background px-3 py-4 sm:px-6 sm:py-12 anim-fade-slide-in">
       <div className="mx-auto flex w-full max-w-3xl lg:max-w-6xl flex-col gap-6">
         <OfficerTabsContainer
           students={studentsList}
@@ -138,6 +146,7 @@ export default async function OfficerDashboardPage() {
           courses={coursesList}
           materials={materialsList}
           classDocs={classDocsList}
+          receipts={receiptsList}
           tasksError={!!tasksError}
           postsError={!!postsError}
           materialsError={!!materialsError}
@@ -145,6 +154,7 @@ export default async function OfficerDashboardPage() {
           user={user}
         />
       </div>
+      <ScrollToTopButton />
     </main>
   )
 }

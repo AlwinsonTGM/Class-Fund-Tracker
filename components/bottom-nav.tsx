@@ -72,6 +72,9 @@ export function BottomNav({
               key={tab.id}
               onClick={() => {
                 setActiveTab(tab.id)
+                if (typeof window !== 'undefined') {
+                  window.scrollTo({ top: 0, behavior: 'instant' })
+                }
               }}
               className="relative flex flex-col items-center justify-center w-1/5 h-12 rounded-full cursor-pointer group active:scale-95 transition-transform"
             >

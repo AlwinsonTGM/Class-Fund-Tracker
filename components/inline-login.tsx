@@ -188,7 +188,7 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isPending || isGooglePending}
-              className="flex w-full items-center justify-center gap-3 rounded-full border border-border bg-background hover:bg-muted py-2.5 px-4 text-xs font-bold text-foreground cursor-pointer disabled:opacity-50 press-spring"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-border bg-background hover:bg-muted py-2.5 px-4 min-h-[44px] text-xs font-bold text-foreground cursor-pointer disabled:opacity-50 press-spring"
             >
               {isGooglePending ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
@@ -231,7 +231,7 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@kld.edu.ph"
-              className="w-full rounded-xl border border-border bg-background px-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 min-h-[44px] text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
             />
           </div>
 
@@ -263,7 +263,7 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-border bg-background px-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 min-h-[44px] text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
               />
             </div>
           )}
@@ -271,7 +271,7 @@ export function InlineLogin({ onSuccess }: InlineLoginProps) {
           <button
             type="submit"
             disabled={isPending || isGooglePending}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-foreground hover:bg-[#383838] py-2.5 px-4 text-xs font-bold text-background cursor-pointer disabled:opacity-50 press-spring"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-foreground hover:bg-[#383838] py-2.5 px-4 min-h-[44px] text-xs font-bold text-background cursor-pointer disabled:opacity-50 press-spring"
           >
             {isPending ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />

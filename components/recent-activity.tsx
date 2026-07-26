@@ -4,6 +4,7 @@ import React, { useState, useEffect, useTransition } from 'react'
 import { deleteAuditLogAction, updateAuditLogAction } from '@/app/officer-dashboard/moderator-actions'
 import { fetchAuditLogsAction } from '@/app/officer-dashboard/actions'
 import { User, AlertTriangle } from 'lucide-react'
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 
 export interface AuditLogItem {
   id: number
@@ -121,28 +122,23 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
   }
 
   return (
-    <section aria-labelledby="activity-heading" className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+    <CollapsibleSection
+      title="Recent Activity"
+      subtitle={localActivities.length === 0 ? "No activities recorded yet." : "The latest actions logged by class officers."}
+      badgeText="Audit Log"
+      defaultOpen={true}
+    >
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 id="activity-heading" className="text-base font-semibold text-card-foreground">Recent Activity</h2>
-            {localActivities.length === 0 ? (
-              <p className="text-sm leading-6 text-muted-foreground mt-1">No activities have been recorded yet.</p>
-            ) : (
-              <p className="text-sm leading-6 text-muted-foreground">The latest actions logged by class officers.</p>
-            )}
-          </div>
-          <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-primary" />
-        </div>
-
         {error && (
           <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs font-medium text-destructive">
             {error}
           </div>
         )}
 
-        {localActivities.length > 0 && (
-          <div className="max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
+        {localActivities.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No activities recorded yet.</p>
+        ) : (
+          <div className="overflow-y-auto sm:max-h-[360px] pr-1 custom-scrollbar">
             <ul className="divide-y divide-border" aria-label="Recent activity log">
               {localActivities.map((activity) => {
                 const isEditing = editingLogId === activity.id
@@ -170,14 +166,14 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
                           <button
                             onClick={() => handleStartEdit(activity)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[36px] min-w-[44px] flex items-center justify-center"
+                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[32px] flex items-center justify-center"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(activity.id)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[36px] min-w-[44px] flex items-center justify-center"
+                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[32px] flex items-center justify-center"
                           >
                             Delete
                           </button>
@@ -199,14 +195,14 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
                           <button
                             onClick={() => handleSaveEdit(activity.id)}
                             disabled={isPending}
-                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg px-2.5 py-1 min-h-[34px] flex items-center justify-center transition-colors cursor-pointer"
                           >
                             Save
                           </button>
                           <button
                             onClick={handleCancelEdit}
                             disabled={isPending}
-                            className="text-[10px] font-bold text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                            className="text-xs font-semibold text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-lg px-2.5 py-1 min-h-[34px] flex items-center justify-center transition-colors cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -214,7 +210,7 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
                       </div>
                     ) : (
                       // Description Output View
-                      <p className="text-sm leading-6 text-muted-foreground mt-1.5 pl-1">
+                      <p className="text-sm leading-6 text-muted-foreground mt-1.5 pl-1 break-words">
                         {activity.action_description}
                       </p>
                     )}
@@ -227,11 +223,11 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
 
         {/* Load More Button */}
         {hasMore && (
-          <div className="flex justify-center pt-3 border-t border-border">
+          <div className="flex justify-center pt-2.5 border-t border-border">
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="text-xs font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-full py-2 px-4 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 press-spring"
+              className="text-[11px] sm:text-xs font-semibold text-foreground/80 hover:text-foreground bg-muted/80 hover:bg-muted border border-border/50 rounded-full py-1.5 px-3.5 min-h-[34px] transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 press-spring"
             >
               {isLoadingMore ? (
                 <span className="h-3 w-3 animate-spin rounded-full border border-foreground border-t-transparent" />
@@ -280,14 +276,14 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
               <button
                 type="button"
                 onClick={() => setLogToDelete(null)}
-                className="px-4 py-1.5 text-xs font-semibold border border-border bg-background rounded-full hover:bg-muted text-foreground cursor-pointer press-spring"
+                className="px-4 py-1.5 text-xs font-semibold border border-border bg-background rounded-full hover:bg-muted text-foreground cursor-pointer press-spring min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmDeleteLog}
-                className="px-4 py-1.5 text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-full cursor-pointer press-spring"
+                className="px-4 py-1.5 text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-full cursor-pointer press-spring min-h-[44px]"
               >
                 Confirm Delete
               </button>
@@ -295,6 +291,6 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
           </div>
         </div>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

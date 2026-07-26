@@ -75,7 +75,7 @@ export function BalanceCard({ balance }: BalanceCardProps) {
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative overflow-hidden rounded-3xl bg-foreground p-6 text-background shadow-lg sm:p-8 gpu-accelerate anim-fade-slide-in"
+      className="relative overflow-hidden rounded-3xl bg-foreground p-4.5 text-background shadow-lg sm:p-6 md:p-8 gpu-accelerate anim-fade-slide-in"
       style={{
         transition: 'transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms ease',
         transformStyle: 'preserve-3d',
@@ -95,7 +95,7 @@ export function BalanceCard({ balance }: BalanceCardProps) {
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-background/60 sm:text-xs">Class Treasury</p>
           <div className="flex flex-col gap-0.5">
             <h2 id="balance-heading" className="text-xs font-medium text-background/60 sm:text-sm">Total Fund Balance</h2>
-            <p className="text-3xl font-bold tracking-tight text-background sm:text-5xl" style={{ wordBreak: 'break-word' }}>
+            <p className="text-2xl font-bold tracking-tight text-background sm:text-4xl md:text-5xl" style={{ wordBreak: 'break-word' }}>
               {formattedBalance}
             </p>
           </div>

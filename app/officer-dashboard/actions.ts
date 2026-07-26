@@ -802,6 +802,257 @@ export async function deleteClassDocumentAction(id: string) {
   }
 }
 
+// ─── Payment Receipts Server Actions ───
+
+export interface SubmitPaymentReceiptInput {
+  student_id: number
+  student_name: string
+  week_number: number
+  amount: number
+  payment_method: string // e.g. 'GCash' | 'Maya'
+  receipt_url: string
+  reference_number?: string
+  file_name?: string
+  file_size?: number
+  mime_type?: string
+  note?: string
+}
+
+export async function submitPaymentReceiptAction(input: SubmitPaymentReceiptInput) {
+  try {
+    const supabase = await createClient()
+
+    if (!input.student_id || !input.student_name) {
+      return { success: false, error: 'Student information is required' }
+    }
+
+    if (input.amount <= 0) {
+      return { success: false, error: 'Payment amount must be greater than zero' }
+    }
+
+    if (input.file_name) {
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.webp']
+      const ext = '.' + input.file_name.split('.').pop()?.toLowerCase()
+      if (!allowedExtensions.includes(ext)) {
+        return { success: false, error: `Invalid file extension "${ext}". Allowed: .jpg, .jpeg, .png, .pdf, .webp` }
+      }
+    }
+
+    if (input.file_size && input.file_size > 5 * 1024 * 1024) {
+      return { success: false, error: 'File size exceeds maximum limit of 5MB' }
+    }
+
+    const { data: newReceipt, error: insertError } = await supabase
+      .from('payment_receipts')
+      .insert({
+        student_id: input.student_id,
+        student_name: input.student_name.trim(),
+        week_number: input.week_number,
+        amount: input.amount,
+        payment_method: input.payment_method || 'GCash',
+        receipt_url: input.receipt_url || '/placeholder-receipt.png',
+        reference_number: input.reference_number?.trim() || null,
+        file_name: input.file_name || null,
+        file_size: input.file_size || null,
+        mime_type: input.mime_type || null,
+        note: input.note?.trim() || null,
+        status: 'pending'
+      })
+      .select('*')
+      .single()
+
+    if (insertError) {
+      console.error('Error submitting payment receipt to DB:', insertError.message)
+      throw new Error(`Database error: ${insertError.message}`)
+    }
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true, receipt: newReceipt }
+  } catch (err: any) {
+    console.error('Error in submitPaymentReceiptAction:', err)
+    return { success: false, error: err.message || 'Failed to submit payment receipt.' }
+  }
+}
+
+export async function approvePaymentReceiptAction(receiptId: number) {
+  try {
+    const { supabase, user } = await verifyOfficerStatus()
+    const officerEmail = user.email || 'unknown_officer'
+
+    // Fetch existing receipt
+    const { data: receipt, error: fetchError } = await supabase
+      .from('payment_receipts')
+      .select('*')
+      .eq('id', receiptId)
+      .single()
+
+    if (fetchError || !receipt) {
+      return { success: false, error: 'Receipt not found' }
+    }
+
+    if (receipt.status !== 'pending') {
+      return { success: false, error: `Receipt has already been ${receipt.status}` }
+    }
+
+    // 1. Update receipt status
+    const { error: updateReceiptError } = await supabase
+      .from('payment_receipts')
+      .update({
+        status: 'approved',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: officerEmail
+      })
+      .eq('id', receiptId)
+
+    if (updateReceiptError) throw updateReceiptError
+
+    // 2. Delete duplicate payment entries and insert paid status into payments table
+    await supabase
+      .from('payments')
+      .delete()
+      .eq('student_id', receipt.student_id)
+      .eq('week_number', receipt.week_number)
+
+    const { error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        student_id: receipt.student_id,
+        week_number: receipt.week_number,
+        status: 'paid',
+        paid_at: new Date().toISOString(),
+        receipt_id: receipt.id
+      })
+
+    if (paymentError) {
+      console.warn('Error inserting payment record:', paymentError.message)
+    }
+
+    // 3. Write to audit_logs
+    const actionDescription = `Approved payment receipt #${receipt.id} for ${receipt.student_name} (Week ${receipt.week_number}, Ref: ${receipt.reference_number || 'N/A'}, ₱${Number(receipt.amount).toFixed(2)})`
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+
+    if (logError) {
+      console.error('Error creating audit log:', logError.message)
+    }
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error in approvePaymentReceiptAction:', err)
+    return { success: false, error: err.message || 'Failed to approve payment receipt.' }
+  }
+}
+
+export async function rejectPaymentReceiptAction(receiptId: number, rejectionReason: string) {
+  try {
+    const { supabase, user } = await verifyOfficerStatus()
+    const officerEmail = user.email || 'unknown_officer'
+
+    // Fetch receipt
+    const { data: receipt, error: fetchError } = await supabase
+      .from('payment_receipts')
+      .select('*')
+      .eq('id', receiptId)
+      .single()
+
+    if (fetchError || !receipt) {
+      return { success: false, error: 'Receipt not found' }
+    }
+
+    if (receipt.status !== 'pending') {
+      return { success: false, error: `Receipt has already been ${receipt.status}` }
+    }
+
+    const reason = rejectionReason?.trim() || 'Invalid proof of payment'
+
+    // Update receipt status
+    const { error: updateReceiptError } = await supabase
+      .from('payment_receipts')
+      .update({
+        status: 'rejected',
+        rejection_reason: reason,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: officerEmail
+      })
+      .eq('id', receiptId)
+
+    if (updateReceiptError) throw updateReceiptError
+
+    // Write to audit_logs
+    const actionDescription = `Rejected payment receipt #${receipt.id} for ${receipt.student_name} (Reason: ${reason})`
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+
+    if (logError) {
+      console.error('Error creating audit log:', logError.message)
+    }
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error in rejectPaymentReceiptAction:', err)
+    return { success: false, error: err.message || 'Failed to reject payment receipt.' }
+  }
+}
+
+export async function getPendingReceiptsAction() {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('payment_receipts')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching pending receipts:', error.message)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('Error in getPendingReceiptsAction:', err)
+    return []
+  }
+}
+
+export async function getStudentReceiptsAction(studentId: number) {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('payment_receipts')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching student receipts:', error.message)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('Error in getStudentReceiptsAction:', err)
+    return []
+  }
+}
+
+
 
 
 
