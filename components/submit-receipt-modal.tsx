@@ -47,7 +47,7 @@ export function SubmitReceiptModal({
   const [selectedStudentId, setSelectedStudentId] = useState<number | ''>('')
   const [selectedWeek, setSelectedWeek] = useState<number>(1)
   const [paymentMethod, setPaymentMethod] = useState<'GCash' | 'Maya'>('GCash')
-  const [amount, setAmount] = useState<number>(50)
+  const [amount, setAmount] = useState<number>(5)
   const [referenceNumber, setReferenceNumber] = useState<string>('')
   const [note, setNote] = useState<string>('')
 

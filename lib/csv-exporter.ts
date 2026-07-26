@@ -96,10 +96,16 @@ export function generatePaymentMatrixCSV(
   students: ExportStudent[],
   payments: ExportPayment[],
   weeks: ExportWeek[],
-  weeklyRate: number = 50.0
+  weeklyRate: number = 5.0
 ): string {
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
   const sortedStudents = [...students].sort((a, b) => (a.seat_number ?? 0) - (b.seat_number ?? 0))
+
+  const activeWeek = sortedWeeks.find((w) => w.status === 'active')
+  const currentWeekNum = activeWeek
+    ? activeWeek.week_number
+    : (sortedWeeks.length > 0 ? sortedWeeks[0].week_number : 1)
+  const elapsedWeeksCount = sortedWeeks.filter((w) => w.week_number <= currentWeekNum).length || 1
 
   const headers = [
     'seat_number',
@@ -124,8 +130,7 @@ export function generatePaymentMatrixCSV(
     })
 
     const totalPaidAmount = paidWeeksCount * weeklyRate
-    const totalWeeksCount = sortedWeeks.length
-    const outstandingBalance = Math.max(0, (totalWeeksCount - paidWeeksCount) * weeklyRate)
+    const outstandingBalance = Math.max(0, (elapsedWeeksCount - paidWeeksCount) * weeklyRate)
 
     return [
       escapeCSV(s.seat_number ?? s.id),
@@ -165,7 +170,7 @@ export function generatePaymentsCSV(
       : receipts.find((r) => r.student_id === p.student_id && r.week_number === p.week_number)
 
     const ref = receipt?.reference_number ? receipt.reference_number : 'N/A'
-    const amt = p.amount ?? 50.0
+    const amt = p.amount ?? 5.0
     const date = p.paid_at || p.created_at || ''
 
     return [

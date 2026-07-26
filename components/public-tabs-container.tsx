@@ -243,7 +243,9 @@ export function PublicTabsContainer({
   }
 
   // Calculate stats
-  const totalContributions = payments.filter(p => p.status === 'paid').length * 5
+  const totalContributions = payments
+    .filter((p) => p.status === 'paid')
+    .reduce((sum, p) => sum + (typeof p.amount === 'number' ? p.amount : 5.0), 0)
   const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount), 0)
   const netBalance = totalContributions - totalExpenses
 

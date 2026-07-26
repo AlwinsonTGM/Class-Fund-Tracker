@@ -61,13 +61,22 @@ export function FinancialAuditReportModal({
   // Calculate core metrics
   const paidPayments = payments.filter((p) => p.status === 'paid')
   const totalCollections = paidPayments.reduce(
-    (sum, p) => sum + (typeof p.amount === 'number' ? p.amount : 50.0),
+    (sum, p) => sum + (typeof p.amount === 'number' ? p.amount : 5.0),
     0
   )
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)
   const remainingBalance = totalCollections - totalExpenses
 
-  const totalPossibleDues = (students.length || 0) * (weeks.length || 0) * 50.0
+  // Determine active / elapsed weeks up to the current date / active week
+  const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
+  const activeWeek = sortedWeeks.find((w) => w.status === 'active')
+  const currentWeekNum = activeWeek
+    ? activeWeek.week_number
+    : (sortedWeeks.length > 0 ? sortedWeeks[0].week_number : 1)
+  const elapsedWeeksCount = sortedWeeks.filter((w) => w.week_number <= currentWeekNum).length || 1
+
+  // Calculate total possible dues for elapsed weeks up to current week
+  const totalPossibleDues = (students.length || 0) * elapsedWeeksCount * 5.0
   const outstandingDues = Math.max(0, totalPossibleDues - totalCollections)
 
   const handlePrint = () => {
@@ -204,7 +213,7 @@ export function FinancialAuditReportModal({
                 </p>
               </div>
               <div className="p-2.5 sm:p-4 rounded-2xl bg-muted/50 border border-border print:bg-white print:border-gray-300">
-                <p className="text-xs font-medium text-muted-foreground print:text-gray-600">Total Outstanding Dues</p>
+                <p className="text-xs font-medium text-muted-foreground print:text-gray-600">Outstanding Dues (As of Wk {currentWeekNum})</p>
                 <p className="text-base sm:text-xl md:text-2xl font-bold text-amber-600 dark:text-amber-400 print:text-black mt-1">
                   ₱{outstandingDues.toFixed(2)}
                 </p>
