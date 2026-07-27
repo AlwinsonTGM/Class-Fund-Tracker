@@ -89,16 +89,16 @@ export default async function Page() {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (studentsError) console.error('Error fetching students:', studentsError.message)
-  if (paymentsError) console.error('Error fetching payments:', paymentsError.message)
-  if (expensesError) console.error('Error fetching expenses:', expensesError.message)
-  if (weeksError) console.error('Error fetching weeks:', weeksError.message)
-  if (logsError) console.error('Error fetching audit logs:', logsError.message)
-  if (tasksError) console.error('Error fetching tasks:', tasksError.message)
-  if (postsError) console.error('Error fetching freedom posts:', postsError.message)
-  if (coursesError) console.error('Error fetching courses:', coursesError.message)
-  if (materialsError) console.error('Error fetching study materials:', materialsError.message)
-  if (classDocsError) console.error('Error fetching class documents:', classDocsError.message)
+  if (studentsError) console.warn('Error fetching students:', studentsError.message)
+  if (paymentsError) console.warn('Error fetching payments:', paymentsError.message)
+  if (expensesError) console.warn('Error fetching expenses:', expensesError.message)
+  if (weeksError) console.warn('Error fetching weeks:', weeksError.message)
+  if (logsError) console.warn('Error fetching audit logs:', logsError.message)
+  if (tasksError) console.warn('Error fetching tasks:', tasksError.message)
+  if (postsError) console.warn('Error fetching freedom posts:', postsError.message)
+  if (coursesError) console.warn('Error fetching courses:', coursesError.message)
+  if (materialsError) console.warn('Error fetching study materials:', materialsError.message)
+  if (classDocsError) console.warn('Error fetching class documents:', classDocsError.message)
 
   const studentsList = dbStudents || []
   const paymentsList = dbPayments || []

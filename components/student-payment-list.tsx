@@ -154,11 +154,11 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
           </div>
 
           {/* Status Filter Quick Chips */}
-          <div className="flex items-center gap-1.5 p-1 bg-muted/40 rounded-xl border border-border/40 w-full xs:w-fit overflow-x-auto">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-muted/40 rounded-xl border border-border/40 w-full sm:w-auto sm:min-w-[320px]">
             <button
               type="button"
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+              className={`w-full px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap shrink-0 ${
                 statusFilter === 'all'
                   ? 'bg-card text-foreground shadow-sm border border-border/20'
                   : 'text-muted-foreground hover:text-foreground'
@@ -169,7 +169,7 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
             <button
               type="button"
               onClick={() => setStatusFilter('unpaid')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+              className={`w-full px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap shrink-0 ${
                 statusFilter === 'unpaid'
                   ? 'bg-card text-destructive shadow-sm border border-destructive/20'
                   : 'text-muted-foreground hover:text-foreground'
@@ -180,7 +180,7 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
             <button
               type="button"
               onClick={() => setStatusFilter('paid')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+              className={`w-full px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap shrink-0 ${
                 statusFilter === 'paid'
                   ? 'bg-card text-primary shadow-sm border border-primary/20'
                   : 'text-muted-foreground hover:text-foreground'

@@ -40,14 +40,14 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Database-Backed Class Documents & Song Attachments**: Stored centrally in Supabase for cross-device sync.
 - **Liquid Glass Navigation Bar**: Refined bottom nav capsule into a rounded liquid glass pill with specular highlights.
 
-### 🎮 8. Flappy Bird Arcade, Multi-Theme & Realtime Leaderboard (v1.8)
+### 🎮 8. Flappy Bird Arcade, Multi-Theme & Realtime Leaderboard (v1.8 - v1.16)
 - **Flappy Bird Mini-Game**: Built with an HTML5 Canvas engine implementing original gravity, flap physics, and infinite parallax scrolling.
 - **Multi-Theme Canvas Environments**: Features 4 distinct visual themes (Classic Farm, Cyberpunk Night, Desert Sunset, Deep Ocean) with custom sky gradients, environment silhouettes, glowing neon grid lines, and thematic pipe designs.
 - **Automatic Theme Randomization**: Every new game round automatically picks a fresh visual theme, with a manual theme selector on the start menu.
-- **Realtime Global Leaderboard (v1.8)**: Live synchronization streaming high scores in real time across all open sessions via Supabase Realtime postgres_changes.
+- **Realtime Global Leaderboard (v1.16)**: Live synchronization streaming high scores in real time across Classic, Zen, and Multiverse modes with strict mode score isolation and mode-specific loading screens.
 - **Mobile Touch Input Protection (v1.8)**: Prevents accidental restarts on touchscreens using input cooldowns (`gameOverTimeRef`) and strict event propagation blocks (`e.stopPropagation()`) on container overlays.
 - **Leaderboard Table Reset (v1.8)**: Added a Clear Table server action and interactive modal reset button to wipe old score entries.
-- **Game Over Mode Switching**: Switch seamlessly between Classic and Zen modes after dying or return to the main menu directly on the Game Over screen.
+- **Game Over Mode Switching**: Switch seamlessly between Classic, Zen, and Multiverse modes after dying or return to the main menu directly on the Game Over screen.
 - **Synthesized Retro Audio**: Web Audio API synthesized sound effects for flap, score chime, hit thud, and falling whistle drop death.
 - **Online Sync vs. Offline Fallback**: Real-time status indicator showing database sync status.
 - **Guest & User Handle Customization**: Authenticated users automatically save player handles, while guest players can customize their handle anytime for section rankings.
@@ -83,8 +83,29 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Freedom Wall Cleanliness**: Removed local reaction palette UI while preserving 100% of post content, author details, song previews, and database models.
 - **Future Mobile Optimizations Notice**: Prominently stated in release notes that the interface will further be optimized for mobile viewports across upcoming updates.
 
+### ✨ 12. Natural Header Scroll & Mobile Dashboard Parity (v1.12)
+- **Resolved Header Scroll Flickering**: Eliminated sticky header scroll oscillation on mobile by replacing unstable conditional component swapping with a single, stable header container.
+- **Mobile & PC Dashboard Parity**: Standardized header scroll behavior across Officer Dashboard and Public Dashboard, ensuring a smooth, natural page scroll experience on all screen sizes.
+- **Eliminated Sticky Viewport Obstruction**: Allowed full header to scroll naturally with page content on mobile, freeing up valuable screen space and preventing backdrop blur overlaps.
+- **Removed Redundant Officer Menu**: Removed redundant slide-over officer sidebar menu, streamlining officer actions directly into the main header toolbar.
 
+### 📄 13. Direct PDF Reviewer Submissions & Anti-Spam Queue Protection (v1.13)
+- **Direct PDF File Uploads**: Students and officers can upload `.pdf` reviewer files (up to 3MB) directly from their local device without needing external Google Drive links.
+- **Embedded PDF Viewer & 1-Click Downloads**: Approved PDF reviewers render directly inside the embedded projection viewer iframe and include a 1-click PDF download button.
+- **Visual PDF File Badges**: Reviewer cards on the board and in the moderator queue feature prominent red `📄 PDF File` badges for quick identification.
+- **Anti-Spam Queue Protection**: Enforced a strict maximum limit of 5 pending unapproved reviewer submissions to prevent submission queue flooding.
+- **Automatic PDF Rejection Cleanup**: Rejecting or deleting a reviewer submission permanently purges the stored PDF file content from database storage.
 
+### 📱 14. Mobile Swiping Glitch Fix & Clean Tab Transitions (v1.14)
+- **Removed Mobile Left/Right Swiping**: Eliminated horizontal CSS scroll snap and scroll listener synchronization to stop layout flickering and glitches when swiping between tabs on mobile screens.
+- **Clean Tab Switching**: Mobile and desktop tabs transition instantly via state switching with automatic window scroll reset to top.
+- **Modal Close Button Alignment**: Adjusted patch notes modal header layout flex positioning to prevent the circular close button from overlapping the version badge.
+
+### 🎬 15. Spontaneous Note Spawning & Tab Entrance Animations (v1.15)
+- **Spontaneous Note Spawning**: Freedom Wall sticky notes spawn one-by-one with a smooth spring zoom-out effect in both Scatter and Grid view modes.
+- **Smooth Tab Entrance Animations**: Tasks Tab, Freedom Wall Tab, and Study Hub Tab share polished fade and slide-in entrance transitions across Public and Officer viewports.
+- **Staggered Task Card Animations**: Task cards slide and fade in with cascading delays when switching to or filtering the Tasks board.
+- **Patch Notes Modal Entrance**: Opening Patch Notes triggers a smooth backdrop blur fade, spring modal card zoom, and staggered version list entrance.
 
 ### ☁️ 7. Cloud Sync, Interactive Notifications & Fluid Glass Navigation (v1.6-beta)
 - **Database-Backed Class Documents**: Class documents are stored centrally in Supabase, enabling real-time visibility across all devices.

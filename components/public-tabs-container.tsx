@@ -115,16 +115,6 @@ export function PublicTabsContainer({
 
   const [mounted, setMounted] = useState(false)
 
-  // Scroll snap container refs and state for mobile swipe synchronization
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const isProgrammaticScroll = useRef(false)
-  const tabOrder = ['home', 'tasks', 'study', 'freedom', 'portal']
-  const activeTabRef = useRef(activeTab)
-
-  useEffect(() => {
-    activeTabRef.current = activeTab
-  }, [activeTab])
-
   // Dogie Easter Egg states
   const [eggClicks, setEggClicks] = useState(0)
   const [dogieActive, setDogieActive] = useState(false)
@@ -206,41 +196,12 @@ export function PublicTabsContainer({
     }
   }, [activeTab, user])
 
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Sync scroll position when activeTab changes programmatically
+  // Scroll to top when activeTab changes
   useEffect(() => {
-    const index = tabOrder.indexOf(activeTab)
-    if (index !== -1 && scrollContainerRef.current) {
-      const width = scrollContainerRef.current.clientWidth
-      if (width > 0) {
-        const targetLeft = index * width
-        if (Math.abs(scrollContainerRef.current.scrollLeft - targetLeft) > 5) {
-          if (scrollTimeoutRef.current) {
-            clearTimeout(scrollTimeoutRef.current)
-          }
-          isProgrammaticScroll.current = true
-          scrollContainerRef.current.scrollTo({ left: targetLeft, behavior: 'instant' })
-          scrollTimeoutRef.current = setTimeout(() => {
-            isProgrammaticScroll.current = false
-          }, 200)
-        }
-      }
-    }
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
   }, [activeTab])
-
-  const handleContainerScroll = () => {
-    if (isProgrammaticScroll.current || !scrollContainerRef.current) return
-    const { scrollLeft, clientWidth } = scrollContainerRef.current
-    if (clientWidth === 0) return
-    const newIndex = Math.round(scrollLeft / clientWidth)
-    if (tabOrder[newIndex] && tabOrder[newIndex] !== activeTabRef.current) {
-      setActiveTab(tabOrder[newIndex])
-    }
-  }
 
   // Calculate stats
   const totalContributions = payments
@@ -285,8 +246,8 @@ export function PublicTabsContainer({
       {/* Auto-popup patch notes on first visit */}
       <PatchNotesModal />
 
-      {/* Sticky / Docked Quick Nav Header on Mobile */}
-      <header className="sticky top-0 z-30 -mx-3 px-3 py-3 bg-background/80 backdrop-blur-md border-b border-border/40 sm:relative sm:top-auto sm:z-auto sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none mb-6 transition-all flex flex-col gap-3">
+      {/* Header Container (Natural Scroll on Mobile & Desktop) */}
+      <header className="relative w-full mb-6 flex flex-col gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs sm:text-sm font-semibold text-primary">Bachelor of Science in Information Systems • BSIS 201</p>
@@ -348,14 +309,10 @@ export function PublicTabsContainer({
         </div>
       </header>
 
-      {/* Horizontal CSS Scroll-Snap Container on Mobile (`< sm`), Block layout on Desktop (`>= sm`) */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={handleContainerScroll}
-        className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none sm:block [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
+      {/* Tab Panes Container */}
+      <div className="w-full">
         {/* Tab Pane 1: Home */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'home' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'home' ? 'block' : 'hidden'}`}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
             {/* Left Column: Stats & Recent Activity */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
@@ -370,12 +327,12 @@ export function PublicTabsContainer({
         </div>
 
         {/* Tab Pane 2: Tasks */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'tasks' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'tasks' ? 'block animate-fade-slide-in' : 'hidden'}`}>
           <TasksSection initialTasks={tasks} isOfficer={false} courses={courses} dbError={tasksError} user={user} />
         </div>
 
         {/* Tab Pane 3: Study Hub */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'study' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'study' ? 'block animate-fade-slide-in' : 'hidden'}`}>
           <StudyHub
             initialMaterials={materials}
             courses={courses}
@@ -388,7 +345,7 @@ export function PublicTabsContainer({
         </div>
 
         {/* Tab Pane 4: Freedom Wall */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'freedom' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'freedom' ? 'block animate-fade-slide-in' : 'hidden'}`}>
           <FreedomWall
             initialPosts={posts}
             isOfficer={false}
@@ -400,7 +357,7 @@ export function PublicTabsContainer({
         </div>
 
         {/* Tab Pane 5: Portal */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'portal' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'portal' ? 'block' : 'hidden'}`}>
           {!user ? (
             <InlineLogin />
           ) : (

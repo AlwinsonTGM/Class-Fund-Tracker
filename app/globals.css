@@ -87,6 +87,11 @@ html.dark {
   from { opacity: 0; transform: translateY(6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+@keyframes note-spawn-zoom {
+  0%   { opacity: 0; transform: scale(1.35) translateY(-12px); }
+  65%  { opacity: 1; transform: scale(0.96) translateY(2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
 @keyframes theme-spin {
   0%   { transform: rotate(0deg) scale(1); }
   50%  { transform: rotate(180deg) scale(0.85); }
@@ -106,6 +111,7 @@ html.dark {
 .anim-slide-out-left    { animation: slide-out-left 450ms var(--ease-spring-smooth) both; }
 .anim-fade-slide-in     { animation: fade-slide-in 350ms var(--ease-spring-smooth) both; }
 .anim-stagger-in        { animation: stagger-in 400ms var(--ease-spring-smooth) both; }
+.anim-note-spawn        { animation: note-spawn-zoom 520ms var(--ease-spring-snappy) both; }
 .anim-theme-spin        { animation: theme-spin 500ms var(--ease-spring-snappy); }
 
 /* ─── Interactive Press Effect ─── */

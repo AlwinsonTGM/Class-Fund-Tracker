@@ -47,6 +47,10 @@ coverage/
 htmlcov/
 .coverage
 
+# AI Agent logs
+.agents/*
+!.agents/workflows/
+
 # Gradle
 .gradle/
 

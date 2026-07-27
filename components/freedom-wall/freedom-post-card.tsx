@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { FreedomPost, UserType } from './types'
-import { getPostTheme, loadAllReactions } from './constants'
+import { getPostTheme } from './constants'
 import { SongMiniPlayer } from './song-mini-player'
 import { X, Music, PenSquare } from 'lucide-react'
 
@@ -39,10 +39,6 @@ export function FreedomPostCard({
   const angle = (post.id % 7) - 3
 
   if (mode === 'scatter') {
-    const reactions = mounted ? (loadAllReactions()[post.id] || {}) : {}
-    const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0)
-    const reactionEmojis = Object.keys(reactions).filter(k => reactions[k] > 0).slice(0, 3)
-
     const innerCardContent = (
       <>
         {theme.bgDecor}
@@ -79,13 +75,6 @@ export function FreedomPostCard({
             <span className="font-bold truncate max-w-[65px]">{post.author_name}</span>
             {post.song && <Music className="h-2.5 w-2.5 text-primary shrink-0" />}
           </div>
-          
-          {totalReactions > 0 && (
-            <div className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded-full text-[8px] font-bold flex items-center gap-0.5 select-none shrink-0 border border-black/5 dark:border-white/5">
-              <span>{reactionEmojis.slice(0, 1).join('')}</span>
-              <span className="opacity-90">{totalReactions}</span>
-            </div>
-          )}
         </div>
       </>
     )

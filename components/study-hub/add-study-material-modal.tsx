@@ -1,7 +1,7 @@
 'use client'
 
-import React from 'react'
-import { AlertCircle } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { AlertCircle, Upload, FileText, Link as LinkIcon, X, CheckCircle2 } from 'lucide-react'
 import { Course, Week, Task } from './types'
 
 export interface AddStudyMaterialModalProps {
@@ -71,7 +71,66 @@ export function AddStudyMaterialModal({
   weeks,
   tasks
 }: AddStudyMaterialModalProps) {
+  const [sourceType, setSourceType] = useState<'pdf' | 'url'>('pdf')
+  const [pdfFileName, setPdfFileName] = useState<string>('')
+  const [pdfFileSize, setPdfFileSize] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   if (!showSubmitModal) return null
+
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSubmitError(null)
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase()
+    if (file.type !== 'application/pdf' && ext !== '.pdf') {
+      setSubmitError('Invalid file format. Please upload a PDF file (.pdf).')
+      return
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      setSubmitError('PDF file size exceeds 3MB limit.')
+      return
+    }
+
+    const sizeStr = file.size >= 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+      : `${(file.size / 1024).toFixed(0)} KB`
+
+    setPdfFileName(file.name)
+    setPdfFileSize(sizeStr)
+
+    if (!submitTitle.trim()) {
+      setSubmitTitle(file.name.replace(/\.pdf$/i, ''))
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setSubmitLink(event.target.result as string)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemovePdf = () => {
+    setPdfFileName('')
+    setPdfFileSize('')
+    setSubmitLink('')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    if (sourceType === 'pdf' && !submitLink.startsWith('data:application/pdf')) {
+      e.preventDefault()
+      setSubmitError('Please select a PDF file to upload.')
+      return
+    }
+    onSubmit(e)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -105,10 +164,10 @@ export function AddStudyMaterialModal({
             </button>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
             <div className="border-b border-border/40 pb-2">
               <h3 className="text-base font-extrabold text-foreground">Submit Study/Review Material</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Share review notes or quiz link. Submissions are reviewed by moderators.</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Upload a PDF directly or share a link. Submissions are reviewed by moderators.</p>
             </div>
 
             {submitError && (
@@ -119,6 +178,44 @@ export function AddStudyMaterialModal({
             )}
 
             <div className="grid grid-cols-2 gap-3">
+              {/* Submission Mode Selection */}
+              <div className="flex flex-col gap-1.5 col-span-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Submission Method *</label>
+                <div className="grid grid-cols-2 gap-2 bg-muted/40 p-1 rounded-2xl border border-border/40">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSourceType('pdf')
+                      setSubmitError(null)
+                    }}
+                    className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 press-spring ${
+                      sourceType === 'pdf'
+                        ? 'bg-card text-primary shadow-xs border border-border/20'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <FileText className="h-3.5 w-3.5 text-red-500" />
+                    <span>Upload PDF File</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSourceType('url')
+                      setSubmitError(null)
+                      if (submitLink.startsWith('data:')) setSubmitLink('')
+                    }}
+                    className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2 press-spring ${
+                      sourceType === 'url'
+                        ? 'bg-card text-primary shadow-xs border border-border/20'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <LinkIcon className="h-3.5 w-3.5 text-blue-500" />
+                    <span>Web Link (URL)</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Title */}
               <div className="flex flex-col gap-1.5 col-span-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Reviewer Title *</label>
@@ -131,6 +228,64 @@ export function AddStudyMaterialModal({
                   className="w-full text-xs rounded-xl border border-border bg-background p-2.5 min-h-[44px] text-foreground focus:outline-none focus:border-primary transition-all"
                 />
               </div>
+
+              {/* PDF Upload or Link Input */}
+              {sourceType === 'pdf' ? (
+                <div className="flex flex-col gap-1.5 col-span-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">PDF File (Max 3MB) *</label>
+                  {pdfFileName && submitLink.startsWith('data:application/pdf') ? (
+                    <div className="flex items-center justify-between p-3 border border-emerald-500/30 bg-emerald-500/10 rounded-2xl">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-foreground truncate">{pdfFileName}</span>
+                          <span className="text-[9px] text-muted-foreground">{pdfFileSize} • PDF Ready</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemovePdf}
+                        className="p-1 text-muted-foreground hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                        title="Remove file"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 bg-background hover:bg-muted/20 rounded-2xl p-4 cursor-pointer transition-all gap-2 group text-center min-h-[100px]">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        onChange={handlePdfChange}
+                        className="hidden"
+                      />
+                      <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Upload className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-extrabold text-foreground">Click or Drag PDF file here</span>
+                        <span className="text-[9px] text-muted-foreground">Supported format: PDF (up to 3MB)</span>
+                      </div>
+                    </label>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5 col-span-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Material Link *</label>
+                  <input
+                    type="url"
+                    required={sourceType === 'url'}
+                    placeholder="e.g. Google Drive sharing URL, PDF link"
+                    value={submitLink.startsWith('data:') ? '' : submitLink}
+                    onChange={e => setSubmitLink(e.target.value)}
+                    className="w-full text-xs rounded-xl border border-border bg-background p-2.5 text-foreground focus:outline-none focus:border-primary transition-all"
+                  />
+                  <span className="text-[8px] text-amber-600 dark:text-amber-500 font-bold px-1.5 py-0.5 bg-amber-500/10 rounded-lg w-fit">
+                    ⚠️ Note: Ensure your Google Drive file permissions are set to "Anyone with the link can view"!
+                  </span>
+                </div>
+              )}
 
               {/* Description */}
               <div className="flex flex-col gap-1.5 col-span-2">

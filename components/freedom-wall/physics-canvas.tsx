@@ -62,7 +62,7 @@ export function PhysicsCanvas({
       ref={canvasRef}
       onPointerMove={onCanvasPointerMove}
       onClick={onCanvasClick}
-      className={`relative w-full h-[420px] sm:h-[650px] bg-sky-200 dark:bg-slate-950 rounded-3xl overflow-hidden border border-border/60 shadow-inner select-none cursor-grab active:cursor-grabbing bg-cover bg-center transition-all duration-1000 bg-[url('/sky/daytime.png')] dark:bg-[url('/sky/nighttime.png')] ${
+      className={`relative w-full h-[420px] sm:h-[650px] bg-sky-200 dark:bg-slate-950 rounded-3xl overflow-hidden border border-border/60 shadow-inner select-none cursor-grab active:cursor-grabbing bg-cover bg-center transition-colors duration-500 bg-[url('/sky/daytime.png')] dark:bg-[url('/sky/nighttime.png')] ${
         shakeCanvas ? 'animate-[shake_0.5s_ease-in-out_infinite]' : ''
       } ${
         (activeDragId !== null || activeTool !== null || isDraggingTool) ? 'touch-none' : ''
@@ -90,7 +90,7 @@ export function PhysicsCanvas({
         }
       `}} />
 
-      {activePosts.map(post => {
+      {activePosts.map((post, idx) => {
         const pos = positions[post.id] || { x: 30, y: 30 }
         const isDragging = activeDragId === post.id
         const angle = (post.id % 13) - 6
@@ -115,10 +115,12 @@ export function PhysicsCanvas({
               transform: isDragging
                 ? 'scale(1.08) rotate(0deg)'
                 : `rotate(${angle}deg)`,
-              transition: isDragging ? 'transform 100ms ease, z-index 100ms ease' : 'transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              animationDelay: `${idx * 85}ms`,
+              willChange: isDragging ? 'left, top, transform' : 'auto',
               touchAction: 'none'
             }}
-            className="w-32 sm:w-40 min-h-[110px] sm:min-h-[130px] flex flex-col p-0.5 group cursor-grab active:cursor-grabbing hover:shadow-lg transition-shadow duration-300"
+            className="w-32 sm:w-40 min-h-[110px] sm:min-h-[130px] flex flex-col p-0.5 group cursor-grab active:cursor-grabbing hover:shadow-lg transition-shadow duration-300 anim-note-spawn"
           >
             <FreedomPostCard
               post={post}

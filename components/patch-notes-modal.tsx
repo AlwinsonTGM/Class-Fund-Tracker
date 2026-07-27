@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.11'
+const CURRENT_VERSION = '1.17'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,80 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.17',
+    date: 'July 27, 2026',
+    title: 'Dashboard Filter Alignments, Mobile Ergonomics & Manage Weeks Refactoring',
+    emoji: '🎨',
+    changes: [
+      { type: 'fix', text: 'Approval Queue Filter Search Bar Width — expanded the digital proof search input to max-w-sm flex-1, perfectly matching the student search bar directly below it.' },
+      { type: 'fix', text: 'Filter Tab Text Wrapping — enforced whitespace-nowrap and optimized padding across filter status buttons to prevent "Pending (0)" text from wrapping onto two lines.' },
+      { type: 'improve', text: 'Equal Filter Tab Distribution — converted All, Unpaid, and Paid filter tabs to a 3-column equal grid layout (33.3% per segment) across mobile and PC.' },
+      { type: 'improve', text: 'Inline Recent Activity Moderator Buttons — aligned Edit and Delete action buttons with Pencil and Trash icons on the exact same header row as officer email and timestamp.' },
+      { type: 'improve', text: 'Mobile Dashboard Toolbar Alignment — aligned all mobile dashboard header action buttons to start on the left, while maintaining right-alignment on PC.' },
+      { type: 'improve', text: 'Manage Class Weeks Layout & Full-Width Add Button — wrapped week management panel in a CollapsibleSection and aligned the Add Week button to span full container width.' },
+    ],
+  },
+  {
+    version: '1.16',
+    date: 'July 27, 2026',
+    title: 'Flappy Bird Multiverse Leaderboard Fix & Mode Score Isolation',
+    emoji: '🕹️',
+    changes: [
+      { type: 'fix', text: 'Multiverse Leaderboard Loading Screen — fixed leaderboard modal display text to correctly show "Loading Multiverse Mode...", purple theme animations, and "Multiverse Best" instead of Classic mode labels.' },
+      { type: 'fix', text: 'Strict Game Mode Score Isolation — disabled legacy automatic cross-mode score copying in server actions so scores achieved in Classic, Zen, and Multiverse modes remain strictly separated.' },
+      { type: 'fix', text: 'Instant Game Mode Physics Sync — synchronized physics engine state immediately upon selecting mode pills to prevent score submission race conditions on game start.' },
+      { type: 'improve', text: 'Clean High Score Fallbacks — removed legacy single-mode localStorage key fallback to prevent historical scores from bleeding into mode-specific personal bests.' },
+    ],
+  },
+  {
+    version: '1.15',
+    date: 'July 27, 2026',
+    title: 'Spontaneous Note Spawning & Tab Entrance Animations',
+    emoji: '🎬',
+    changes: [
+      { type: 'new', text: 'Spontaneous Note Spawning — Freedom Wall sticky notes now spawn one-by-one with a smooth spring zoom-out effect in both Scatter and Grid view modes.' },
+      { type: 'improve', text: 'Smooth Tab Entrance Animations — Tasks Tab, Freedom Wall Tab, and Study Hub Tab now share polished fade and slide-in entrance transitions across Public and Officer viewports.' },
+      { type: 'improve', text: 'Staggered Task Card Animations — task cards slide and fade in with cascading delays when switching to or filtering the Tasks board.' },
+      { type: 'improve', text: 'Patch Notes Modal Entrance — opening Patch Notes triggers a smooth backdrop blur fade, spring modal card zoom, and staggered version list entrance.' },
+    ],
+  },
+  {
+    version: '1.14',
+    date: 'July 27, 2026',
+    title: 'Mobile Swiping Glitch Fix & Clean Tab Transitions',
+    emoji: '📱',
+    changes: [
+      { type: 'fix', text: 'Removed Mobile Left/Right Swiping — eliminated horizontal CSS scroll snap and scroll listener sync to stop layout flickering and glitches when swiping on mobile.' },
+      { type: 'improve', text: 'Clean Tab Switching — mobile and desktop tabs now transition instantly via state switching with automatic window scroll reset to top.' },
+      { type: 'fix', text: 'Modal Close Button Alignment — adjusted patch notes modal header layout flex positioning to prevent the circular close button from overlapping the version badge.' },
+    ],
+  },
+  {
+    version: '1.13',
+    date: 'July 27, 2026',
+    title: 'Direct PDF Reviewer Submissions & Anti-Spam Queue Protection',
+    emoji: '📄',
+    changes: [
+      { type: 'new', text: 'Direct PDF Reviewer File Uploads — students and officers can now upload .pdf files (up to 3MB) directly from their local device when submitting reviewers in Study Hub.' },
+      { type: 'new', text: 'Embedded PDF Viewer & 1-Click Download — approved PDF reviewers render directly inside the embedded projection viewer iframe and include a 1-click PDF download button.' },
+      { type: 'new', text: 'Visual PDF File Badges — reviewer cards on the board and in the moderator approval queue feature prominent red 📄 PDF File badges for quick file type identification.' },
+      { type: 'improve', text: 'Anti-Spam Queue Protection — enforced a strict maximum limit of 5 pending unapproved reviewer submissions to prevent submission queue flooding and spam.' },
+      { type: 'improve', text: 'Automatic PDF Rejection Cleanup — rejecting or deleting a reviewer submission permanently purges the stored PDF file content from database storage.' },
+    ],
+  },
+  {
+    version: '1.12',
+    date: 'July 27, 2026',
+    title: 'Natural Header Scroll & Mobile Dashboard Parity',
+    emoji: '✨',
+    changes: [
+      { type: 'fix', text: 'Resolved Header Scroll Flickering — eliminated sticky header scroll oscillation on mobile by replacing unstable conditional component swapping with a single, stable header container.' },
+      { type: 'improve', text: 'Mobile & PC Dashboard Parity — standardized header scroll behavior across Officer Dashboard and Public Dashboard, ensuring a smooth, natural page scroll experience on all screen sizes.' },
+      { type: 'improve', text: 'Eliminated Sticky Viewport Obstruction — allowed full header to scroll naturally with page content on mobile, freeing up valuable screen space and preventing backdrop blur overlaps.' },
+      { type: 'fix', text: 'Removed Redundant Officer Menu — removed redundant slide-over officer sidebar menu, streamlining officer actions directly into the main header toolbar.' },
+    ],
+  },
   {
     version: '1.11',
     date: 'July 27, 2026',
@@ -288,50 +362,56 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
 
   const modal = (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4 anim-modal-overlay-in"
       style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.45)' }}
     >
       <div
-        className="relative w-full max-w-lg max-h-[85vh] flex flex-col bg-card border border-border rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg max-h-[85vh] flex flex-col bg-card border border-border rounded-3xl shadow-2xl overflow-hidden anim-modal-card-in"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative flex items-center justify-between px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b border-border/60 shrink-0 bg-gradient-to-br from-primary/5 to-transparent">
-          <div className="flex flex-col gap-1 pr-4 text-left">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border/60 shrink-0 bg-gradient-to-br from-primary/5 to-transparent gap-2">
+          <div className="flex flex-col gap-1 pr-2 text-left min-w-0">
             <div className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground tracking-tight">Patch Notes</h2>
+              <ClipboardList className="h-5 w-5 text-primary shrink-0" />
+              <h2 className="text-lg font-bold text-foreground tracking-tight truncate">Patch Notes</h2>
             </div>
-            <p className="text-xs text-muted-foreground">Latest changes & improvements to BSIS 201 Section Hub</p>
+            <p className="text-xs text-muted-foreground truncate">Latest changes & improvements to BSIS 201 Section Hub</p>
           </div>
 
-          {/* Latest version badge (with pr-8 padding to prevent overlap with the close button) */}
-          <div className="flex flex-col items-end gap-1 shrink-0 pr-8">
-            <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
-              v{CURRENT_VERSION} Latest
-            </span>
+          {/* Version badge & Close button flex container */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="flex flex-col items-end gap-1">
+              <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground whitespace-nowrap">
+                v{CURRENT_VERSION} Latest
+              </span>
+              <button
+                onClick={handleClose}
+                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-medium whitespace-nowrap"
+              >
+                Don't show again
+              </button>
+            </div>
+
+            {/* Close X */}
             <button
               onClick={handleClose}
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer font-medium"
+              className="size-9 sm:size-10 flex items-center justify-center rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer press-spring shrink-0"
+              aria-label="Close patch notes"
             >
-              Don't show again
+              <X className="h-4 w-4" />
             </button>
           </div>
-
-          {/* Close X */}
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 size-11 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer press-spring"
-            aria-label="Close patch notes"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6">
           {PATCH_NOTES.map((patch, patchIdx) => (
-            <div key={patch.version} className="flex flex-col gap-3">
+            <div
+              key={patch.version}
+              className="flex flex-col gap-3 anim-stagger-in"
+              style={{ animationDelay: `${patchIdx * 70}ms` }}
+            >
               {/* Version header */}
               <div className="flex items-start gap-3">
                 <span className="text-xl shrink-0 mt-0.5">{patch.emoji}</span>

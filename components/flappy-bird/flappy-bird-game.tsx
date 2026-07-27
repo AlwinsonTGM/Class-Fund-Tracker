@@ -225,7 +225,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       }
 
       if (typeof window !== 'undefined') {
-        const savedClassic = localStorage.getItem('cft_flappy_high_score_classic') || localStorage.getItem('cft_flappy_high_score')
+        const savedClassic = localStorage.getItem('cft_flappy_high_score_classic')
         if (savedClassic) {
           setHighScoreClassic(parseInt(savedClassic, 10))
         }
@@ -1523,11 +1523,13 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 onClick={(e) => {
                   e.stopPropagation()
                   lastUiInteractTimeRef.current = performance.now()
+                  stateRef.current.gameMode = 'classic'
                   setGameMode('classic')
                 }}
                 onTouchStart={(e) => {
                   e.stopPropagation()
                   lastUiInteractTimeRef.current = performance.now()
+                  stateRef.current.gameMode = 'classic'
                   setGameMode('classic')
                 }}
                 className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
@@ -1544,11 +1546,13 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 onClick={(e) => {
                   e.stopPropagation()
                   lastUiInteractTimeRef.current = performance.now()
+                  stateRef.current.gameMode = 'zen'
                   setGameMode('zen')
                 }}
                 onTouchStart={(e) => {
                   e.stopPropagation()
                   lastUiInteractTimeRef.current = performance.now()
+                  stateRef.current.gameMode = 'zen'
                   setGameMode('zen')
                 }}
                 className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
@@ -1565,11 +1569,13 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
                 onClick={(e) => {
                   e.stopPropagation()
                   lastUiInteractTimeRef.current = performance.now()
+                  stateRef.current.gameMode = 'multiverse'
                   setGameMode('multiverse')
                 }}
                 onTouchStart={(e) => {
                   e.stopPropagation()
                   lastUiInteractTimeRef.current = performance.now()
+                  stateRef.current.gameMode = 'multiverse'
                   setGameMode('multiverse')
                 }}
                 className={`flex-1 py-1.5 px-2 rounded-xl font-black text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${

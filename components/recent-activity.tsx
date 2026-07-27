@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from 'react'
 import { deleteAuditLogAction, updateAuditLogAction } from '@/app/officer-dashboard/moderator-actions'
 import { fetchAuditLogsAction } from '@/app/officer-dashboard/actions'
-import { User, AlertTriangle } from 'lucide-react'
+import { User, AlertTriangle, Pencil, Trash2 } from 'lucide-react'
 import { CollapsibleSection } from '@/components/ui/collapsible-section'
 
 export interface AuditLogItem {
@@ -145,12 +145,12 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
 
                 return (
                   <li key={activity.id} className={`flex flex-col py-3 first:pt-0 last:pb-0 text-sm text-foreground gpu-accelerate ${deletingIds.has(activity.id) ? 'anim-slide-out-left overflow-hidden' : ''}`}>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                        <span className="font-semibold text-xs bg-muted px-2.5 py-0.5 rounded-full text-foreground/80 truncate max-w-[200px] sm:max-w-none flex items-center gap-1">
-                          <User className="h-3 w-3 text-muted-foreground" /> {activity.officer_email}
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0">
+                        <span className="font-semibold text-xs bg-muted px-2.5 py-0.5 rounded-full text-foreground/80 truncate max-w-[150px] xs:max-w-[200px] sm:max-w-none flex items-center gap-1 shrink-0">
+                          <User className="h-3 w-3 text-muted-foreground shrink-0" /> {activity.officer_email}
                         </span>
-                        <span className="text-[11px] font-medium text-muted-foreground">
+                        <span className="text-[11px] font-medium text-muted-foreground shrink-0">
                           {new Date(activity.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
@@ -162,20 +162,24 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
 
                       {/* Moderator Action Buttons */}
                       {isModerator && !isEditing && (
-                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={() => handleStartEdit(activity)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-foreground/80 hover:text-foreground bg-muted hover:bg-muted/80 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[32px] flex items-center justify-center"
+                            className="text-[11px] font-medium text-muted-foreground hover:text-foreground bg-muted/60 hover:bg-muted rounded-md px-2 py-0.5 cursor-pointer press-spring flex items-center gap-1 transition-colors"
+                            title="Edit log entry"
                           >
-                            Edit
+                            <Pencil className="h-3 w-3" />
+                            <span>Edit</span>
                           </button>
                           <button
                             onClick={() => handleDelete(activity.id)}
                             disabled={isPending}
-                            className="text-[11px] font-semibold text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 cursor-pointer press-spring min-h-[32px] flex items-center justify-center"
+                            className="text-[11px] font-medium text-destructive hover:bg-destructive/10 rounded-md px-2 py-0.5 cursor-pointer press-spring flex items-center gap-1 transition-colors"
+                            title="Delete log entry"
                           >
-                            Delete
+                            <Trash2 className="h-3 w-3" />
+                            <span>Delete</span>
                           </button>
                         </div>
                       )}

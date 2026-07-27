@@ -518,19 +518,24 @@ export function TasksSection({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredTasks.map(task => (
-            <TaskCard
+          {filteredTasks.map((task, idx) => (
+            <div
               key={task.id}
-              task={task}
-              isOfficer={isOfficer}
-              user={user}
-              isPending={isPending}
-              deletingTaskId={deletingTaskId}
-              togglingTaskId={togglingTaskId}
-              onToggleTask={handleToggleTask}
-              onStartEdit={handleStartEdit}
-              onDeleteTask={(t) => setTaskToDelete(t)}
-            />
+              className="anim-stagger-in"
+              style={{ animationDelay: `${idx * 60}ms` }}
+            >
+              <TaskCard
+                task={task}
+                isOfficer={isOfficer}
+                user={user}
+                isPending={isPending}
+                deletingTaskId={deletingTaskId}
+                togglingTaskId={togglingTaskId}
+                onToggleTask={handleToggleTask}
+                onStartEdit={handleStartEdit}
+                onDeleteTask={(t) => setTaskToDelete(t)}
+              />
+            </div>
           ))}
         </div>
       )}

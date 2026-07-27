@@ -314,6 +314,14 @@ export function StudyHub({
       return
     }
 
+    const pendingCount = materials.filter(m => !m.approved).length
+    if (pendingCount >= 5) {
+      const queueErrorMsg = 'Submission queue full. There are currently 5 pending submissions awaiting moderator review. Please try again later.'
+      setSubmitError(queueErrorMsg)
+      toast.error(queueErrorMsg, 'Queue Limit Reached')
+      return
+    }
+
     const payload = {
       title: submitTitle.trim(),
       description: submitDescription.trim() || undefined,
@@ -541,10 +549,17 @@ export function StudyHub({
                           {mat.study_type === 'lesson' && mat.lesson_name && <span className="bg-green-500/10 text-green-700 px-1 py-0.25 rounded truncate max-w-[80px]">{mat.lesson_name}</span>}
                           {mat.study_type === 'task' && mat.task_name && <span className="bg-indigo-500/10 text-indigo-700 px-1 py-0.25 rounded truncate max-w-[80px]">{mat.task_name}</span>}
                         </div>
-                        <div className="text-[9px] text-primary truncate mt-1 underline flex items-center gap-0.5">
-                          <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                          <span className="truncate">{mat.link}</span>
-                        </div>
+                        {mat.link.startsWith('data:application/pdf') ? (
+                          <div className="text-[9px] text-red-600 dark:text-red-400 font-bold mt-1 flex items-center gap-1 bg-red-500/10 px-1.5 py-0.5 rounded-md w-fit">
+                            <FileText className="h-3 w-3 shrink-0" />
+                            <span>Uploaded PDF File</span>
+                          </div>
+                        ) : (
+                          <div className="text-[9px] text-primary truncate mt-1 underline flex items-center gap-0.5">
+                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                            <span className="truncate">{mat.link}</span>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-2 border-t border-border/30 pt-3 mt-1">

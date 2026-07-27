@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import Script from 'next/script'
@@ -46,7 +47,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geist.className} font-sans antialiased`}>
         <ToastProvider>
           {children}
-          {process.env.NODE_ENV === 'production' && <Analytics />}
+          <Analytics />
+          <SpeedInsights />
         </ToastProvider>
       </body>
     </html>

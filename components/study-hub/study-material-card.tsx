@@ -39,6 +39,9 @@ export function StudyMaterialCard({
       {mat.description && <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 leading-normal">{mat.description}</p>}
       
       <div className="flex flex-wrap gap-1 mt-1.5 text-[8px] font-bold text-current">
+        {(mat.link.startsWith('data:application/pdf') || mat.link.toLowerCase().endsWith('.pdf')) && (
+          <span className="bg-red-500/10 text-red-600 dark:text-red-400 px-1 py-0.25 rounded">📄 PDF File</span>
+        )}
         {course && <span className="bg-sky-500/10 text-sky-700 px-1 py-0.25 rounded">{course.code}</span>}
         {mat.study_type === 'week' && <span className="bg-purple-500/10 text-purple-700 px-1 py-0.25 rounded">Week {mat.week_number}</span>}
         {mat.study_type === 'lesson' && mat.lesson_name && <span className="bg-green-500/10 text-green-700 px-1 py-0.25 rounded truncate max-w-[80px]">{mat.lesson_name}</span>}

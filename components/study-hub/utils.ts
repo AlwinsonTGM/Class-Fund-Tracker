@@ -58,8 +58,8 @@ export function getEmbeddableUrl(url: string): { embedUrl: string | null; isEmbe
       }
     }
 
-    // Direct PDFs
-    if (cleanUrl.toLowerCase().endsWith('.pdf')) {
+    // Direct PDFs or Data URL PDFs
+    if (cleanUrl.startsWith('data:application/pdf') || cleanUrl.toLowerCase().endsWith('.pdf')) {
       return {
         embedUrl: cleanUrl,
         isEmbeddable: true,

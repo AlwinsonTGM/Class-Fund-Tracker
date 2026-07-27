@@ -90,15 +90,26 @@ export function EmbedViewerModal({
 
       {/* Link Redirect Footer */}
       <div className="flex items-center gap-2.5 pt-3 border-t border-border/40">
-        <a
-          href={selectedMaterial.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 min-h-[44px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-2xl py-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center"
-        >
-          <ExternalLink className="h-4 w-4" />
-          Open Reviewer & Download 📥
-        </a>
+        {selectedMaterial.link.startsWith('data:application/pdf') ? (
+          <a
+            href={selectedMaterial.link}
+            download={`${selectedMaterial.title.replace(/[^a-z0-9_-]/gi, '_')}.pdf`}
+            className="flex-1 min-h-[44px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-2xl py-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Download PDF File 📥
+          </a>
+        ) : (
+          <a
+            href={selectedMaterial.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 min-h-[44px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-2xl py-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Open Reviewer & Download 📥
+          </a>
+        )}
       </div>
     </div>
   )

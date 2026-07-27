@@ -146,12 +146,13 @@ export function OfficerReceiptApprovalQueue({
         </div>
 
         {/* Filter Pills & Search */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 rounded-xl bg-muted/60 p-1 border border-border/40 overflow-x-auto custom-scrollbar flex-nowrap shrink-0 max-w-full">
+          <div className="grid grid-cols-2 xs:grid-cols-4 gap-1 rounded-xl bg-muted/60 p-1 border border-border/40 w-full sm:w-auto sm:min-w-[360px]">
             <button
+              type="button"
               onClick={() => setActiveFilter('pending')}
-              className={`rounded-lg px-3.5 py-2.5 min-h-[44px] text-xs font-semibold transition-all cursor-pointer flex items-center justify-center ${
+              className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center whitespace-nowrap shrink-0 ${
                 activeFilter === 'pending'
                   ? 'bg-card text-foreground shadow-xs border border-border/10'
                   : 'text-muted-foreground hover:text-foreground'
@@ -161,8 +162,9 @@ export function OfficerReceiptApprovalQueue({
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveFilter('approved')}
-              className={`rounded-lg px-3.5 py-2.5 min-h-[44px] text-xs font-semibold transition-all cursor-pointer flex items-center justify-center ${
+              className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center whitespace-nowrap shrink-0 ${
                 activeFilter === 'approved'
                   ? 'bg-card text-foreground shadow-xs border border-border/10'
                   : 'text-muted-foreground hover:text-foreground'
@@ -172,8 +174,9 @@ export function OfficerReceiptApprovalQueue({
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveFilter('rejected')}
-              className={`rounded-lg px-3.5 py-2.5 min-h-[44px] text-xs font-semibold transition-all cursor-pointer flex items-center justify-center ${
+              className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center whitespace-nowrap shrink-0 ${
                 activeFilter === 'rejected'
                   ? 'bg-card text-foreground shadow-xs border border-border/10'
                   : 'text-muted-foreground hover:text-foreground'
@@ -183,8 +186,9 @@ export function OfficerReceiptApprovalQueue({
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveFilter('all')}
-              className={`rounded-lg px-3.5 py-2.5 min-h-[44px] text-xs font-semibold transition-all cursor-pointer flex items-center justify-center ${
+              className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center whitespace-nowrap shrink-0 ${
                 activeFilter === 'all'
                   ? 'bg-card text-foreground shadow-xs border border-border/10'
                   : 'text-muted-foreground hover:text-foreground'
@@ -195,15 +199,15 @@ export function OfficerReceiptApprovalQueue({
           </div>
 
           {/* Search Box */}
-          <div className="relative">
+          <div className="relative flex-1 max-w-sm w-full">
             <input
               type="text"
               placeholder="Filter by name, week, ref..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-48 rounded-xl border border-border bg-card px-3.5 py-2.5 min-h-[44px] pl-8 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
+              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 min-h-[44px] pl-10 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
             />
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
           </div>
         </div>
       </div>

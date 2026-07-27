@@ -160,7 +160,7 @@ export function LeaderboardModal({
           </div>
           <div className="text-right">
             <span className="text-muted-foreground block text-[10px]">
-              {activeModeTab === 'zen' ? 'Zen Best' : 'Classic Best'}
+              {activeModeTab === 'zen' ? 'Zen Best' : activeModeTab === 'multiverse' ? 'Multiverse Best' : 'Classic Best'}
             </span>
             <span className="font-black text-amber-600 dark:text-amber-400 text-sm">{userBestScore} PTS</span>
           </div>
@@ -172,11 +172,13 @@ export function LeaderboardModal({
             <div className="p-6 my-auto flex-1 flex flex-col items-center justify-center text-center space-y-4 animate-fade-in">
               <div className="relative flex items-center justify-center">
                 <div className={`absolute size-16 rounded-full opacity-30 animate-ping ${
-                  activeModeTab === 'zen' ? 'bg-emerald-500' : 'bg-amber-500'
+                  activeModeTab === 'zen' ? 'bg-emerald-500' : activeModeTab === 'multiverse' ? 'bg-purple-500' : 'bg-amber-500'
                 }`} />
                 <div className={`relative size-14 rounded-2xl flex items-center justify-center shadow-xl ${
                   activeModeTab === 'zen'
                     ? 'bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950'
+                    : activeModeTab === 'multiverse'
+                    ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white'
                     : 'bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950'
                 }`}>
                   <Loader2 className="h-7 w-7 animate-spin" />
@@ -184,7 +186,7 @@ export function LeaderboardModal({
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-black text-foreground tracking-wide">
-                  Loading {activeModeTab === 'zen' ? 'Zen Mode' : 'Classic Mode'}...
+                  Loading {activeModeTab === 'zen' ? 'Zen Mode' : activeModeTab === 'multiverse' ? 'Multiverse Mode' : 'Classic Mode'}...
                 </h3>
                 <p className="text-xs text-muted-foreground font-medium">
                   Fetching latest rankings & high scores
@@ -210,7 +212,7 @@ export function LeaderboardModal({
           ) : entries.length === 0 ? (
             <div className="text-center my-auto py-10 text-muted-foreground text-xs space-y-2">
               <Award className="h-8 w-8 mx-auto opacity-40" />
-              <p>No high scores recorded yet for {activeModeTab === 'zen' ? 'Zen Mode' : 'Classic Mode'}.</p>
+              <p>No high scores recorded yet for {activeModeTab === 'zen' ? 'Zen Mode' : activeModeTab === 'multiverse' ? 'Multiverse Mode' : 'Classic Mode'}.</p>
               <p className="text-[10px]">Be the first to set a record!</p>
             </div>
 

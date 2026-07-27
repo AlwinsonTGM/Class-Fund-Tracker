@@ -631,6 +631,19 @@ export async function addStudyMaterialAction(input: AddStudyMaterialInput) {
   try {
     const supabase = await createClient()
 
+    // Spam protection: Limit maximum pending unapproved submissions to 5
+    const { count, error: countError } = await supabase
+      .from('study_materials')
+      .select('*', { count: 'exact', head: true })
+      .eq('approved', false)
+
+    if (!countError && count !== null && count >= 5) {
+      return {
+        success: false,
+        error: 'Submission queue full. Maximum of 5 pending submissions allowed at a time. Please wait for moderators to review existing submissions.'
+      }
+    }
+
     // Public action, anyone can submit. We force approved to false.
     const { error: insertError } = await supabase
       .from('study_materials')

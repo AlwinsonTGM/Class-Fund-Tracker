@@ -18,7 +18,6 @@ import { StudyHub } from '@/components/study-hub'
 import { signOutAction } from '@/app/login/actions'
 import { OfficerReceiptApprovalQueue, ReceiptItem } from '@/components/officer-receipt-approval-queue'
 import { FinancialAuditReportModal } from '@/components/financial-audit-report-modal'
-import { OfficerSidebarDrawer } from '@/components/officer-sidebar-drawer'
 import {
   generatePaymentMatrixCSV,
   generatePaymentsCSV,
@@ -130,82 +129,20 @@ export function OfficerTabsContainer({
   const [addPostTrigger, setAddPostTrigger] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
 
-  const [mounted, setMounted] = useState(false)
-
-  // Scroll snap container refs and state for mobile swipe synchronization
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const isProgrammaticScroll = useRef(false)
-  const tabOrder = ['home', 'tasks', 'study', 'freedom', 'portal']
-  const activeTabRef = useRef(activeTab)
-
-  useEffect(() => {
-    activeTabRef.current = activeTab
-  }, [activeTab])
-
   // Dogie Easter Egg states
   const [eggClicks, setEggClicks] = useState(0)
   const [dogieActive, setDogieActive] = useState(false)
   const [dogies, setDogies] = useState<FallingDogie[]>([])
 
-  // Shrink header effect on scroll with hysteresis threshold to prevent flickering
-  const [isScrolled, setIsScrolled] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const y = window.scrollY
-      setIsScrolled((prev) => {
-        if (!prev && y > 45) return true
-        if (prev && y < 10) return false
-        return prev
-      })
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   // Hidden button ref to trigger AddExpenseModal from BottomNav
   const addExpenseBtnRef = useRef<HTMLButtonElement | null>(null)
 
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Sync scroll position when activeTab changes programmatically
+  // Scroll to top when activeTab changes
   useEffect(() => {
-    const index = tabOrder.indexOf(activeTab)
-    if (index !== -1 && scrollContainerRef.current) {
-      const width = scrollContainerRef.current.clientWidth
-      if (width > 0) {
-        const targetLeft = index * width
-        if (Math.abs(scrollContainerRef.current.scrollLeft - targetLeft) > 5) {
-          if (scrollTimeoutRef.current) {
-            clearTimeout(scrollTimeoutRef.current)
-          }
-          isProgrammaticScroll.current = true
-          scrollContainerRef.current.scrollTo({ left: targetLeft, behavior: 'instant' })
-          scrollTimeoutRef.current = setTimeout(() => {
-            isProgrammaticScroll.current = false
-          }, 200)
-        }
-      }
-    }
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
   }, [activeTab])
-
-  const handleContainerScroll = () => {
-    if (isProgrammaticScroll.current || !scrollContainerRef.current) return
-    const { scrollLeft, clientWidth } = scrollContainerRef.current
-    if (clientWidth === 0) return
-    const newIndex = Math.round(scrollLeft / clientWidth)
-    if (tabOrder[newIndex] && tabOrder[newIndex] !== activeTabRef.current) {
-      setActiveTab(tabOrder[newIndex])
-    }
-  }
 
   // Calculate stats
   const totalContributions = payments
@@ -261,19 +198,22 @@ export function OfficerTabsContainer({
         <AddExpenseModal />
       </div>
 
-      {/* Sticky / Docked Quick Nav Header on Mobile with Dynamic Scroll Shrink */}
-      <header className={`sticky top-0 z-30 -mx-3 px-3 backdrop-blur-md border-b border-border/40 sm:relative sm:top-auto sm:z-auto sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none transition-all duration-300 ${isScrolled ? 'py-2 bg-background/95 shadow-sm mb-3' : 'py-3 bg-background/80 mb-6'}`}>
-        {isScrolled ? (
-          /* Scrolled Sticky Bar: Compact title on left, mini icon controls on right */
-          <div className="flex items-center justify-between gap-2 w-full">
-            <div className="flex items-center gap-2 min-w-0 shrink">
-              <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
-              <h1 className="text-xs sm:text-sm font-bold text-foreground truncate text-left">
+      {/* Header Container (Natural Scroll on Mobile & Desktop) */}
+      <header className="relative w-full mb-6 flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
+            {/* Title Block */}
+            <div className="min-w-0 text-left">
+              <p className="text-xs sm:text-sm font-semibold text-primary mb-0.5">
+                Officer Management Portal
+              </p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground text-left text-balance">
                 Officer Dashboard
               </h1>
             </div>
 
-            <div className="flex items-center gap-1 xs:gap-1.5 shrink-0">
+            {/* Action Toolbar Row */}
+            <div className="flex flex-wrap items-center justify-start sm:justify-end gap-1.5 xs:gap-2 w-full sm:w-auto shrink-0">
               <FinancialAuditReportModal
                 students={students}
                 payments={payments}
@@ -281,106 +221,53 @@ export function OfficerTabsContainer({
                 expenses={expenses}
                 receipts={receipts}
               />
+
+              <button
+                onClick={triggerAddExpense}
+                title="Record Expense"
+                aria-label="Record Expense"
+                className="size-8 xs:size-9 sm:w-auto shrink-0 sm:px-3 sm:py-1.5 text-xs font-semibold bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/25 rounded-full cursor-pointer press-spring flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <DollarSign className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">Record Expense</span>
+              </button>
+
+              {/* Render the AddExpenseModal so we can target it via click delegation */}
+              <div className="hidden" ref={el => {
+                if (el) {
+                  const btn = el.querySelector('button')
+                  if (btn) {
+                    addExpenseBtnRef.current = btn
+                  }
+                }
+              }}>
+                <AddExpenseModal />
+              </div>
+
+              <BirdButton />
               <PatchNotesButton />
               <ThemeToggle />
-              <OfficerSidebarDrawer
-                user={user}
-                students={students}
-                payments={payments}
-                weeks={weeks}
-                expenses={expenses}
-                receipts={receipts}
-                onRecordExpenseClick={triggerAddExpense}
-              />
+              <form 
+                action={signOutAction} 
+                onSubmit={() => setSigningOut(true)} 
+                className="shrink-0"
+              >
+                <button
+                  type="submit"
+                  disabled={signingOut}
+                  className="px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full cursor-pointer press-spring flex items-center justify-center gap-1.5"
+                >
+                  {signingOut && <span className="h-3 w-3 animate-spin rounded-full border border-destructive border-t-transparent shrink-0" />}
+                  <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>
+                </button>
+              </form>
             </div>
           </div>
-        ) : (
-          /* Unscrolled Full Header: Title top/left, full action buttons below/right */
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
-              {/* Title Block */}
-              <div className="min-w-0 text-left">
-                <p className="text-xs sm:text-sm font-semibold text-primary mb-0.5">
-                  Officer Management Portal
-                </p>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground text-left text-balance">
-                  Officer Dashboard
-                </h1>
-              </div>
 
-              {/* Action Toolbar Row */}
-              <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
-                {/* Essential Financial Tools — Left side of toolbar */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <FinancialAuditReportModal
-                    students={students}
-                    payments={payments}
-                    weeks={weeks}
-                    expenses={expenses}
-                    receipts={receipts}
-                  />
-
-                  <button
-                    onClick={triggerAddExpense}
-                    title="Record Expense"
-                    aria-label="Record Expense"
-                    className="size-8 xs:size-9 sm:w-auto shrink-0 sm:px-3 sm:py-1.5 text-xs font-semibold bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/25 rounded-full cursor-pointer press-spring flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <DollarSign className="h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0" />
-                    <span className="hidden sm:inline whitespace-nowrap">Record Expense</span>
-                  </button>
-
-                  {/* Render the AddExpenseModal so we can target it via click delegation */}
-                  <div className="hidden" ref={el => {
-                    if (el) {
-                      const btn = el.querySelector('button')
-                      if (btn) {
-                        addExpenseBtnRef.current = btn
-                      }
-                    }
-                  }}>
-                    <AddExpenseModal />
-                  </div>
-                </div>
-
-                {/* Extras & Shenanigans — Right side of toolbar */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <BirdButton />
-                  <PatchNotesButton />
-                  <ThemeToggle />
-                  <OfficerSidebarDrawer
-                    user={user}
-                    students={students}
-                    payments={payments}
-                    weeks={weeks}
-                    expenses={expenses}
-                    receipts={receipts}
-                    onRecordExpenseClick={triggerAddExpense}
-                  />
-
-                  <form 
-                    action={signOutAction} 
-                    onSubmit={() => setSigningOut(true)} 
-                    className="shrink-0 hidden lg:block"
-                  >
-                    <button
-                      type="submit"
-                      disabled={signingOut}
-                      className="px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full cursor-pointer press-spring flex items-center justify-center gap-1.5"
-                    >
-                      {signingOut && <span className="h-3 w-3 animate-spin rounded-full border border-destructive border-t-transparent shrink-0" />}
-                      <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-pretty text-left text-xs sm:text-base leading-5 sm:leading-6 text-muted-foreground">
-              Logged in as <strong className="text-foreground">{user.email}</strong>. Manage payments, expenses, tasks, and posts.
-            </p>
-          </div>
-        )}
+          <p className="text-pretty text-left text-xs sm:text-base leading-5 sm:leading-6 text-muted-foreground">
+            Logged in as <strong className="text-foreground">{user.email}</strong>. Manage payments, expenses, tasks, and posts.
+          </p>
+        </div>
 
         {/* Desktop Top Tab Navigation */}
         <div className="hidden sm:flex items-center gap-1.5 p-1 bg-muted/60 dark:bg-muted/30 border border-border/40 rounded-2xl w-fit mt-4">
@@ -408,14 +295,10 @@ export function OfficerTabsContainer({
         </div>
       </header>
 
-      {/* Horizontal CSS Scroll-Snap Container on Mobile (`< sm`), Block layout on Desktop (`>= sm`) */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={handleContainerScroll}
-        className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none sm:block [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
+      {/* Tab Panes Container */}
+      <div className="w-full">
         {/* Tab Pane 1: Home (Student View) */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'home' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'home' ? 'block' : 'hidden'}`}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
             {/* Left Column: Stats & Recent Activity */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
@@ -430,7 +313,7 @@ export function OfficerTabsContainer({
         </div>
 
         {/* Tab Pane 2: Tasks */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'tasks' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'tasks' ? 'block animate-fade-slide-in' : 'hidden'}`}>
           <TasksSection
             initialTasks={tasks}
             isOfficer={true}
@@ -443,7 +326,7 @@ export function OfficerTabsContainer({
         </div>
 
         {/* Tab Pane 3: Study Hub */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'study' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'study' ? 'block animate-fade-slide-in' : 'hidden'}`}>
           <StudyHub
             initialMaterials={materials}
             courses={courses}
@@ -456,7 +339,7 @@ export function OfficerTabsContainer({
         </div>
 
         {/* Tab Pane 4: Freedom Wall */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'freedom' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'freedom' ? 'block animate-fade-slide-in' : 'hidden'}`}>
           <FreedomWall
             initialPosts={posts}
             isOfficer={true}
@@ -468,7 +351,7 @@ export function OfficerTabsContainer({
         </div>
 
         {/* Tab Pane 5: Officer Portal */}
-        <div className={`w-full shrink-0 snap-start snap-always ${activeTab === 'portal' ? 'sm:block' : 'sm:hidden'}`}>
+        <div className={`w-full ${activeTab === 'portal' ? 'block' : 'hidden'}`}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
             {/* Left Column: Stats, Export Reports Panel, Manage Weeks, and Activity */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">

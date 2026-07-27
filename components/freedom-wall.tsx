@@ -386,15 +386,6 @@ export function FreedomWall({
       el.style.left = `${newX}%`
       el.style.top = `${newY}%`
     }
-
-    setPositions(prev => {
-      const updated = {
-        ...prev,
-        [postId]: { x: newX, y: newY }
-      }
-      localStorage.setItem('cft_post_positions_v2', JSON.stringify(updated))
-      return updated
-    })
   }
 
   const handlePointerUp = (e: React.PointerEvent, postId: number) => {
@@ -406,6 +397,18 @@ export function FreedomWall({
       try {
         element.releasePointerCapture(e.pointerId)
       } catch {}
+
+      const finalPos = positionsRef.current[postId]
+      if (finalPos) {
+        setPositions(prev => {
+          const updated = {
+            ...prev,
+            [postId]: finalPos
+          }
+          localStorage.setItem('cft_post_positions_v2', JSON.stringify(updated))
+          return updated
+        })
+      }
 
       if (draggedDistance < 5) {
         handleNoteClick(postId, element)
@@ -433,7 +436,7 @@ export function FreedomWall({
     setTimeout(() => {
       setFocusedPostId(null)
       setFocusedRect(null)
-    }, 400)
+    }, 350)
   }
 
   const targetWidth = Math.min(460, viewportSize.w - 32)
@@ -443,12 +446,15 @@ export function FreedomWall({
 
   const zoomStyle = focusedRect ? {
     position: 'fixed' as const,
-    left: isZoomed ? `${targetLeft}px` : `${focusedRect.left}px`,
-    top: isZoomed ? `${targetTop}px` : `${focusedRect.top}px`,
-    width: isZoomed ? `${targetWidth}px` : `${focusedRect.width}px`,
-    height: isZoomed ? `${targetHeight}px` : `${focusedRect.height}px`,
-    transform: isZoomed ? 'rotate(0deg)' : `rotate(${(focusedPostId ? (focusedPostId % 13) - 6 : 0)}deg)`,
-    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    left: `${targetLeft}px`,
+    top: `${targetTop}px`,
+    width: `${targetWidth}px`,
+    height: `${targetHeight}px`,
+    opacity: isZoomed ? 1 : 0.3,
+    transform: isZoomed
+      ? 'scale(1) rotate(0deg)'
+      : `scale(0.4) rotate(${(focusedPostId ? (focusedPostId % 13) - 6 : 0)}deg)`,
+    transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease-out',
     zIndex: 9999,
   } : {}
 
@@ -930,16 +936,21 @@ export function FreedomWall({
         </PhysicsCanvas>
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3.5">
-          {posts.map(post => (
-            <FreedomPostCard
+          {posts.map((post, idx) => (
+            <div
               key={post.id}
-              post={post}
-              isOfficer={isOfficer}
-              user={user}
-              onDelete={handleDeletePost}
-              onNoteClick={(id, el) => handleNoteClick(id, el)}
-              mode="grid"
-            />
+              className="anim-note-spawn"
+              style={{ animationDelay: `${idx * 65}ms` }}
+            >
+              <FreedomPostCard
+                post={post}
+                isOfficer={isOfficer}
+                user={user}
+                onDelete={handleDeletePost}
+                onNoteClick={(id, el) => handleNoteClick(id, el)}
+                mode="grid"
+              />
+            </div>
           ))}
         </div>
       )}
