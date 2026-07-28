@@ -20,10 +20,12 @@ const PATCH_NOTES: PatchEntry[] = [
   {
     version: '1.26',
     date: 'July 28, 2026',
-    title: 'Officer Student Checklist: Smooth Multi-Item Updates & Zero Delay',
+    title: 'Officer Student Checklist: Real-Time Balance Sync, Animated Counters & Mobile Corner Toast',
     emoji: '⚡',
     changes: [
-      { type: 'fix', text: 'Instantaneous Checklist Toggles — fixed a bug where officers had to wait up to 10 seconds per item update. Toggling payment status is now instantaneous (0ms UI latency) and supports rapid multi-student updates concurrently. (Special thanks to Dandan for reporting this bug!)' },
+      { type: 'new', text: 'Mobile Floating Corner Balance Toast — mobile users get a floating corner widget displaying total balance changes in real-time with counting animation and +₱5.00/-₱5.00 delta badges when checking/unchecking items.' },
+      { type: 'improve', text: 'Real-Time Animated Total Fund Balance — Total Balance Card now smoothly animates numeric transitions over 400ms with glow pulse highlights and floating delta badges.' },
+      { type: 'fix', text: 'Instantaneous Checklist Toggles & Real-Time Balance Sync — toggling payment status updates the total fund balance across the portal instantaneously (0ms UI latency) with smooth optimistic state sync. (Special thanks to Dandan for reporting checklist feedback!)' },
       { type: 'fix', text: 'Week Selection Persistence — fixed an issue where marking a checklist item in Week 2 automatically reset the view back to Week 1 upon server revalidation.' },
       { type: 'improve', text: 'Non-Blocking Background Synchronization — replaced global UI lock with fine-grained per-item pending states and smooth background sync indicators.' },
       { type: 'improve', text: 'Parallel Officer Verification — optimized server authentication checks to run database queries concurrently for faster response times.' },

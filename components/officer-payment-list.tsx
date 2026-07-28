@@ -30,9 +30,10 @@ interface OfficerPaymentListProps {
   students: Student[]
   initialPayments: Payment[]
   weeks: Week[]
+  onPaymentsChange?: (payments: Payment[]) => void
 }
 
-export function OfficerPaymentList({ students = [], initialPayments = [], weeks = [] }: OfficerPaymentListProps) {
+export function OfficerPaymentList({ students = [], initialPayments = [], weeks = [], onPaymentsChange }: OfficerPaymentListProps) {
   const { toast } = useToast()
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
 
@@ -158,12 +159,13 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
 
     // Optimistically update local payments state immediately
     setPayments((prev) => {
+      let next: Payment[]
       if (targetPaid) {
         const exists = prev.some(
           (p) => p.student_id === studentId && p.week_number === selectedWeek && p.status === 'paid'
         )
         if (exists) return prev
-        return [
+        next = [
           ...prev,
           {
             id: Date.now(),
@@ -173,10 +175,12 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
           }
         ]
       } else {
-        return prev.filter(
+        next = prev.filter(
           (p) => !(p.student_id === studentId && p.week_number === selectedWeek)
         )
       }
+      onPaymentsChange?.(next)
+      return next
     })
 
     try {
@@ -194,12 +198,13 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
 
       // Targeted rollback for ONLY this student & week if server save failed
       setPayments((prev) => {
+        let next: Payment[]
         if (currentlyPaid) {
           const exists = prev.some(
             (p) => p.student_id === studentId && p.week_number === selectedWeek && p.status === 'paid'
           )
           if (exists) return prev
-          return [
+          next = [
             ...prev,
             {
               id: Date.now(),
@@ -209,10 +214,12 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
             }
           ]
         } else {
-          return prev.filter(
+          next = prev.filter(
             (p) => !(p.student_id === studentId && p.week_number === selectedWeek)
           )
         }
+        onPaymentsChange?.(next)
+        return next
       })
       setLocalErrors((prev) => ({
         ...prev,

@@ -13,10 +13,14 @@ export function BalanceCard({ balance }: BalanceCardProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
 
-  const formattedBalance = new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP'
-  }).format(balance)
+  // Animated display balance & delta tracking
+  const [displayBalance, setDisplayBalance] = useState(balance)
+  const [delta, setDelta] = useState<number | null>(null)
+  const [isPulsing, setIsPulsing] = useState(false)
+  const prevBalanceRef = useRef(balance)
+  const startAnimTimeRef = useRef<number | null>(null)
+  const animFrameRef = useRef<number | null>(null)
+  const deltaTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Detect mobile
   useEffect(() => {
@@ -25,6 +29,62 @@ export function BalanceCard({ balance }: BalanceCardProps) {
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  // Smooth numeric counter animation on balance change
+  useEffect(() => {
+    const prev = prevBalanceRef.current
+    if (prev !== balance) {
+      const diff = balance - prev
+      setDelta(diff)
+      setIsPulsing(true)
+
+      if (deltaTimeoutRef.current) clearTimeout(deltaTimeoutRef.current)
+      deltaTimeoutRef.current = setTimeout(() => {
+        setDelta(null)
+        setIsPulsing(false)
+      }, 2400)
+
+      const startValue = displayBalance
+      const targetValue = balance
+      const duration = 400 // ms
+      startAnimTimeRef.current = performance.now()
+
+      const step = (now: number) => {
+        if (!startAnimTimeRef.current) return
+        const elapsed = now - startAnimTimeRef.current
+        const progress = Math.min(elapsed / duration, 1)
+        // Ease out cubic
+        const easeProgress = 1 - Math.pow(1 - progress, 3)
+        const current = startValue + (targetValue - startValue) * easeProgress
+        setDisplayBalance(current)
+
+        if (progress < 1) {
+          animFrameRef.current = requestAnimationFrame(step)
+        } else {
+          setDisplayBalance(targetValue)
+          prevBalanceRef.current = targetValue
+        }
+      }
+
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = requestAnimationFrame(step)
+    }
+  }, [balance])
+
+  // Cleanup timers & animation frame
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+      if (deltaTimeoutRef.current) clearTimeout(deltaTimeoutRef.current)
+    }
+  }, [])
+
+  const formattedBalance = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP'
+  }).format(displayBalance)
+
+  const formattedDelta = delta !== null ? `${delta > 0 ? '+' : ''}${new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(delta)}` : ''
 
   // 3D tilt + magnetic glow (desktop only)
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -75,9 +135,11 @@ export function BalanceCard({ balance }: BalanceCardProps) {
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative overflow-hidden rounded-3xl bg-foreground p-4.5 text-background shadow-lg sm:p-6 md:p-8 gpu-accelerate anim-fade-slide-in"
+      className={`relative overflow-hidden rounded-3xl bg-foreground p-4.5 text-background shadow-lg sm:p-6 md:p-8 gpu-accelerate anim-fade-slide-in transition-all duration-300 ${
+        isPulsing ? 'ring-4 ring-primary/40 ring-offset-2 ring-offset-background scale-[1.01]' : ''
+      }`}
       style={{
-        transition: 'transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms ease',
+        transition: 'transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms ease, ring 300ms ease',
         transformStyle: 'preserve-3d',
         ...(isPressed ? { transform: 'scale(0.97)' } : {}),
         ...(isHovering ? { boxShadow: '0 20px 50px -12px rgba(0,0,0,0.35)' } : {}),
@@ -95,15 +157,30 @@ export function BalanceCard({ balance }: BalanceCardProps) {
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-background/60 sm:text-xs">Class Treasury</p>
           <div className="flex flex-col gap-0.5">
             <h2 id="balance-heading" className="text-xs font-medium text-background/60 sm:text-sm">Total Fund Balance</h2>
-            <p className="text-2xl font-bold tracking-tight text-background sm:text-4xl md:text-5xl" style={{ wordBreak: 'break-word' }}>
-              {formattedBalance}
-            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-2xl font-bold tracking-tight text-background sm:text-4xl md:text-5xl" style={{ wordBreak: 'break-word' }}>
+                {formattedBalance}
+              </p>
+              {delta !== null && (
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold tracking-wide animate-bounce ${
+                    delta > 0
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                  }`}
+                  style={{ animationDuration: '600ms', animationIterationCount: '2' }}
+                >
+                  {formattedDelta}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <p className="w-fit rounded-full border border-background/20 px-3 py-1.5 text-[10px] font-semibold text-background/70 sm:text-xs">
-          Updated today
+          Updated live
         </p>
       </div>
     </section>
   )
 }
+

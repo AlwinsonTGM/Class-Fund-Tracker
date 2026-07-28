@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { BottomNav } from '@/components/bottom-nav'
 import { BalanceCard } from '@/components/balance-card'
+import { MobileBalanceToast } from '@/components/mobile-balance-toast'
 import { OfficerPaymentList } from '@/components/officer-payment-list'
 import { ManageWeeksPanel } from '@/components/manage-weeks-panel'
 import { RecentActivity } from '@/components/recent-activity'
@@ -137,6 +138,13 @@ export function OfficerTabsContainer({
   // Hidden button ref to trigger AddExpenseModal from BottomNav
   const addExpenseBtnRef = useRef<HTMLButtonElement | null>(null)
 
+  // Local payments state for instantaneous optimistic updates across header cards & mobile popups
+  const [localPayments, setLocalPayments] = useState<ContainerPayment[]>(payments)
+
+  useEffect(() => {
+    setLocalPayments(payments)
+  }, [payments])
+
   // Scroll to top when activeTab changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -144,8 +152,8 @@ export function OfficerTabsContainer({
     }
   }, [activeTab])
 
-  // Calculate stats
-  const totalContributions = payments
+  // Calculate stats dynamically from localPayments
+  const totalContributions = localPayments
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + (typeof p.amount === 'number' ? p.amount : 5.0), 0)
   const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount), 0)
@@ -307,7 +315,7 @@ export function OfficerTabsContainer({
             </div>
             {/* Right Column: Student Checklist */}
             <div className="lg:col-span-7">
-              <StudentPaymentList students={students} payments={payments} weeks={weeks} />
+              <StudentPaymentList students={students} payments={localPayments} weeks={weeks} />
             </div>
           </div>
         </div>
@@ -409,11 +417,19 @@ export function OfficerTabsContainer({
             {/* Right Column: Receipts Approval Queue + Officer Student Checklist */}
             <div className="lg:col-span-7 flex flex-col gap-6">
               <OfficerReceiptApprovalQueue receipts={receipts} />
-              <OfficerPaymentList students={students} initialPayments={payments} weeks={weeks} />
+              <OfficerPaymentList
+                students={students}
+                initialPayments={localPayments}
+                weeks={weeks}
+                onPaymentsChange={setLocalPayments}
+              />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Floating Corner Total Fund Balance Window */}
+      <MobileBalanceToast balance={netBalance} />
 
       {/* Dedicated spacer to prevent BottomNav overlapping lowest scrollable content */}
       <div className="h-36 pointer-events-none" aria-hidden="true" />

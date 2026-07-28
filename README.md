@@ -65,9 +65,11 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Balanced Spacing & Drifting**: Increased horizontal pipe clearance (171px gap) and capped drifting pipe amplitudes for smoother reaction time.
 - **Long Goodbye Gap Limit**: Set a fair minimum pipe gap (`88px`) in shrinking gap universes so gameplay stays challenging yet completely beatable.
 
-### ⚡ 23. Officer Student Checklist Instantaneous Toggles & Non-Blocking Sync (v1.26)
-- **Instantaneous Checklist Toggles**: Eliminated the 10-second blocking delay when marking student payments. Toggling payment status is now instantaneous (0ms UI latency) and supports rapid multi-student updates concurrently. *(Special thanks to Dandan for reporting this bug!)*
-- **Week Selection Persistence**: Preserved the active week dropdown state (`useRef` guarded) so toggling a student's payment status in Week 2 no longer resets the view back to Week 1 on server revalidation.
+### ⚡ 23. Officer Student Checklist Real-Time Sync, Animations & Mobile Corner Toast (v1.26)
+- **Mobile Floating Corner Balance Toast**: Mobile users get a floating corner balance window (`sm:hidden`, fixed at `bottom-20 right-3.5`) displaying total fund balance updates in real-time with counting animation and `+₱5.00` / `-₱5.00` delta badges when toggling payments.
+- **Real-Time Animated Total Fund Balance**: Balance Card smoothly animates numeric transitions over 400ms (`requestAnimationFrame` ease-out cubic lerp counter) with glow pulse highlights and floating delta badges.
+- **Instantaneous Checklist Toggles & Real-Time Sync**: Eliminated UI lag when marking student payments. Toggling payment status is instantaneous (0ms UI latency), supports rapid multi-student updates, and updates the total fund balance in real-time across the portal.
+- **Week Selection Persistence**: Preserved active week dropdown state (`useRef` guarded) so toggling a student's payment status in Week 2 no longer resets the view back to Week 1 on server revalidation.
 - **Non-Blocking Background Sync**: Replaced global UI locks with fine-grained per-item pending keys (`pendingKeys`) and smooth animated sync indicators (`Loader2`).
 - **Parallel Officer Verification**: Optimized server authentication checks to run database queries (`moderators` and `officers`) concurrently with `Promise.all` and `.maybeSingle()`.
 
