@@ -465,9 +465,10 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                 return (
                   <li
                     key={student.id}
-                    className="flex min-h-14 items-center justify-between gap-3 px-4 py-2.5 sm:min-h-16 sm:gap-4 sm:py-3 sm:px-6 hover:bg-muted/30 relative"
+                    className={`flex min-h-14 items-center justify-between gap-3 px-4 py-2.5 sm:min-h-16 sm:gap-4 sm:py-3 sm:px-6 hover:bg-muted/30 relative transition-colors ${
+                      isMenuOpen ? 'z-50' : 'z-0'
+                    }`}
                     style={{
-                      transition: 'background-color 200ms var(--ease-swift)',
                       animation: `stagger-in 400ms var(--ease-spring-smooth) both`,
                       animationDelay: `${Math.min(visibleStudents.indexOf(student) * 20, 300)}ms`
                     }}
