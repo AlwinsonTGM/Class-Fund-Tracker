@@ -16,9 +16,10 @@ export interface AuditLogItem {
 interface RecentActivityProps {
   activities: AuditLogItem[]
   isModerator?: boolean
+  defaultOpen?: boolean
 }
 
-export function RecentActivity({ activities = [], isModerator = false }: RecentActivityProps) {
+export function RecentActivity({ activities = [], isModerator = false, defaultOpen = false }: RecentActivityProps) {
   const [localActivities, setLocalActivities] = useState<AuditLogItem[]>(activities)
   const [editingLogId, setEditingLogId] = useState<number | null>(null)
   const [editingText, setEditingText] = useState('')
@@ -126,7 +127,7 @@ export function RecentActivity({ activities = [], isModerator = false }: RecentA
       title="Recent Activity"
       subtitle={localActivities.length === 0 ? "No activities recorded yet." : "The latest actions logged by class officers."}
       badgeText="Audit Log"
-      defaultOpen={true}
+      defaultOpen={defaultOpen}
     >
       <div className="flex flex-col gap-4">
         {error && (

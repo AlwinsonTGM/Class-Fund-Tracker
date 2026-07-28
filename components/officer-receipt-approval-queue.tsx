@@ -43,11 +43,15 @@ export interface ReceiptItem {
 interface OfficerReceiptApprovalQueueProps {
   receipts: ReceiptItem[]
   onUpdate?: () => void
+  defaultOpen?: boolean
 }
+
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 
 export function OfficerReceiptApprovalQueue({
   receipts = [],
-  onUpdate
+  onUpdate,
+  defaultOpen = false
 }: OfficerReceiptApprovalQueueProps) {
   const [activeFilter, setActiveFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
   const [searchQuery, setSearchQuery] = useState('')
@@ -125,26 +129,13 @@ export function OfficerReceiptApprovalQueue({
   }
 
   return (
-    <section className="flex flex-col gap-5">
-      {/* Header & Controls */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              <span>Digital Proof Approval Queue</span>
-            </h2>
-            {pendingCount > 0 && (
-              <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                {pendingCount} Pending
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Review student payment screenshots and update payment records with 1-click approvals
-          </p>
-        </div>
-
+    <CollapsibleSection
+      title="Digital Proof Approval Queue"
+      subtitle="Review student payment screenshots and update payment records with 1-click approvals"
+      badgeText={pendingCount > 0 ? `${pendingCount} Pending` : 'Approval Queue'}
+      defaultOpen={defaultOpen}
+    >
+      <section className="flex flex-col gap-5">
         {/* Filter Pills & Search */}
         <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           {/* Status Tabs */}
@@ -210,7 +201,6 @@ export function OfficerReceiptApprovalQueue({
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
           </div>
         </div>
-      </div>
 
       {/* Alert Banners */}
       {actionError && (
@@ -488,5 +478,6 @@ export function OfficerReceiptApprovalQueue({
         </div>
       )}
     </section>
+    </CollapsibleSection>
   )
 }

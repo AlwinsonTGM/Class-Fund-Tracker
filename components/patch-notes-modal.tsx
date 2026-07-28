@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.26'
+const CURRENT_VERSION = '1.27'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,21 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.27',
+    date: 'July 28, 2026',
+    title: 'Portal UI Refinements, Current Week Automation, Classmate CRUD & Completion Confetti',
+    emoji: '🎉',
+    changes: [
+      { type: 'new', text: 'Full Classmate Management (Add, Edit & Delete) — moderators and officers can now add new classmates, edit student details, and moderators can remove classmates with audit logging.' },
+      { type: 'new', text: 'Auto-Select Week for Today — automatically detects and selects the active week corresponding to today\'s date so you don\'t have to switch weeks manually each session.' },
+      { type: 'new', text: 'Celebratory Week Completion & Confetti — when 100% of class fund contributions for a week are collected, falling confetti and a Thank You statement pop up, displaying a completion badge and freezing the list from further edits.' },
+      { type: 'improve', text: 'Mobile Portal Tab Layout & Collapsible Containers — Officer Student Checklist is positioned directly below Total Balance on mobile screens, and all management panels start neatly collapsed by default.' },
+      { type: 'fix', text: 'No More "Updated live" Text Flickering — fixed layout wrapping where "Updated live" would break into two lines when payment delta badges (+₱5.00/-₱5.00) popped in.' },
+      { type: 'fix', text: 'Financial Audit Report Current Week Sync — Outstanding Dues in the financial statement now dynamically reflects the active week (e.g. As of Wk 2) instead of defaulting to Week 1.' },
+      { type: 'improve', text: 'Compact CSV Export Buttons — optimized CSV export buttons into horizontal flex/grid rows on PC to save space.' },
+    ],
+  },
   {
     version: '1.26',
     date: 'July 28, 2026',

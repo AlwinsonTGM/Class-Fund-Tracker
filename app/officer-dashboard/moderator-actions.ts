@@ -160,3 +160,129 @@ export async function updateAuditLogAction(logId: number, newDescription: string
     return { success: false, error: err.message || 'Failed to update activity log.' }
   }
 }
+
+export async function addStudentAction(
+  firstName: string,
+  lastName: string | null,
+  seatNumber: number,
+  studentIdNumber?: string
+) {
+  try {
+    const { supabase, user } = await verifyModeratorStatus()
+
+    if (!firstName || !firstName.trim()) {
+      throw new Error('First name is required.')
+    }
+
+    const { data: newStudent, error: insertError } = await supabase
+      .from('students')
+      .insert({
+        first_name: firstName.trim(),
+        last_name: lastName ? lastName.trim() : null,
+        seat_number: seatNumber,
+        student_id_number: studentIdNumber ? studentIdNumber.trim() : null
+      })
+      .select()
+      .single()
+
+    if (insertError) throw insertError
+
+    const officerEmail = user.email || 'moderator'
+    const studentFullName = `${firstName.trim()} ${lastName ? lastName.trim() : ''}`.trim()
+    await supabase.from('audit_logs').insert({
+      officer_email: officerEmail,
+      action_description: `Added new classmate "${studentFullName}" (Seat #${seatNumber}).`
+    })
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true, student: newStudent }
+  } catch (err: any) {
+    console.error('Error adding student:', err)
+    return { success: false, error: err.message || 'Failed to add student.' }
+  }
+}
+
+export async function updateStudentAction(
+  studentId: number,
+  firstName: string,
+  lastName: string | null,
+  seatNumber: number,
+  studentIdNumber?: string
+) {
+  try {
+    const { supabase, user } = await verifyModeratorStatus()
+
+    if (!firstName || !firstName.trim()) {
+      throw new Error('First name is required.')
+    }
+
+    const { error: updateError } = await supabase
+      .from('students')
+      .update({
+        first_name: firstName.trim(),
+        last_name: lastName ? lastName.trim() : null,
+        seat_number: seatNumber,
+        student_id_number: studentIdNumber ? studentIdNumber.trim() : null
+      })
+      .eq('id', studentId)
+
+    if (updateError) throw updateError
+
+    const officerEmail = user.email || 'moderator'
+    const studentFullName = `${firstName.trim()} ${lastName ? lastName.trim() : ''}`.trim()
+    await supabase.from('audit_logs').insert({
+      officer_email: officerEmail,
+      action_description: `Updated classmate information for "${studentFullName}" (Seat #${seatNumber}).`
+    })
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error updating student:', err)
+    return { success: false, error: err.message || 'Failed to update student.' }
+  }
+}
+
+export async function removeStudentAction(studentId: number, studentName: string) {
+  try {
+    const { supabase, user } = await verifyModeratorStatus()
+
+    // 1. Delete all payments linked to this student
+    const { error: delPaymentsError } = await supabase
+      .from('payments')
+      .delete()
+      .eq('student_id', studentId)
+
+    if (delPaymentsError) {
+      console.warn('Failed deleting student payments:', delPaymentsError.message)
+    }
+
+    // 2. Delete student record
+    const { error: deleteStudentError } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', studentId)
+
+    if (deleteStudentError) throw deleteStudentError
+
+    // 3. Log audit entry
+    const officerEmail = user.email || 'moderator'
+    await supabase.from('audit_logs').insert({
+      officer_email: officerEmail,
+      action_description: `Removed classmate "${studentName}" (ID: ${studentId}) from class database.`
+    })
+
+    revalidatePath('/')
+    revalidatePath('/officer-dashboard')
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error removing student:', err)
+    return { success: false, error: err.message || 'Failed to remove classmate.' }
+  }
+}
+

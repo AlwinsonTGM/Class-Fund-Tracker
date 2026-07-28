@@ -19,6 +19,7 @@ import { StudyHub } from '@/components/study-hub'
 import { signOutAction } from '@/app/login/actions'
 import { OfficerReceiptApprovalQueue, ReceiptItem } from '@/components/officer-receipt-approval-queue'
 import { FinancialAuditReportModal } from '@/components/financial-audit-report-modal'
+import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import {
   generatePaymentMatrixCSV,
   generatePaymentsCSV,
@@ -360,23 +361,78 @@ export function OfficerTabsContainer({
 
         {/* Tab Pane 5: Officer Portal */}
         <div className={`w-full ${activeTab === 'portal' ? 'block' : 'hidden'}`}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
+          {/* Mobile Layout (< lg): Reordered sequence (Balance -> Officer Checklist -> Approval Queue -> Financial Audit -> Manage Weeks -> Recent Activity) */}
+          <div className="flex flex-col gap-6 lg:hidden animate-fade-slide-in">
+            <BalanceCard balance={netBalance} />
+
+            <OfficerPaymentList
+              students={students}
+              initialPayments={localPayments}
+              weeks={weeks}
+              onPaymentsChange={setLocalPayments}
+              isModerator={isModerator}
+            />
+
+            <OfficerReceiptApprovalQueue receipts={receipts} defaultOpen={false} />
+
+            <CollapsibleSection
+              title="Financial Audit & CSV Exports"
+              subtitle="Export financial statements, audit logs, and student payment grids."
+              badgeText="Officer Tool"
+              defaultOpen={false}
+            >
+              <div className="flex flex-col gap-3">
+                <FinancialAuditReportModal
+                  students={students}
+                  payments={payments}
+                  weeks={weeks}
+                  expenses={expenses}
+                  receipts={receipts}
+                  fullWidth
+                />
+                <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 pt-1">
+                  <button
+                    onClick={() => downloadCSV(`payment_matrix_${Date.now()}.csv`, generatePaymentMatrixCSV(students, payments, weeks))}
+                    className="min-h-[44px] px-2.5 py-2 text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl transition-colors cursor-pointer flex items-center justify-center text-center truncate"
+                    title="Export Payment Grid CSV"
+                  >
+                    Payment Matrix
+                  </button>
+                  <button
+                    onClick={() => downloadCSV(`student_payments_${Date.now()}.csv`, generatePaymentsCSV(students, payments, receipts))}
+                    className="min-h-[44px] px-2.5 py-2 text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl transition-colors cursor-pointer flex items-center justify-center text-center truncate"
+                    title="Export Payment History CSV"
+                  >
+                    Payment History
+                  </button>
+                  <button
+                    onClick={() => downloadCSV(`expense_logs_${Date.now()}.csv`, generateExpensesCSV(expenses))}
+                    className="min-h-[44px] px-2.5 py-2 text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl transition-colors cursor-pointer flex items-center justify-center text-center truncate"
+                    title="Export Expense Logs CSV"
+                  >
+                    Expense Logs
+                  </button>
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            <ManageWeeksPanel weeks={weeks} defaultOpen={false} />
+            <RecentActivity activities={logs} isModerator={isModerator} defaultOpen={false} />
+          </div>
+
+          {/* Desktop Layout (>= lg): Preserved original 2-column arrangement */}
+          <div className="hidden lg:grid lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
             {/* Left Column: Stats, Export Reports Panel, Manage Weeks, and Activity */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
               <BalanceCard balance={netBalance} />
 
-              {/* Financial Audit Reports & CSV Export Panel */}
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs sm:text-sm font-semibold text-card-foreground truncate">Financial Audit & CSV Exports</h3>
-                  <span className="whitespace-nowrap shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary inline-flex items-center justify-center">
-                    Officer Tool
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Export financial statements, audit logs, and student payment grids into CSV or PDF format.
-                </p>
-                <div className="grid grid-cols-1 gap-2 pt-1">
+              <CollapsibleSection
+                title="Financial Audit & CSV Exports"
+                subtitle="Export financial statements, audit logs, and student payment grids."
+                badgeText="Officer Tool"
+                defaultOpen={false}
+              >
+                <div className="flex flex-col gap-3">
                   <FinancialAuditReportModal
                     students={students}
                     payments={payments}
@@ -385,7 +441,7 @@ export function OfficerTabsContainer({
                     receipts={receipts}
                     fullWidth
                   />
-                  <div className="grid grid-cols-1 xs:grid-cols-3 gap-1.5 pt-1">
+                  <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 pt-1">
                     <button
                       onClick={() => downloadCSV(`payment_matrix_${Date.now()}.csv`, generatePaymentMatrixCSV(students, payments, weeks))}
                       className="min-h-[44px] px-2.5 py-2 text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl transition-colors cursor-pointer flex items-center justify-center text-center truncate"
@@ -409,19 +465,20 @@ export function OfficerTabsContainer({
                     </button>
                   </div>
                 </div>
-              </div>
+              </CollapsibleSection>
 
-              <ManageWeeksPanel weeks={weeks} />
-              <RecentActivity activities={logs} isModerator={isModerator} />
+              <ManageWeeksPanel weeks={weeks} defaultOpen={false} />
+              <RecentActivity activities={logs} isModerator={isModerator} defaultOpen={false} />
             </div>
             {/* Right Column: Receipts Approval Queue + Officer Student Checklist */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              <OfficerReceiptApprovalQueue receipts={receipts} />
+              <OfficerReceiptApprovalQueue receipts={receipts} defaultOpen={false} />
               <OfficerPaymentList
                 students={students}
                 initialPayments={localPayments}
                 weeks={weeks}
                 onPaymentsChange={setLocalPayments}
+                isModerator={isModerator}
               />
             </div>
           </div>

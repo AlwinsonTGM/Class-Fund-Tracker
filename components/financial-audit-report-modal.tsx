@@ -15,6 +15,8 @@ import {
   ExportReceipt
 } from '@/lib/csv-exporter'
 
+import { findCurrentWeekNumber } from '@/lib/week-utils'
+
 export interface FinancialAuditReportModalProps {
   students?: ExportStudent[]
   payments?: ExportPayment[]
@@ -69,10 +71,7 @@ export function FinancialAuditReportModal({
 
   // Determine active / elapsed weeks up to the current date / active week
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
-  const activeWeek = sortedWeeks.find((w) => w.status === 'active')
-  const currentWeekNum = activeWeek
-    ? activeWeek.week_number
-    : (sortedWeeks.length > 0 ? sortedWeeks[0].week_number : 1)
+  const currentWeekNum = findCurrentWeekNumber(weeks)
   const elapsedWeeksCount = sortedWeeks.filter((w) => w.week_number <= currentWeekNum).length || 1
 
   // Calculate total possible dues for elapsed weeks up to current week

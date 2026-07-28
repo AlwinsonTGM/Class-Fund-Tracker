@@ -73,6 +73,17 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Non-Blocking Background Sync**: Replaced global UI locks with fine-grained per-item pending keys (`pendingKeys`) and smooth animated sync indicators (`Loader2`).
 - **Parallel Officer Verification**: Optimized server authentication checks to run database queries (`moderators` and `officers`) concurrently with `Promise.all` and `.maybeSingle()`.
 
+### 🏢 24. Classmate Management, Current Week Automation, Confetti Celebration & Layout Refinements (v1.27)
+- **Full Classmate Management (Add, Edit, Delete)**: Added complete student CRUD capabilities with an Add Classmate toolbar button, Edit modal, and Moderator-only Delete classmate action with confirmation modals and detailed audit logging.
+- **Auto-Select Week for Today**: Built `findCurrentWeekNumber(weeks)` date range parser that automatically detects and selects the active week corresponding to today's date so officers and students don't need to manually switch week dropdowns each session.
+- **Celebratory Week Completion & Confetti**: When 100% of class fund contributions for a week are collected, falling confetti (`ConfettiCanvas`) and a Thank You pop-up modal trigger automatically (persisted via `localStorage`), displaying a **"Week Completed — 100% Fund Collected"** badge and freezing the list from further edits.
+- **Mobile Portal Tab Layout**: Reordered section elements on mobile screens (`< lg`) so the Officer Student Checklist sits directly below Total Balance, followed by Approval Queue, Audit Exports, Manage Weeks, and Recent Activity, preserving the 2-column desktop layout.
+- **Default Closed Containers**: Financial Audit & CSV Exports, Digital Approval Queue, Manage Class Weeks, and Recent Activity start neatly collapsed by default.
+- **"Updated live" Text Stability**: Added `whitespace-nowrap shrink-0` to prevent "Updated live" text from flickering onto two lines when balance delta badges appear.
+- **Financial Audit Report Week Sync**: Updated Outstanding Dues in the financial statement to dynamically calculate dues as of the current week ("As of Wk 2") instead of defaulting to Week 1.
+- **Compact CSV Exports Layout**: Re-arranged CSV export buttons into a clean, horizontal flex/grid row to save vertical space on PC screens.
+
+
 
 ### 🖥️ 20. PC Desktop Layout Alignment & Dex Redesign (v1.23)
 - **PC Desktop Side-by-Side Layout**: Fixed side panels (*Now Showing*, *Controls*, *Porting Notes*) so they align side-by-side with the 480x640 game canvas in a centered container on PC desktop views.

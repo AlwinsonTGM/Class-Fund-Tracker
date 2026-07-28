@@ -176,7 +176,7 @@ export function BalanceCard({ balance }: BalanceCardProps) {
             </div>
           </div>
         </div>
-        <p className="w-fit rounded-full border border-background/20 px-3 py-1.5 text-[10px] font-semibold text-background/70 sm:text-xs">
+        <p className="w-fit shrink-0 whitespace-nowrap rounded-full border border-background/20 px-3 py-1.5 text-[10px] font-semibold text-background/70 sm:text-xs">
           Updated live
         </p>
       </div>

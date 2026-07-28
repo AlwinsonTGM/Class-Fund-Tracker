@@ -15,9 +15,10 @@ interface Week {
 
 interface ManageWeeksPanelProps {
   weeks: Week[]
+  defaultOpen?: boolean
 }
 
-export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
+export function ManageWeeksPanel({ weeks = [], defaultOpen = false }: ManageWeeksPanelProps) {
   const { toast } = useToast()
   const [weekNumber, setWeekNumber] = useState('')
   const [dateRange, setDateRange] = useState('')
@@ -130,7 +131,7 @@ export function ManageWeeksPanel({ weeks = [] }: ManageWeeksPanelProps) {
       title="Manage Class Weeks"
       subtitle="Add, edit, or delete weeks for class suspensions/health breaks."
       badgeText="Schedule"
-      defaultOpen={true}
+      defaultOpen={defaultOpen}
     >
       <div className="flex flex-col gap-4">
         {error && (

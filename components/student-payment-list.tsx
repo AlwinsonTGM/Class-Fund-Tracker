@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Award, HeartHandshake } from 'lucide-react'
 import { SubmitReceiptModal } from '@/components/submit-receipt-modal'
+import { findCurrentWeekNumber } from '@/lib/week-utils'
+import { ConfettiCanvas } from '@/components/ui/confetti-canvas'
 
 interface Student {
   id: number
@@ -41,22 +43,26 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
   // Sort weeks by week_number ascending
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
   
-  // Set default selected week to the lowest week number, or 1 if empty
-  const [selectedWeek, setSelectedWeek] = useState(1)
+  // Set default selected week to today's date range, or lowest week number
+  const [selectedWeek, setSelectedWeek] = useState(() => findCurrentWeekNumber(weeks))
   const hasInitializedWeek = useRef(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
   const [isExpanded, setIsExpanded] = useState(false)
 
+  // Confetti and Thank You modal state
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [showThankYouModal, setShowThankYouModal] = useState(false)
+
   useEffect(() => {
     if (sortedWeeks.length > 0) {
       if (!hasInitializedWeek.current) {
-        setSelectedWeek(sortedWeeks[0].week_number)
+        setSelectedWeek(findCurrentWeekNumber(weeks))
         hasInitializedWeek.current = true
       } else {
         const weekExists = sortedWeeks.some((w) => w.week_number === selectedWeek)
         if (!weekExists) {
-          setSelectedWeek(sortedWeeks[0].week_number)
+          setSelectedWeek(findCurrentWeekNumber(weeks))
         }
       }
     }
@@ -83,7 +89,18 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
   const paidStudentsCount = filteredStudents.filter((s) => isStudentPaid(s.id)).length
   const unpaidStudentsCount = totalStudents - paidStudentsCount
 
-  // Filter based on status filter chip
+  const isWeekAccomplished = totalStudents > 0 && paidStudentsCount === totalStudents
+
+  useEffect(() => {
+    if (isWeekAccomplished) {
+      const key = `confetti_seen_week_${selectedWeek}`
+      if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
+        setShowConfetti(true)
+        setShowThankYouModal(true)
+        localStorage.setItem(key, 'true')
+      }
+    }
+  }, [isWeekAccomplished, selectedWeek])
   const displayedStudents = filteredStudents.filter((student) => {
     const isPaid = isStudentPaid(student.id)
     if (statusFilter === 'paid') return isPaid
@@ -96,6 +113,54 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
 
   return (
     <section aria-labelledby="students-heading" className="flex flex-col gap-5">
+      {showConfetti && <ConfettiCanvas onComplete={() => setShowConfetti(false)} />}
+
+      {/* Thank You Pop-up Modal */}
+      {showThankYouModal && (
+        <div className="fixed inset-0 z-[130] bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-card text-card-foreground border border-amber-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center flex flex-col items-center gap-4 shadow-2xl animate-fade-slide-in">
+            <div className="size-16 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center border border-amber-500/30">
+              <Award className="h-8 w-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold tracking-tight text-foreground">Week {selectedWeek} Complete!</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Thank you everyone! All class fund contributions for Week {selectedWeek} have been 100% collected and verified.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20">
+              <CheckCircle2 className="h-4 w-4" /> 100% Fund Accomplished
+            </div>
+            <button
+              onClick={() => setShowThankYouModal(false)}
+              className="w-full mt-2 min-h-[44px] px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors cursor-pointer press-spring"
+            >
+              Thank You & Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Banner */}
+      {isWeekAccomplished && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+              <Award className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-foreground">Week {selectedWeek} Completed</h4>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Complete
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">All {totalStudents} classmates have settled their funds for this week.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Week Selector */}

@@ -1,15 +1,18 @@
-'use client'
-
-import React, { useState, useEffect, useRef } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
-import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { removeStudentAction } from '@/app/officer-dashboard/actions'
+import { removeStudentAction as removeStudentActionMod } from '@/app/officer-dashboard/moderator-actions'
+import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2, Award, CheckCircle2, Lock, UserPlus } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
+import { findCurrentWeekNumber } from '@/lib/week-utils'
+import { ConfettiCanvas } from '@/components/ui/confetti-canvas'
+import { StudentManagementModal } from '@/components/student-management-modal'
 
 interface Student {
   id: number
   first_name: string
   last_name: string | null
   seat_number: number
+  student_id_number?: string
 }
 
 interface Payment {
@@ -31,13 +34,14 @@ interface OfficerPaymentListProps {
   initialPayments: Payment[]
   weeks: Week[]
   onPaymentsChange?: (payments: Payment[]) => void
+  isModerator?: boolean
 }
 
-export function OfficerPaymentList({ students = [], initialPayments = [], weeks = [], onPaymentsChange }: OfficerPaymentListProps) {
+export function OfficerPaymentList({ students = [], initialPayments = [], weeks = [], onPaymentsChange, isModerator = false }: OfficerPaymentListProps) {
   const { toast } = useToast()
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
 
-  const [selectedWeek, setSelectedWeek] = useState(1)
+  const [selectedWeek, setSelectedWeek] = useState(() => findCurrentWeekNumber(weeks))
   const hasInitializedWeek = useRef(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
@@ -46,17 +50,22 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({})
   const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set())
   const [poppingIds, setPoppingIds] = useState<Set<number>>(new Set())
+  const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null)
 
-  // Sync selected week to the lowest week number initially or if selected week is no longer valid
+  // Confetti and Thank You modal state
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [showThankYouModal, setShowThankYouModal] = useState(false)
+
+  // Sync selected week to the current week initially or if selected week is no longer valid
   useEffect(() => {
     if (sortedWeeks.length > 0) {
       if (!hasInitializedWeek.current) {
-        setSelectedWeek(sortedWeeks[0].week_number)
+        setSelectedWeek(findCurrentWeekNumber(weeks))
         hasInitializedWeek.current = true
       } else {
         const weekExists = sortedWeeks.some((w) => w.week_number === selectedWeek)
         if (!weekExists) {
-          setSelectedWeek(sortedWeeks[0].week_number)
+          setSelectedWeek(findCurrentWeekNumber(weeks))
         }
       }
     }
@@ -235,8 +244,89 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
     }
   }
 
+  const handleRemoveStudent = async (studentId: number, studentName: string) => {
+    if (!confirm(`Are you sure you want to remove classmate "${studentName}" (ID: ${studentId}) from the database? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingStudentId(studentId)
+    try {
+      const res = await removeStudentActionMod(studentId, studentName)
+      if (res.success) {
+        toast.success(`Removed classmate "${studentName}" from class database.`, 'Classmate Removed')
+      } else {
+        toast.error(res.error || 'Failed to remove classmate.', 'Error')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to remove classmate.', 'Error')
+    } finally {
+      setDeletingStudentId(null)
+    }
+  }
+
+  const isWeekAccomplished = totalStudents > 0 && paidStudentsCount === totalStudents
+
+  useEffect(() => {
+    if (isWeekAccomplished) {
+      const key = `confetti_seen_week_${selectedWeek}`
+      if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
+        setShowConfetti(true)
+        setShowThankYouModal(true)
+        localStorage.setItem(key, 'true')
+      }
+    }
+  }, [isWeekAccomplished, selectedWeek])
+
   return (
     <section aria-labelledby="officer-checklist-heading" className="flex flex-col gap-5">
+      {showConfetti && <ConfettiCanvas onComplete={() => setShowConfetti(false)} />}
+
+      {/* Thank You Pop-up Modal */}
+      {showThankYouModal && (
+        <div className="fixed inset-0 z-[130] bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-card text-card-foreground border border-amber-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center flex flex-col items-center gap-4 shadow-2xl animate-fade-slide-in">
+            <div className="size-16 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center border border-amber-500/30">
+              <Award className="h-8 w-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold tracking-tight text-foreground">Week {selectedWeek} Complete!</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Congratulations! All class fund contributions for Week {selectedWeek} are 100% collected. This week is now completed and frozen.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20">
+              <CheckCircle2 className="h-4 w-4" /> 100% Fund Accomplished & Frozen
+            </div>
+            <button
+              onClick={() => setShowThankYouModal(false)}
+              className="w-full mt-2 min-h-[44px] px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors cursor-pointer press-spring"
+            >
+              Thank You & Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Banner */}
+      {isWeekAccomplished && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+              <Award className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-foreground">Week {selectedWeek} Completed</h4>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Complete & Frozen
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">All {totalStudents} classmates have paid. Week checklist is frozen from further edits.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Week Selector */}
@@ -262,16 +352,20 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
           )}
         </div>
 
-        {/* Search Field */}
-        <div className="relative flex-1 max-w-sm w-full">
-          <input
-            type="text"
-            placeholder="Search students..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-4 py-2.5 min-h-[44px] pl-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
-          />
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4 pointer-events-none" />
+        {/* Search Field & Add Classmate Button */}
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 w-full sm:w-auto">
+          <div className="relative flex-1 max-w-sm w-full">
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-border bg-card px-4 py-2.5 min-h-[44px] pl-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none transition-colors"
+            />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4 pointer-events-none" />
+          </div>
+
+          <StudentManagementModal mode="add" />
         </div>
       </div>
 
@@ -383,8 +477,36 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      <label className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 cursor-pointer select-none p-1">
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Edit student button */}
+                      <StudentManagementModal
+                        mode="edit"
+                        student={student}
+                      />
+
+                      {/* Moderator Remove Student button */}
+                      {isModerator && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveStudent(student.id, fullName)}
+                          disabled={deletingStudentId === student.id}
+                          title={`Remove ${fullName} from class database`}
+                          className="size-9 sm:size-10 flex items-center justify-center rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {deletingStudentId === student.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
+
+                      <label
+                        className={`flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 select-none p-1 ${
+                          isWeekAccomplished ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+                        }`}
+                        title={isWeekAccomplished ? 'Week Completed & Frozen' : undefined}
+                      >
                         <span className="hidden text-sm text-muted-foreground sm:inline-flex items-center gap-1.5">
                           {isPaid ? 'Paid' : 'Unpaid'}
                           {isItemPending && (
@@ -395,7 +517,9 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                           <input
                             type="checkbox"
                             checked={isPaid}
+                            disabled={isWeekAccomplished}
                             onChange={() => {
+                              if (isWeekAccomplished) return
                               setPoppingIds((prev) => new Set(prev).add(student.id))
                               setTimeout(() => {
                                 setPoppingIds((prev) => {
@@ -406,7 +530,9 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                               }, 350)
                               handleToggle(student.id, fullName, isPaid)
                             }}
-                            className="size-6 rounded-md border border-border bg-background checked:bg-primary checked:border-primary text-primary-foreground focus:ring-primary focus:ring-offset-2 cursor-pointer accent-primary"
+                            className={`size-6 rounded-md border border-border bg-background checked:bg-primary checked:border-primary text-primary-foreground focus:ring-primary focus:ring-offset-2 accent-primary ${
+                              isWeekAccomplished ? 'cursor-not-allowed' : 'cursor-pointer'
+                            }`}
                             style={{ transition: 'background-color 200ms var(--ease-spring-snappy), border-color 200ms var(--ease-spring-snappy)' }}
                           />
                         </div>
