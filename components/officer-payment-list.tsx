@@ -1,6 +1,8 @@
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
-import { removeStudentAction } from '@/app/officer-dashboard/actions'
-import { removeStudentAction as removeStudentActionMod } from '@/app/officer-dashboard/moderator-actions'
+import { removeStudentAction } from '@/app/officer-dashboard/moderator-actions'
 import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2, Award, CheckCircle2, Lock, UserPlus } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { findCurrentWeekNumber } from '@/lib/week-utils'
@@ -251,7 +253,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
 
     setDeletingStudentId(studentId)
     try {
-      const res = await removeStudentActionMod(studentId, studentName)
+      const res = await removeStudentAction(studentId, studentName)
       if (res.success) {
         toast.success(`Removed classmate "${studentName}" from class database.`, 'Classmate Removed')
       } else {
