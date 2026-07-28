@@ -725,6 +725,40 @@ export async function deleteStudyMaterialAction(id: number) {
   }
 }
 
+export async function updateStudyMaterialTitleAction(id: number, title: string) {
+  try {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      return { success: false, error: 'Title cannot be empty.' }
+    }
+
+    const { supabase, user } = await verifyOfficerStatus()
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Updated title of study material ID ${id} to "${trimmedTitle}".`
+
+    const { error: updateError } = await supabase
+      .from('study_materials')
+      .update({ title: trimmedTitle })
+      .eq('id', id)
+
+    if (updateError) throw updateError
+
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log study material title update:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error updating study material title:', err)
+    return { success: false, error: err.message || 'Failed to update study material title.' }
+  }
+}
+
 // ─── Class Documents Server Actions ───
 
 export interface AddClassDocumentInput {
@@ -800,6 +834,40 @@ export async function deleteClassDocumentAction(id: string) {
   } catch (err: any) {
     console.error('Error deleting class document:', err)
     return { success: false, error: err.message || 'Failed to delete class document.' }
+  }
+}
+
+export async function updateClassDocumentTitleAction(id: string, title: string) {
+  try {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      return { success: false, error: 'Title cannot be empty.' }
+    }
+
+    const { supabase, user } = await verifyOfficerStatus()
+    const officerEmail = user.email || 'unknown_officer'
+    const actionDescription = `Updated title of class document ID ${id} to "${trimmedTitle}".`
+
+    const { error: updateError } = await supabase
+      .from('class_documents')
+      .update({ title: trimmedTitle })
+      .eq('id', id)
+
+    if (updateError) throw updateError
+
+    const { error: logError } = await supabase
+      .from('audit_logs')
+      .insert({
+        officer_email: officerEmail,
+        action_description: actionDescription
+      })
+    if (logError) console.error('Failed to log class document title update:', logError.message)
+
+    revalidatePath('/')
+    return { success: true }
+  } catch (err: any) {
+    console.error('Error updating class document title:', err)
+    return { success: false, error: err.message || 'Failed to update class document title.' }
   }
 }
 

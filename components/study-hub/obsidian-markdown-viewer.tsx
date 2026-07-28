@@ -1,7 +1,7 @@
 'use client'
 
-import React from 'react'
-import { Download } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Download, Pencil, Check, X } from 'lucide-react'
 import { getEmbeddableUrl } from './utils'
 
 export interface ObsidianMarkdownViewerProps {
@@ -16,18 +16,86 @@ export interface ObsidianMarkdownViewerProps {
   }
   mdContent: string
   mdLoading: boolean
+  onUpdateDocTitle?: (docId: string, newTitle: string) => void
 }
 
 export function ObsidianMarkdownViewer({
   selectedLocalDoc,
   mdContent,
-  mdLoading
+  mdLoading,
+  onUpdateDocTitle
 }: ObsidianMarkdownViewerProps) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleInput, setTitleInput] = useState('')
+
+  useEffect(() => {
+    setIsEditingTitle(false)
+    setTitleInput(selectedLocalDoc.title)
+  }, [selectedLocalDoc.id, selectedLocalDoc.title])
+
+  const handleSaveTitle = () => {
+    const trimmed = titleInput.trim()
+    if (!trimmed) return
+    if (trimmed !== selectedLocalDoc.title && onUpdateDocTitle) {
+      onUpdateDocTitle(selectedLocalDoc.id, trimmed)
+    }
+    setIsEditingTitle(false)
+  }
+
+  const handleCancelTitle = () => {
+    setTitleInput(selectedLocalDoc.title)
+    setIsEditingTitle(false)
+  }
+
   return (
     <div className="md:col-span-9 bg-card border border-border rounded-3xl p-5 shadow-sm relative min-h-[500px] md:min-h-[680px] flex flex-col">
-      <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-4">
-        <div>
-          <h3 className="text-sm font-bold text-foreground">{selectedLocalDoc.title}</h3>
+      <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-4 gap-2">
+        <div className="min-w-0 flex-1">
+          {isEditingTitle ? (
+            <div className="flex items-center gap-1.5 max-w-md mb-1">
+              <input
+                type="text"
+                value={titleInput}
+                onChange={e => setTitleInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSaveTitle()
+                  if (e.key === 'Escape') handleCancelTitle()
+                }}
+                className="flex-1 text-sm font-bold text-foreground bg-background border border-primary/50 rounded-xl px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                autoFocus
+              />
+              <button
+                onClick={handleSaveTitle}
+                className="p-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+                title="Save title"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleCancelTitle}
+                className="p-1.5 rounded-xl bg-muted text-muted-foreground cursor-pointer"
+                title="Cancel"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 group">
+              <h3 className="text-sm font-bold text-foreground truncate">{selectedLocalDoc.title}</h3>
+              {onUpdateDocTitle && (
+                <button
+                  onClick={() => {
+                    setTitleInput(selectedLocalDoc.title)
+                    setIsEditingTitle(true)
+                  }}
+                  className="p-1 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all cursor-pointer press-spring shrink-0"
+                  title="Change document title"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground mt-0.5">
             Format: {selectedLocalDoc.type === 'pdf' ? 'Embedded PDF' : 'Parsed Markdown with Obsidian Style'}
           </p>

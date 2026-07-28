@@ -1,7 +1,7 @@
 'use client'
 
-import React from 'react'
-import { ExternalLink, Trash2, HelpCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { ExternalLink, Trash2, HelpCircle, Pencil, Check, X } from 'lucide-react'
 import { StudyMaterial, Course, UserType } from './types'
 import { getEmbeddableUrl } from './utils'
 
@@ -11,6 +11,7 @@ export interface EmbedViewerModalProps {
   user?: UserType | null
   isDragging?: boolean
   onDeleteMaterial: (id: number) => void
+  onUpdateTitle?: (id: number, newTitle: string) => void
 }
 
 export function EmbedViewerModal({
@@ -18,8 +19,35 @@ export function EmbedViewerModal({
   courses,
   user,
   isDragging = false,
-  onDeleteMaterial
+  onDeleteMaterial,
+  onUpdateTitle
 }: EmbedViewerModalProps) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleInput, setTitleInput] = useState('')
+
+  useEffect(() => {
+    setIsEditingTitle(false)
+    if (selectedMaterial) {
+      setTitleInput(selectedMaterial.title)
+    }
+  }, [selectedMaterial?.id, selectedMaterial?.title])
+
+  const handleSaveTitle = () => {
+    const trimmed = titleInput.trim()
+    if (!trimmed || !selectedMaterial) return
+    if (trimmed !== selectedMaterial.title && onUpdateTitle) {
+      onUpdateTitle(selectedMaterial.id, trimmed)
+    }
+    setIsEditingTitle(false)
+  }
+
+  const handleCancelTitle = () => {
+    if (selectedMaterial) {
+      setTitleInput(selectedMaterial.title)
+    }
+    setIsEditingTitle(false)
+  }
+
   if (!selectedMaterial) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border/60 rounded-2xl bg-muted/10 min-h-[300px] md:min-h-[400px]">
@@ -39,9 +67,53 @@ export function EmbedViewerModal({
     <div className="flex flex-col h-full justify-between gap-4">
       {/* Header Details */}
       <div className="flex items-start justify-between border-b border-border/40 pb-3 gap-2">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">{selectedMaterial.category} Reviewer</span>
-          <h3 className="text-sm font-extrabold text-foreground truncate mt-1">{selectedMaterial.title}</h3>
+          
+          {isEditingTitle ? (
+            <div className="flex items-center gap-1.5 mt-1.5 max-w-md">
+              <input
+                type="text"
+                value={titleInput}
+                onChange={e => setTitleInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSaveTitle()
+                  if (e.key === 'Escape') handleCancelTitle()
+                }}
+                className="flex-1 text-sm font-extrabold text-foreground bg-background border border-primary/50 rounded-xl px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                autoFocus
+              />
+              <button
+                onClick={handleSaveTitle}
+                className="min-h-[36px] min-w-[36px] p-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-colors flex items-center justify-center press-spring"
+                title="Save title"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleCancelTitle}
+                className="min-h-[36px] min-w-[36px] p-1.5 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground cursor-pointer transition-colors flex items-center justify-center press-spring"
+                title="Cancel"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mt-1 group">
+              <h3 className="text-sm font-extrabold text-foreground truncate">{selectedMaterial.title}</h3>
+              <button
+                onClick={() => {
+                  setTitleInput(selectedMaterial.title)
+                  setIsEditingTitle(true)
+                }}
+                className="p-1 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all cursor-pointer press-spring shrink-0"
+                title="Change module title"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground font-semibold flex-wrap">
             <span>Submitted by: <strong>{selectedMaterial.submitted_by}</strong></span>
             <span>•</span>

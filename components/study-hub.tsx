@@ -18,8 +18,10 @@ import {
   addStudyMaterialAction, 
   approveStudyMaterialAction, 
   deleteStudyMaterialAction,
+  updateStudyMaterialTitleAction,
   addClassDocumentAction,
-  deleteClassDocumentAction
+  deleteClassDocumentAction,
+  updateClassDocumentTitleAction
 } from '@/app/officer-dashboard/actions'
 import { useToast } from '@/components/ui/toast'
 import {
@@ -444,6 +446,77 @@ export function StudyHub({
     })
   }
 
+  const handleUpdateTitle = (id: number, newTitle: string) => {
+    const trimmed = newTitle.trim()
+    if (!trimmed) return
+
+    startTransition(async () => {
+      const updatedMaterials = materials.map(m => m.id === id ? { ...m, title: trimmed } : m)
+      setMaterials(updatedMaterials)
+      if (selectedMaterial?.id === id) {
+        setSelectedMaterial({ ...selectedMaterial, title: trimmed })
+      }
+
+      if (fallbackMode) {
+        localStorage.setItem('cft_local_materials', JSON.stringify(updatedMaterials))
+        toast.success(`Module title updated to "${trimmed}".`, 'Title Updated')
+        return
+      }
+
+      try {
+        const res = await updateStudyMaterialTitleAction(id, trimmed)
+        if (res.success) {
+          toast.success(`Module title updated to "${trimmed}".`, 'Title Updated')
+          router.refresh()
+        } else {
+          if (!user) {
+            localStorage.setItem('cft_local_materials', JSON.stringify(updatedMaterials))
+            toast.success(`Module title updated to "${trimmed}".`, 'Title Updated')
+          } else {
+            toast.error(res.error || 'Failed to update title.', 'Update Failed')
+          }
+        }
+      } catch {
+        localStorage.setItem('cft_local_materials', JSON.stringify(updatedMaterials))
+        toast.success(`Module title updated to "${trimmed}".`, 'Title Updated')
+      }
+    })
+  }
+
+  const handleUpdateClassDocTitle = (docId: string, newTitle: string) => {
+    const trimmed = newTitle.trim()
+    if (!trimmed) return
+
+    const doc = docsList.find(d => d.id === docId)
+    if (!doc) return
+
+    startTransition(async () => {
+      const updatedDocs = docsList.map(d => d.id === docId ? { ...d, title: trimmed } : d)
+      setDocsList(updatedDocs)
+      if (selectedLocalDoc.id === docId) {
+        setSelectedLocalDoc({ ...selectedLocalDoc, title: trimmed })
+      }
+
+      if (doc.isDb && doc.dbId) {
+        try {
+          const res = await updateClassDocumentTitleAction(doc.dbId, trimmed)
+          if (res.success) {
+            toast.success(`Document title updated to "${trimmed}".`, 'Title Updated')
+            router.refresh()
+          } else {
+            toast.error(res.error || 'Failed to update document title.', 'Update Failed')
+          }
+        } catch {
+          toast.error('Failed to update document title.', 'Update Failed')
+        }
+      } else {
+        const customDocs = updatedDocs.filter(d => !d.isDefault)
+        localStorage.setItem('cft_local_class_docs', JSON.stringify(customDocs))
+        toast.success(`Document title updated to "${trimmed}".`, 'Title Updated')
+      }
+    })
+  }
+
   const approvedMaterials = materials.filter(m => m.approved)
   const pendingMaterials = materials.filter(m => !m.approved)
 
@@ -513,6 +586,7 @@ export function StudyHub({
             selectedLocalDoc={selectedLocalDoc}
             mdContent={mdContent}
             mdLoading={mdLoading}
+            onUpdateDocTitle={handleUpdateClassDocTitle}
           />
         </ClassDocumentsSection>
       )}
@@ -663,6 +737,7 @@ export function StudyHub({
                   user={user}
                   isDragging={isDragging}
                   onDeleteMaterial={handleDelete}
+                  onUpdateTitle={handleUpdateTitle}
                 />
               </div>
 
@@ -698,6 +773,7 @@ export function StudyHub({
                         isSelected={isSelected}
                         course={course}
                         onSelect={setSelectedMaterial}
+                        onUpdateTitle={handleUpdateTitle}
                       />
                     )
                   })
