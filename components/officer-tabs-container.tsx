@@ -422,9 +422,11 @@ export function OfficerTabsContainer({
 
           {/* Desktop Layout (>= lg): Preserved original 2-column arrangement */}
           <div className="hidden lg:grid lg:grid-cols-12 gap-8 items-start animate-fade-slide-in">
-            {/* Left Column: Stats, Export Reports Panel, Manage Weeks, and Activity */}
+            {/* Left Column: Stats, Approval Queue, Export Reports Panel, Manage Weeks, and Activity */}
             <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
               <BalanceCard balance={netBalance} />
+
+              <OfficerReceiptApprovalQueue receipts={receipts} defaultOpen={false} />
 
               <CollapsibleSection
                 title="Financial Audit & CSV Exports"
@@ -470,9 +472,8 @@ export function OfficerTabsContainer({
               <ManageWeeksPanel weeks={weeks} defaultOpen={false} />
               <RecentActivity activities={logs} isModerator={isModerator} defaultOpen={false} />
             </div>
-            {/* Right Column: Receipts Approval Queue + Officer Student Checklist */}
+            {/* Right Column: Officer Student Checklist */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              <OfficerReceiptApprovalQueue receipts={receipts} defaultOpen={false} />
               <OfficerPaymentList
                 students={students}
                 initialPayments={localPayments}
@@ -496,6 +497,7 @@ export function OfficerTabsContainer({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isOfficer={true}
+        hasPendingQueue={receipts.some((r) => r.status === 'pending')}
         onAddExpense={triggerAddExpense}
         onAddTask={() => {
           setActiveTab('tasks')

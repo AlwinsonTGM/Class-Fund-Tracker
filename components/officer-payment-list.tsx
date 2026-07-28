@@ -330,33 +330,36 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
       )}
 
       {/* Settings bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-full max-w-full min-w-0">
         {/* Week Selector */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3 w-full sm:w-auto min-w-0 max-w-full">
           <label htmlFor="officer-week-select" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
             Selected Week:
           </label>
           {sortedWeeks.length === 0 ? (
             <span className="text-sm text-muted-foreground">No weeks configured</span>
           ) : (
-            <select
-              id="officer-week-select"
-              value={selectedWeek}
-              onChange={(e) => setSelectedWeek(Number(e.target.value))}
-              className="rounded-xl border border-border bg-card px-4 py-2.5 min-h-[44px] text-sm font-medium text-foreground focus:border-primary focus:outline-none transition-colors cursor-pointer"
-            >
-              {sortedWeeks.map((w) => (
-                <option key={w.id} value={w.week_number}>
-                  Week {w.week_number} ({w.date_range})
-                </option>
-              ))}
-            </select>
+            <div className="relative w-full sm:w-auto min-w-0 max-w-full">
+              <select
+                id="officer-week-select"
+                value={selectedWeek}
+                onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                className="w-full sm:w-auto min-w-0 max-w-full truncate rounded-xl border border-border bg-card px-3.5 py-2.5 min-h-[44px] text-sm font-medium text-foreground focus:border-primary focus:outline-none transition-colors cursor-pointer appearance-none pr-9"
+              >
+                {sortedWeeks.map((w) => (
+                  <option key={w.id} value={w.week_number}>
+                    Week {w.week_number} ({w.date_range})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            </div>
           )}
         </div>
 
         {/* Search Field & Add Classmate Button */}
-        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 w-full sm:w-auto">
-          <div className="relative flex-1 max-w-sm w-full">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2.5 w-full sm:w-auto min-w-0">
+          <div className="relative flex-1 max-w-sm w-full min-w-0">
             <input
               type="text"
               placeholder="Search students..."

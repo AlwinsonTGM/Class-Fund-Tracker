@@ -128,11 +128,25 @@ export function OfficerReceiptApprovalQueue({
     }
   }
 
+  const queueBadge = pendingCount > 0 ? (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px] font-extrabold uppercase tracking-wider animate-pulse">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+      </span>
+      {pendingCount} Pending Queue
+    </span>
+  ) : (
+    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+      Approval Queue
+    </span>
+  )
+
   return (
     <CollapsibleSection
       title="Digital Proof Approval Queue"
       subtitle="Review student payment screenshots and update payment records with 1-click approvals"
-      badgeText={pendingCount > 0 ? `${pendingCount} Pending` : 'Approval Queue'}
+      badgeText={queueBadge}
       defaultOpen={defaultOpen}
     >
       <section className="flex flex-col gap-5">

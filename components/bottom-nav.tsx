@@ -8,6 +8,7 @@ export interface BottomNavProps {
   activeTab: string
   setActiveTab: (tab: string) => void
   isOfficer: boolean
+  hasPendingQueue?: boolean
   onAddExpense?: () => void
   onAddTask?: () => void
   onAddPost?: () => void
@@ -15,7 +16,8 @@ export interface BottomNavProps {
 
 export function BottomNav({
   activeTab,
-  setActiveTab
+  setActiveTab,
+  hasPendingQueue = false
 }: BottomNavProps) {
   const [mounted, setMounted] = useState(false)
   
@@ -78,12 +80,18 @@ export function BottomNav({
               }}
               className="relative flex flex-col items-center justify-center w-1/5 h-12 rounded-full cursor-pointer group active:scale-95 transition-transform"
             >
-              <span className={`transition-all duration-300 transform ${
+              <span className={`relative transition-all duration-300 transform ${
                 isActive 
                   ? '-translate-y-2 scale-110 text-primary filter drop-shadow-[0_2px_8px_rgba(46,189,127,0.3)]' 
                   : 'translate-y-0 opacity-60 group-hover:opacity-100 group-hover:scale-105'
               }`}>
                 {tab.icon}
+                {tab.id === 'portal' && hasPendingQueue && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 border border-background"></span>
+                  </span>
+                )}
               </span>
               <span className={`absolute bottom-1 text-[9px] font-bold tracking-wider transition-all duration-300 transform ${
                 isActive 

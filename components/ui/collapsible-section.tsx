@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 export interface CollapsibleSectionProps {
   title: string
   subtitle?: string
-  badgeText?: string
+  badgeText?: React.ReactNode
   defaultOpen?: boolean
   children: React.ReactNode
   className?: string
@@ -37,9 +37,13 @@ export function CollapsibleSection({
             <div className="flex items-center gap-2">
               <h3 className="text-base font-semibold text-card-foreground">{title}</h3>
               {badgeText && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {badgeText}
-                </span>
+                typeof badgeText === 'string' ? (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    {badgeText}
+                  </span>
+                ) : (
+                  badgeText
+                )
               )}
             </div>
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
