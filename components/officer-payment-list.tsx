@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
 import { removeStudentAction } from '@/app/officer-dashboard/moderator-actions'
-import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2, Award, CheckCircle2, Lock, UserPlus } from 'lucide-react'
+import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2, Trash2, Pencil, Award, CheckCircle2, Lock, UserPlus, MoreVertical } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { findCurrentWeekNumber } from '@/lib/week-utils'
 import { ConfettiCanvas } from '@/components/ui/confetti-canvas'
@@ -53,6 +53,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set())
   const [poppingIds, setPoppingIds] = useState<Set<number>>(new Set())
   const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null)
+  const [activeMenuStudentId, setActiveMenuStudentId] = useState<number | null>(null)
 
   // Confetti and Thank You modal state
   const [showConfetti, setShowConfetti] = useState(false)
@@ -459,53 +460,33 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                 const errorKey = `${student.id}-${selectedWeek}`
                 const hasError = localErrors[errorKey]
                 const isItemPending = pendingKeys.has(errorKey)
+                const isMenuOpen = activeMenuStudentId === student.id
 
                 return (
                   <li
                     key={student.id}
-                    className="flex min-h-14 items-center justify-between gap-3 px-5 py-2.5 sm:min-h-16 sm:gap-4 sm:py-3 sm:px-6 hover:bg-muted/30"
+                    className="flex min-h-14 items-center justify-between gap-3 px-4 py-2.5 sm:min-h-16 sm:gap-4 sm:py-3 sm:px-6 hover:bg-muted/30 relative"
                     style={{
                       transition: 'background-color 200ms var(--ease-swift)',
                       animation: `stagger-in 400ms var(--ease-spring-smooth) both`,
                       animationDelay: `${Math.min(visibleStudents.indexOf(student) * 20, 300)}ms`
                     }}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground sm:size-9 sm:text-sm">
                         {student.seat_number}
                       </span>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium text-foreground truncate text-sm sm:text-base">{fullName}</span>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="font-medium text-foreground truncate text-sm sm:text-base" title={fullName}>
+                          {fullName}
+                        </span>
                         {hasError && (
                           <span className="text-xs text-destructive font-medium">{localErrors[errorKey]}</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Edit student button */}
-                      <StudentManagementModal
-                        mode="edit"
-                        student={student}
-                      />
-
-                      {/* Moderator Remove Student button */}
-                      {isModerator && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveStudent(student.id, fullName)}
-                          disabled={deletingStudentId === student.id}
-                          title={`Remove ${fullName} from class database`}
-                          className="size-9 sm:size-10 flex items-center justify-center rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          {deletingStudentId === student.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </button>
-                      )}
-
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                       <label
                         className={`flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 select-none p-1 ${
                           isWeekAccomplished ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
@@ -542,6 +523,67 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                           />
                         </div>
                       </label>
+
+                      {/* Action Trigger Menu (Edit & Delete options) */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuStudentId(isMenuOpen ? null : student.id)}
+                          title={`Options for ${fullName}`}
+                          className={`size-9 flex items-center justify-center rounded-xl border border-border/60 bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${
+                            isMenuOpen ? 'bg-muted text-foreground ring-2 ring-primary/20' : ''
+                          }`}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+
+                        {isMenuOpen && (
+                          <>
+                            {/* Invisible overlay backdrop for click-outside */}
+                            <div
+                              className="fixed inset-0 z-30"
+                              onClick={() => setActiveMenuStudentId(null)}
+                            />
+
+                            {/* Action Dropdown Menu */}
+                            <div className="absolute right-0 top-full mt-1.5 z-40 min-w-[170px] rounded-2xl border border-border bg-card p-1.5 shadow-xl animate-fade-slide-in flex flex-col gap-0.5">
+                              <StudentManagementModal
+                                mode="edit"
+                                student={student}
+                                triggerBtn={
+                                  <button
+                                    type="button"
+                                    onClick={() => setActiveMenuStudentId(null)}
+                                    className="w-full min-h-[38px] px-3 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 text-primary shrink-0" />
+                                    <span>Edit Classmate</span>
+                                  </button>
+                                }
+                              />
+
+                              {isModerator && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuStudentId(null)
+                                    handleRemoveStudent(student.id, fullName)
+                                  }}
+                                  disabled={deletingStudentId === student.id}
+                                  className="w-full min-h-[38px] px-3 py-2 text-left text-xs font-semibold text-destructive hover:bg-destructive/10 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                  {deletingStudentId === student.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-destructive shrink-0" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive shrink-0" />
+                                  )}
+                                  <span>Delete Classmate</span>
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </li>
                 )
