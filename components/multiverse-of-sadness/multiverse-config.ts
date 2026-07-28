@@ -13,6 +13,8 @@ export interface TrackConfig {
 
 export type UniverseFlavor = 'classic' | 'physics' | 'weather' | 'fourth_wall' | 'cinema' | 'online' | 'cursed'
 export type RarityTier = 'common' | 'uncommon' | 'cursed'
+export type PipeStyle = 'classic' | 'rust' | 'neon' | 'gothic' | 'crystal' | 'cosmic' | 'overgrown' | 'retro' | 'origami' | 'quantum' | 'void'
+
 
 export interface UniverseConfig {
   id: string
@@ -64,11 +66,30 @@ export interface UniverseConfig {
   rainbow?: boolean
   nostalgia?: boolean
   wedding?: boolean
+  pipeStyle?: PipeStyle
+}
+
+export function getPipeStyleForUniverse(u: UniverseConfig): PipeStyle {
+  if (u.pipeStyle) return u.pipeStyle
+  if (u.voidMode) return 'void'
+  if (u.rainbow) return 'cosmic'
+  if (u.thunderstorm || u.lowBattery) return 'neon'
+  if (u.snow || u.deepEnd) return 'crystal'
+  if (u.autumn || u.soup) return 'overgrown'
+  if (u.noir || u.silentFilm || u.documentary) return 'origami'
+  if (u.vhs || u.comments || u.freeTrial) return 'retro'
+  if (u.insomnia || u.taxSeason || u.dreadMeter !== undefined) return 'gothic'
+  if (u.rarity === 'cursed' || u.sneeze || u.flip) return 'quantum'
+  if (u.flavor === 'physics') return 'rust'
+  if (u.flavor === 'fourth_wall') return 'retro'
+  if (u.flavor === 'cinema') return 'origami'
+  return 'classic'
 }
 
 // ----------------------------------------------------------------------
 // 1. ALL 40 UNIVERSES DEFINITION
 // ----------------------------------------------------------------------
+
 export const UNIVERSE_CONFIGS: UniverseConfig[] = [
   // CLASSIC
   {
@@ -795,4 +816,88 @@ export const MULTIVERSE_VIDEOS: string[] = [
   '/multiverse/ssstik.io_@whitesongs4_1784846786537.mp4',
   '/multiverse/ssstik.io_@whos_leyyyy_1784846666515.mp4',
   '/multiverse/ssstik.io_@zy_mxc_1784846590404.mp4'
+]
+
+export const NEAR_MISS_QUOTES: string[] = [
+  'so close. like everything else.',
+
+  // FAILURE
+  'almost. your whole life, almost.',
+  "you made it. don't get used to it.",
+  'survived. the bar is on the floor.',
+  "you're great at nearly.",
+  "close doesn't count. it never counted.",
+  "you peaked at 'almost.'",
+  'success is a rumor you keep hearing.',
+  'not a failure. a learning experience. about failure.',
+  "the gap forgives you. your resume won't.",
+  "one day you'll make it. statistically.",
+  "that's the closest you'll get. to anything.",
+  "another one you didn't mess up. yet.",
+  'the pipe believed in you. briefly.',
+  'you dodged it. like responsibility.',
+
+  // RELATIONSHIPS
+  'closer than your last relationship got.',
+  'you almost had them. you always almost do.',
+  "they said 'maybe.' it meant no.",
+  'this gap lasted longer than they did.',
+  "you fit through. they didn't fit in.",
+  'left on read. by the pipe. by everyone.',
+  'you two had something. for 0.3 seconds.',
+  "it's not you. it's the pipe. it's also you.",
+  "they're with a bird who doesn't flap now.",
+  'you gave 100%. they gave a thumbs up.',
+  "the pipe will remember you. they won't.",
+  'they said forever. forever was four days.',
+  "'it's complicated.' everything is.",
+  'you swiped. nothing matched. even the pipes.',
+
+  // LIFE
+  "you're still here. questionable. but here.",
+  'this is it. this is the whole thing.',
+  "life flashes. it's mostly pipes.",
+  "another day you didn't plan for.",
+  'adulthood is just pipes with rent.',
+  'nobody gives you the gap tutorial.',
+  'the meaning of life was this. sorry.',
+  'living is just not dying, repeatedly.',
+  'you peaked in the tutorial.',
+  'everything happens for a reason. the reason is pipes.',
+  'you came, you saw, you nearly died.',
+  'the rent is due in every universe.',
+  "you'll figure it out. you won't. you'll be fine.",
+  "you're the main character. of a sad game.",
+
+  // PASSION
+  'the dream was bigger. the gap is smaller.',
+  "you wanted to be an astronaut. you're a bird.",
+  'passion looks a lot like panic, up close.',
+  'this is what you practiced for. somehow.',
+  "your childhood dream didn't include pipes.",
+  "you're living the dream. it's raining.",
+  "the spark is still there. it's wet.",
+  "dreams don't come true. gaps do. barely.",
+  'you used to want more. now you want the gap.',
+  "the fire inside is mostly smoke now.",
+  "you're chasing something. it's the next pipe.",
+  'make art, they said. you made it through.',
+  'your passion has a hitbox now.',
+  'you believed in something once. it was a gap.',
+
+  // SELF
+  'you made it. you, specifically. somehow.',
+  "proud of you. nobody else is. that's fine.",
+  "you're enough. the gap agrees. barely.",
+  'self-love is surviving a pipe. technically.',
+  "inner child is watching. they're stressed.",
+  'you are the problem and the solution. mostly the problem.',
+  'growth looks like this. damp and narrow.',
+  "healing isn't linear. it's pipes.",
+  "you're not the same bird. you're worse. but wiser.",
+  'be kind to yourself. you just almost died.',
+  'you matter. to the scoreboard. briefly.',
+  "the voice in your head said 'you got this.' it lied. you got it.",
+  "you forgave yourself. the pipe didn't. you made it anyway.",
+  "you're becoming someone. it's mostly flapping."
 ]

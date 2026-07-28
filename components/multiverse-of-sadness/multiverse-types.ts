@@ -1,4 +1,4 @@
-import { UniverseConfig, RarityTier } from './multiverse-config'
+import { UniverseConfig, RarityTier, PipeStyle } from './multiverse-config'
 
 export interface Particle {
   x: number
@@ -42,7 +42,11 @@ export interface PipeObj {
   gold?: boolean
   wedding?: boolean
   hasCake?: boolean
+  style?: PipeStyle
+  isHerald?: boolean
+  targetUniName?: string
 }
+
 
 export interface RecFrame {
   y: number
@@ -114,7 +118,13 @@ export interface GameStateRef {
   therapyTimer: number
   rainbowTimer: number
   unlockedUniIds: string[]
+  unlockedFusionKeys: string[]
+  justShifted: boolean
+  pendingHeraldTargetIdx: number | null
+  queuedUniverseShiftIdx: number | null
 }
+
+
 
 export interface BuildingScenery {
   x: number

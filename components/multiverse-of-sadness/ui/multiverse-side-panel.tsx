@@ -94,30 +94,6 @@ export function MultiverseSidePanel({
         </ul>
       </section>
 
-      {/* 3. PORTING NOTES PANEL */}
-      <section className="bg-gradient-to-b from-[#111b29] to-[#0e1622] border border-[#22344a] rounded-[6px] p-[16px_18px] transition-all duration-400 hover:border-[#2f4a6b] hover:-translate-y-[2px]">
-        <h3 className="font-['Special_Elite'] font-normal text-[12.5px] tracking-[2.5px] uppercase text-[#d9a441] mb-3 flex items-center gap-[10px]">
-          <span>Porting Notes</span>
-          <span className="flex-1 h-[1px] bg-gradient-to-r from-[#22344a] to-transparent" />
-        </h3>
-
-        <ul className="list-none flex flex-col gap-[9px] text-[12px] text-[#7f93a8] leading-[1.55] font-['Space_Grotesk']">
-          <li>
-            <b className="text-[#c9d6e2]">Your sad videos:</b> put them on a{' '}
-            <code className="font-mono text-[11px] text-[#96b6d6] bg-[rgba(150,182,214,0.08)] px-1.5 py-0.5 rounded">
-              &lt;video&gt;
-            </code>{' '}
-            behind the canvas and lower the sky opacity — the rain, grain and subtitles sit right on top of your clips.
-          </li>
-          <li>
-            <b className="text-[#c9d6e2]">Modular:</b> every universe is one small object (gravity, speed, rain, desat). adding yours is ~5 lines.
-          </li>
-          <li>
-            <b className="text-[#c9d6e2]">Steal freely:</b> take one idea, take all of them. the tears are yours.
-          </li>
-        </ul>
-      </section>
-
     </aside>
   )
 }

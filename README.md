@@ -59,6 +59,12 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Ambient Dark Rain Background**: Restored dual-layer seamless ambient rain animations (`fallA` / `fallB` keyframes) and atmospheric vignette (`.atmo-vig`) on background.
 - **Strict GEMINI.md Guidelines**: Updated `GEMINI.md` with comprehensive, strict design system rules to preserve canonical styling across future AI updates.
 
+### 🔮 24. Multiverse of Sadness II Official Launch & Fusion Dex (v1.29)
+- **Official Standalone Mode**: Full standalone flappy mode featuring 42 base universes of emotional rain weather, physics, cinema, fourth-wall, and cursed anomalies.
+- **Fusion Dex (861 Combinations)**: Complete cataloging of all 861 pairwise universe combinations ($\binom{42}{2} = 861$) with signature handcrafted lore and dynamic procedural descriptions.
+- **Purple Hub Portal Button**: Glowing purple hub button with smooth atmospheric gate transitions ("ENTERING MULTIVERSE II...") connecting the main Section Hub to the Multiverse app.
+- **Fast Dex Windowing & Search**: Ultra-fast Dex UI with real-time search, rarity tags, status filters, and 24-item pagination controls.
+
 ### 🚰 22. Multiverse of Sadness Gameplay Slowdown Removal & Pipe Generation Balancing (v1.25)
 - **Impossible Pipe Generation Fixed**: Added a vertical delta constraint (`maxDelta = 110px`) between consecutive pipe gaps, eliminating physically unpassable pipe gap jumps.
 - **Removed Gameplay Slowdown**: Removed unwanted slow-motion time scaling during near-miss popups while maintaining floating quote text, tear particles, and sound effects.

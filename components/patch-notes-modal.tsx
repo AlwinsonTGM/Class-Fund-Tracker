@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.28'
+const CURRENT_VERSION = '1.29'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,19 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.29',
+    date: 'July 28, 2026',
+    title: 'Multiverse of Sadness II Launch & Fusion Dex (861 Combinations)',
+    emoji: '🔮',
+    changes: [
+      { type: 'new', text: 'Multiverse of Sadness II Official Launch — full standalone flappy mode featuring 42 base universes of emotional rain weather, physics, cinema, fourth-wall, and cursed anomalies.' },
+      { type: 'new', text: 'Fusion Dex (861 Combinations) — cataloging every possible pairwise universe combination with signature lore and dynamic procedural descriptions.' },
+      { type: 'new', text: 'Purple Hub Portal Button — added a purple atmospheric button in the main section hub with smooth portal gate transitions.' },
+      { type: 'improve', text: 'Streamlined Side Panel UI — removed legacy porting notes container for a cleaner desktop layout.' },
+      { type: 'improve', text: 'Fast Dex Windowing & Search — search and filter 861 fusions effortlessly with search inputs, pagination, and rarity badges.' }
+    ],
+  },
   {
     version: '1.28',
     date: 'July 28, 2026',

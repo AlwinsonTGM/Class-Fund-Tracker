@@ -9,11 +9,14 @@ export const PIPE_W = 74
 
 export const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v)
 
-export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = false) {
+export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = false, t = 0) {
   const top = p.gapY
   const bot = p.gapY + p.gapH
+  const style = p.style || (isVoid ? 'void' : 'classic')
 
   ctx.save()
+
+  // Hologram translucent mode
   if (p.hologram) {
     ctx.globalAlpha = 0.45
     ctx.strokeStyle = '#38bdf8'
@@ -21,31 +24,148 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = fal
     ctx.shadowBlur = 10
   }
 
-  const pipeBodyColor = p.gold ? '#ca8a04' : isVoid ? '#0f172a' : '#31493f'
-  const pipeCapColor = p.gold ? '#eab308' : isVoid ? '#1e293b' : '#3a564a'
+  // Determine palette base colors per style
+  let bodyColor = '#31493f'
+  let capColor = '#3a564a'
+  let highlightColor = 'rgba(190,225,205,0.10)'
+  let strokeColor = 'rgba(0,0,0,0.4)'
 
-  // Top Pipe
+  if (p.gold) {
+    bodyColor = '#ca8a04'
+    capColor = '#eab308'
+    highlightColor = 'rgba(254,240,138,0.3)'
+  } else {
+    switch (style) {
+      case 'rust':
+        bodyColor = '#5c3a21'
+        capColor = '#7c4d2b'
+        highlightColor = 'rgba(234,179,8,0.2)'
+        strokeColor = '#3a2211'
+        break
+      case 'neon':
+        bodyColor = '#0b1329'
+        capColor = '#152347'
+        highlightColor = 'rgba(56,189,248,0.3)'
+        strokeColor = '#06b6d4'
+        break
+      case 'gothic':
+        bodyColor = '#1e2025'
+        capColor = '#2a2d34'
+        highlightColor = 'rgba(217,164,65,0.15)'
+        strokeColor = '#454a54'
+        break
+      case 'crystal':
+        bodyColor = '#164e63'
+        capColor = '#0891b2'
+        highlightColor = 'rgba(165,243,252,0.4)'
+        strokeColor = '#67e8f9'
+        break
+      case 'cosmic':
+        bodyColor = '#0f172a'
+        capColor = '#1e1b4b'
+        highlightColor = 'rgba(192,132,252,0.3)'
+        strokeColor = '#818cf8'
+        break
+      case 'overgrown':
+        bodyColor = '#243324'
+        capColor = '#324732'
+        highlightColor = 'rgba(134,239,172,0.2)'
+        strokeColor = '#152315'
+        break
+      case 'retro':
+        bodyColor = '#2e1065'
+        capColor = '#3b0764'
+        highlightColor = 'rgba(249,115,22,0.35)'
+        strokeColor = '#f97316'
+        break
+      case 'origami':
+        bodyColor = '#cbd5e1'
+        capColor = '#94a3b8'
+        highlightColor = 'rgba(255,255,255,0.5)'
+        strokeColor = '#334155'
+        break
+      case 'quantum':
+        bodyColor = '#31124b'
+        capColor = '#4c1d95'
+        highlightColor = 'rgba(236,72,153,0.35)'
+        strokeColor = '#c084fc'
+        break
+      case 'void':
+        bodyColor = '#0f172a'
+        capColor = '#1e293b'
+        highlightColor = 'rgba(56,189,248,0.15)'
+        strokeColor = '#38bdf8'
+        break
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // TOP PIPE BODY & CAP
+  // ----------------------------------------------------------------
   if (top > 0) {
-    ctx.fillStyle = pipeBodyColor
+    ctx.fillStyle = bodyColor
     ctx.fillRect(p.x, -20, PIPE_W, top + 5)
-    ctx.fillStyle = p.gold ? 'rgba(254,240,138,0.3)' : 'rgba(190,225,205,0.10)'
+
+    // Style Specific Body Details (Top Pipe)
+    if (style === 'retro') {
+      ctx.strokeStyle = 'rgba(249,115,22,0.4)'
+      ctx.lineWidth = 1
+      for (let yG = 0; yG < top; yG += 14) {
+        ctx.beginPath()
+        ctx.moveTo(p.x, yG)
+        ctx.lineTo(p.x + PIPE_W, yG)
+        ctx.stroke()
+      }
+    } else if (style === 'rust') {
+      // Steampunk rivets
+      ctx.fillStyle = '#b45309'
+      for (let yR = 10; yR < top - 15; yR += 22) {
+        ctx.fillRect(p.x + 4, yR, 3, 3)
+        ctx.fillRect(p.x + PIPE_W - 7, yR, 3, 3)
+      }
+    } else if (style === 'overgrown') {
+      // Vines on top pipe
+      ctx.strokeStyle = '#4ade80'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(p.x + 2, -10)
+      ctx.quadraticCurveTo(p.x + 25, top * 0.4, p.x + PIPE_W - 8, top - 10)
+      ctx.stroke()
+    } else if (style === 'cosmic') {
+      // Star particles inside body
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      for (let i = 0; i < 4; i++) {
+        const sx = p.x + 8 + ((i * 19 + Math.sin(t + i) * 10) % (PIPE_W - 16))
+        const sy = (i * 25) % top
+        ctx.fillRect(sx, sy, 2, 2)
+      }
+    }
+
+    // Body Highlight & Shadow
+    ctx.fillStyle = highlightColor
     ctx.fillRect(p.x + 7, -20, 7, top + 5)
     ctx.fillStyle = 'rgba(0,0,0,0.30)'
     ctx.fillRect(p.x + PIPE_W - 11, -20, 11, top + 5)
-    ctx.strokeStyle = isVoid ? '#38bdf8' : 'rgba(0,0,0,0.4)'
-    ctx.lineWidth = isVoid ? 1.5 : 1
+    ctx.strokeStyle = strokeColor
+    ctx.lineWidth = style === 'neon' || style === 'quantum' ? 1.5 : 1
     ctx.strokeRect(p.x + 0.5, -19.5, PIPE_W - 1, top + 4)
 
     // Top Cap
-    ctx.fillStyle = pipeCapColor
+    ctx.fillStyle = capColor
     ctx.fillRect(p.x - 6, top - 15, PIPE_W + 12, 15)
-    ctx.fillStyle = 'rgba(220,245,230,0.14)'
+    ctx.fillStyle = highlightColor
     ctx.fillRect(p.x - 6, top - 15, PIPE_W + 12, 2)
     ctx.fillStyle = 'rgba(0,0,0,0.32)'
     ctx.fillRect(p.x - 6, top - 3, PIPE_W + 12, 3)
     ctx.strokeRect(p.x - 5.5, top - 14.5, PIPE_W + 11, 14)
 
-    // Wedding Veil / Cap or Cake decoration
+    // Gothic Spire Accents
+    if (style === 'gothic') {
+      ctx.fillStyle = '#ef4444'
+      ctx.fillRect(p.x + 12, top - 12, 4, 4)
+      ctx.fillRect(p.x + PIPE_W - 16, top - 12, 4, 4)
+    }
+
     if (p.wedding) {
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(p.x + 10, top - 25, PIPE_W - 20, 10)
@@ -54,17 +174,24 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = fal
     }
   }
 
-  // Bottom Cap
-  ctx.fillStyle = pipeCapColor
+  // ----------------------------------------------------------------
+  // BOTTOM PIPE CAP & BODY
+  // ----------------------------------------------------------------
+  ctx.fillStyle = capColor
   ctx.fillRect(p.x - 6, bot, PIPE_W + 12, 15)
-  ctx.fillStyle = 'rgba(220,245,230,0.14)'
+  ctx.fillStyle = highlightColor
   ctx.fillRect(p.x - 6, bot, PIPE_W + 12, 2)
   ctx.fillStyle = 'rgba(0,0,0,0.32)'
   ctx.fillRect(p.x - 6, bot + 12, PIPE_W + 12, 3)
-  ctx.strokeStyle = isVoid ? '#38bdf8' : 'rgba(0,0,0,0.4)'
+  ctx.strokeStyle = strokeColor
   ctx.strokeRect(p.x - 5.5, bot + 0.5, PIPE_W + 11, 14)
 
-  // Wedding Top Hat on bottom pipe
+  if (style === 'gothic') {
+    ctx.fillStyle = '#ef4444'
+    ctx.fillRect(p.x + 12, bot + 4, 4, 4)
+    ctx.fillRect(p.x + PIPE_W - 16, bot + 4, 4, 4)
+  }
+
   if (p.wedding) {
     ctx.fillStyle = '#0f172a'
     ctx.fillRect(p.x + 18, bot - 18, 38, 18)
@@ -73,7 +200,6 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = fal
     ctx.fillRect(p.x + 18, bot - 7, 38, 3)
   }
 
-  // Birthday Cake sitting on bottom cap
   if (p.hasCake) {
     ctx.fillStyle = '#f472b6'
     ctx.fillRect(p.x + 16, bot - 16, 42, 16)
@@ -85,20 +211,88 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = fal
     ctx.fill()
   }
 
-  // Bottom Pipe Body
   const botH = H - GROUND - bot - 15
   if (botH > 0) {
-    ctx.fillStyle = pipeBodyColor
+    ctx.fillStyle = bodyColor
     ctx.fillRect(p.x, bot + 15, PIPE_W, botH)
-    ctx.fillStyle = p.gold ? 'rgba(254,240,138,0.3)' : 'rgba(190,225,205,0.10)'
+
+    if (style === 'retro') {
+      ctx.strokeStyle = 'rgba(249,115,22,0.4)'
+      ctx.lineWidth = 1
+      for (let yG = bot + 15; yG < H - GROUND; yG += 14) {
+        ctx.beginPath()
+        ctx.moveTo(p.x, yG)
+        ctx.lineTo(p.x + PIPE_W, yG)
+        ctx.stroke()
+      }
+    } else if (style === 'rust') {
+      ctx.fillStyle = '#b45309'
+      for (let yR = bot + 25; yR < H - GROUND - 10; yR += 22) {
+        ctx.fillRect(p.x + 4, yR, 3, 3)
+        ctx.fillRect(p.x + PIPE_W - 7, yR, 3, 3)
+      }
+    } else if (style === 'overgrown') {
+      ctx.strokeStyle = '#4ade80'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(p.x + PIPE_W - 6, bot + 20)
+      ctx.quadraticCurveTo(p.x + 10, bot + botH * 0.5, p.x + 6, bot + botH - 10)
+      ctx.stroke()
+    } else if (style === 'cosmic') {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      for (let i = 0; i < 4; i++) {
+        const sx = p.x + 8 + ((i * 23 + Math.cos(t + i) * 8) % (PIPE_W - 16))
+        const sy = bot + 15 + ((i * 30) % botH)
+        ctx.fillRect(sx, sy, 2, 2)
+      }
+    }
+
+    ctx.fillStyle = highlightColor
     ctx.fillRect(p.x + 7, bot + 15, 7, botH)
     ctx.fillStyle = 'rgba(0,0,0,0.30)'
     ctx.fillRect(p.x + PIPE_W - 11, bot + 15, 11, botH)
+    ctx.strokeStyle = strokeColor
     ctx.strokeRect(p.x + 0.5, bot + 15.5, PIPE_W - 1, botH - 1)
+  }
+
+  // ----------------------------------------------------------------
+  // UNIVERSE SHIFT HERALD / PORTAL RIFT INDICATOR
+  // ----------------------------------------------------------------
+  if (p.isHerald) {
+    ctx.save()
+    // Swirling portal energy beam in pipe gap
+    const pulse = 0.5 + 0.5 * Math.sin(t * 8)
+    const portalG = ctx.createLinearGradient(p.x, top, p.x + PIPE_W, bot)
+    portalG.addColorStop(0, `rgba(217, 164, 65, ${0.25 + pulse * 0.25})`)
+    portalG.addColorStop(0.5, `rgba(168, 85, 247, ${0.4 + pulse * 0.3})`)
+    portalG.addColorStop(1, `rgba(217, 164, 65, ${0.25 + pulse * 0.25})`)
+
+    ctx.fillStyle = portalG
+    ctx.fillRect(p.x - 4, top, PIPE_W + 8, p.gapH)
+
+    // Pulsing Herald Border Glow
+    ctx.strokeStyle = `rgba(217, 164, 65, ${0.6 + pulse * 0.4})`
+    ctx.lineWidth = 2.5
+    ctx.strokeRect(p.x - 7, top - 16, PIPE_W + 14, 16)
+    ctx.strokeRect(p.x - 7, bot, PIPE_W + 14, 16)
+
+    // Dimensional Herald Warning Badge
+    ctx.fillStyle = '#d9a441'
+    ctx.font = "10px 'Special Elite', monospace"
+    ctx.textAlign = 'center'
+    ctx.fillText('⚡ SHIFT HERALD ⚡', p.x + PIPE_W / 2, top - 22)
+    if (p.targetUniName) {
+      ctx.fillStyle = '#e9f0f7'
+      ctx.font = "9px 'Space Grotesk', sans-serif"
+      ctx.fillText(`WARP: ${p.targetUniName.toUpperCase()}`, p.x + PIPE_W / 2, top - 10)
+    }
+
+    ctx.restore()
   }
 
   ctx.restore()
 }
+
 
 export function drawBird(
   ctx: CanvasRenderingContext2D,
@@ -351,8 +545,9 @@ export function renderGameFrame(
 
   // Pipes
   for (const p of S.pipes) {
-    drawPipe(ctx, p, u.voidMode)
+    drawPipe(ctx, p, u.voidMode, S.t)
   }
+
 
   // Fog Layer Mask
   if (u.fog) {

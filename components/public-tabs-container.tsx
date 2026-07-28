@@ -10,6 +10,7 @@ import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { InlineLogin } from '@/components/inline-login'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
 import { BirdButton } from '@/components/flappy-bird/bird-button'
+import { MultiverseButton } from '@/components/multiverse-button'
 import { Home, ClipboardList, MessageSquare, Lock, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
@@ -260,6 +261,7 @@ export function PublicTabsContainer({
               <ThemeToggle />
               <PatchNotesButton />
               <BirdButton />
+              <MultiverseButton />
             </div>
 
             {user && (

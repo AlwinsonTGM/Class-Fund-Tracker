@@ -13,6 +13,7 @@ import { AddExpenseModal } from '@/components/add-expense-modal'
 import { StudentPaymentList } from '@/components/student-payment-list'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
 import { BirdButton } from '@/components/flappy-bird/bird-button'
+import { MultiverseButton } from '@/components/multiverse-button'
 import { Home, ClipboardList, MessageSquare, ShieldAlert, DollarSign, FileText, LogOut } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
@@ -254,6 +255,7 @@ export function OfficerTabsContainer({
               </div>
 
               <BirdButton />
+              <MultiverseButton />
               <PatchNotesButton />
               <ThemeToggle />
               <form 

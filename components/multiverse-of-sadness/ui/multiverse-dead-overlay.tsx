@@ -12,6 +12,7 @@ interface MultiverseDeadOverlayProps {
   tearsCount?: number
   runUnis?: number
   flapsCount?: number
+  totalCount?: number
 }
 
 export function MultiverseDeadOverlay({
@@ -24,7 +25,8 @@ export function MultiverseDeadOverlay({
   runsCount = 1,
   tearsCount = 0,
   runUnis = 0,
-  flapsCount = 0
+  flapsCount = 0,
+  totalCount = 42
 }: MultiverseDeadOverlayProps) {
   return (
     <div className="absolute inset-0 z-[8] flex flex-col items-center justify-center gap-[13px] text-center bg-[#04070c]/[0.68] p-[24px] transition-all duration-500 font-['Space_Grotesk']">
@@ -32,7 +34,7 @@ export function MultiverseDeadOverlay({
         run #{runsCount} concluded
       </div>
       
-      <p className="font-['Special_Elite'] text-[19px] text-[#e9f0f7] max-w-[330px] leading-[1.5] drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]">
+      <p className="font-['Special_Elite'] text-[19px] text-[#e9f0f7] max-w-[330px] leading-[1.6] drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]">
         {epitaph}
       </p>
 
@@ -76,7 +78,7 @@ export function MultiverseDeadOverlay({
           onClick={onOpenDex}
           className="font-['Space_Grotesk'] border border-[#22344a] px-[16px] py-[6px] text-[10.5px] font-medium tracking-[1.8px] uppercase text-[#7f93a8] rounded-[3px] transition-all duration-300 hover:border-[#3a5474] hover:text-[#c9d6e2] cursor-pointer flex items-center justify-center gap-2"
         >
-          <BookOpen className="w-3.5 h-3.5" /> View Dex ({unlockedCount}/40)
+          <BookOpen className="w-3.5 h-3.5" /> View Dex ({unlockedCount}/{totalCount})
         </button>
       </div>
 

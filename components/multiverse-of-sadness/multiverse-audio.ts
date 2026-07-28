@@ -12,14 +12,16 @@ export function createAudioContext(): AudioRefs {
   }
 
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     const audioCtx = new AudioCtx()
     const masterGain = audioCtx.createGain()
-    masterGain.gain.setValueAtTime(0.35, audioCtx.currentTime)
+    masterGain.gain.setValueAtTime(0.85, audioCtx.currentTime)
     masterGain.connect(audioCtx.destination)
 
     const rainGain = audioCtx.createGain()
-    rainGain.gain.setValueAtTime(0.04, audioCtx.currentTime)
+    rainGain.gain.setValueAtTime(0.08, audioCtx.currentTime)
     rainGain.connect(masterGain)
 
     return { audioCtx, masterGain, rainGain }
@@ -37,85 +39,155 @@ export function playTone(
 ) {
   const { audioCtx, masterGain } = refs
   if (!audioCtx || !masterGain || !soundEnabled) return
+
   if (audioCtx.state === 'suspended') {
-    audioCtx.resume()
+    audioCtx.resume().catch(() => {})
   }
 
-  const { type = 'sine', vol = 0.08, attack = 0.012, glide = 0, delay = 0 } = options
-  const startTime = audioCtx.currentTime + delay
+  const { type = 'sine', vol = 0.25, attack = 0.01, glide = 0, delay = 0 } = options
+  const startTime = Math.max(audioCtx.currentTime, 0.001) + delay
   const osc = audioCtx.createOscillator()
   const gain = audioCtx.createGain()
 
   osc.type = type
   osc.frequency.setValueAtTime(freq, startTime)
   if (glide) {
-    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freq + glide), startTime + dur)
+    const targetFreq = Math.max(20, freq + glide)
+    osc.frequency.linearRampToValueAtTime(targetFreq, startTime + dur)
   }
 
   gain.gain.setValueAtTime(0.0001, startTime)
   gain.gain.linearRampToValueAtTime(vol, startTime + attack)
-  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur)
+  gain.gain.linearRampToValueAtTime(0.0001, startTime + dur)
 
   osc.connect(gain)
   gain.connect(masterGain)
 
-  osc.start(startTime)
-  osc.stop(startTime + dur + 0.05)
+  try {
+    osc.start(startTime)
+    osc.stop(startTime + dur + 0.05)
+  } catch (e) {
+    // Ignore audio timing exceptions
+  }
 }
 
-export function playSigh(refs: AudioRefs, soundEnabled: boolean, vol = 0.03) {
+export function playSigh(refs: AudioRefs, soundEnabled: boolean, vol = 0.2) {
   const { audioCtx, masterGain } = refs
   if (!audioCtx || !masterGain || !soundEnabled) return
-  if (audioCtx.state === 'suspended') audioCtx.resume()
 
-  const startTime = audioCtx.currentTime
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {})
+  }
+
+  const startTime = Math.max(audioCtx.currentTime, 0.001)
   const osc = audioCtx.createOscillator()
   const gain = audioCtx.createGain()
 
   osc.type = 'sine'
-  osc.frequency.setValueAtTime(260, startTime)
-  osc.frequency.exponentialRampToValueAtTime(110, startTime + 0.65)
+  osc.frequency.setValueAtTime(280, startTime)
+  osc.frequency.linearRampToValueAtTime(110, startTime + 0.65)
 
   gain.gain.setValueAtTime(0.0001, startTime)
   gain.gain.linearRampToValueAtTime(vol, startTime + 0.12)
-  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.65)
+  gain.gain.linearRampToValueAtTime(0.0001, startTime + 0.65)
 
   osc.connect(gain)
   gain.connect(masterGain)
 
-  osc.start(startTime)
-  osc.stop(startTime + 0.7)
+  try {
+    osc.start(startTime)
+    osc.stop(startTime + 0.7)
+  } catch (e) {}
 }
 
-export const createSfxManager = (refs: AudioRefs, soundEnabled: boolean) => ({
-  flap: () => {
-    playTone(refs, soundEnabled, 280, 0.1, { glide: 140, vol: 0.09, type: 'triangle' })
-    playTone(refs, soundEnabled, 190, 0.2, { glide: -60, vol: 0.04, type: 'sine', delay: 0.03 })
-  },
-  score: () => {
-    playTone(refs, soundEnabled, 349.23, 0.18, { vol: 0.06 }) // F4
-    playTone(refs, soundEnabled, 440.0, 0.35, { vol: 0.07, delay: 0.08 }) // A4
-  },
-  die: () => {
-    playTone(refs, soundEnabled, 180, 0.45, { glide: -110, vol: 0.14, type: 'sawtooth' })
-    playSigh(refs, soundEnabled, 0.06)
-  },
-  near: () => {
-    playTone(refs, soundEnabled, 523.25, 0.12, { vol: 0.05, type: 'sine' })
-  },
-  portal: () => {
-    playTone(refs, soundEnabled, 220, 0.4, { glide: 220, vol: 0.07, type: 'sine' })
-    playTone(refs, soundEnabled, 440, 0.5, { glide: -150, vol: 0.05, type: 'triangle', delay: 0.1 })
-  },
-  sneeze: () => {
-    playTone(refs, soundEnabled, 600, 0.05, { glide: 400, vol: 0.1, type: 'square' })
-    playTone(refs, soundEnabled, 150, 0.25, { glide: -100, vol: 0.12, type: 'sawtooth', delay: 0.05 })
-  },
-  thunder: () => {
-    playTone(refs, soundEnabled, 80, 0.8, { glide: -50, vol: 0.2, type: 'sawtooth' })
-  },
-  chime: () => {
-    playTone(refs, soundEnabled, 587.33, 0.4, { vol: 0.08, type: 'sine' })
-    playTone(refs, soundEnabled, 880.0, 0.5, { vol: 0.08, delay: 0.1, type: 'sine' })
+export type SoundMode = 'multiverse' | 'original' | 'off'
+
+export interface AudioVolumes {
+  video: number
+  flap: number
+  score: number
+}
+
+export const createSfxManager = (
+  refs: AudioRefs,
+  soundMode: SoundMode,
+  volumes: AudioVolumes = { video: 0.45, flap: 1, score: 1 }
+) => {
+  const isEnabled = soundMode !== 'off'
+  const flapVol = Math.max(0, Math.min(1, volumes.flap ?? 1))
+  const scoreVol = Math.max(0, Math.min(1, volumes.score ?? 1))
+
+  return {
+    flap: () => {
+      if (!isEnabled || flapVol <= 0) return
+      if (soundMode === 'original') {
+        // Classic Flappy 8-Bit Jump sound (high square pitch sweep up 520Hz -> 820Hz)
+        playTone(refs, true, 520, 0.06, { glide: 300, vol: 0.35 * flapVol, type: 'square' })
+      } else {
+        // Multiverse Atmospheric Synth flap
+        playTone(refs, true, 320, 0.08, { glide: -120, vol: 0.35 * flapVol, type: 'triangle' })
+        playTone(refs, true, 220, 0.12, { glide: -80, vol: 0.18 * flapVol, type: 'sine', delay: 0.02 })
+      }
+    },
+    score: () => {
+      if (!isEnabled || scoreVol <= 0) return
+      if (soundMode === 'original') {
+        // Classic Flappy 8-Bit Point Sound (2-tone high pitch ping: B5 -> E6)
+        playTone(refs, true, 987.77, 0.08, { vol: 0.3 * scoreVol, type: 'square' })
+        playTone(refs, true, 1318.51, 0.16, { vol: 0.35 * scoreVol, delay: 0.06, type: 'square' })
+      } else {
+        // Multiverse Synth score
+        playTone(refs, true, 349.23, 0.14, { vol: 0.22 * scoreVol, type: 'sine' }) // F4
+        playTone(refs, true, 440.0, 0.18, { vol: 0.25 * scoreVol, delay: 0.06, type: 'sine' }) // A4
+        playTone(refs, true, 523.25, 0.28, { vol: 0.28 * scoreVol, delay: 0.12, type: 'triangle' }) // C5
+      }
+    },
+    die: () => {
+      if (!isEnabled) return
+      if (soundMode === 'original') {
+        // Classic Flappy 8-Bit Hit & Fall sound
+        playTone(refs, true, 180, 0.12, { glide: -100, vol: 0.45, type: 'sawtooth' })
+        playTone(refs, true, 500, 0.35, { glide: -350, vol: 0.35, type: 'square', delay: 0.12 })
+      } else {
+        // Multiverse Synth die
+        playTone(refs, true, 240, 0.45, { glide: -160, vol: 0.4, type: 'sawtooth' })
+        playSigh(refs, true, 0.2)
+      }
+    },
+    near: () => {
+      if (!isEnabled) return
+      if (soundMode === 'original') {
+        playTone(refs, true, 784, 0.08, { vol: 0.3, type: 'square' })
+      } else {
+        playTone(refs, true, 523.25, 0.12, { vol: 0.2, type: 'sine' })
+      }
+    },
+    portal: () => {
+      if (!isEnabled) return
+      if (soundMode === 'original') {
+        // 8-bit Teleport Arpeggio (C5 -> E5 -> G5 -> C6)
+        playTone(refs, true, 523.25, 0.06, { vol: 0.25, type: 'square' })
+        playTone(refs, true, 659.25, 0.06, { vol: 0.25, delay: 0.05, type: 'square' })
+        playTone(refs, true, 783.99, 0.06, { vol: 0.25, delay: 0.1, type: 'square' })
+        playTone(refs, true, 1046.5, 0.12, { vol: 0.3, delay: 0.15, type: 'square' })
+      } else {
+        playTone(refs, true, 220, 0.35, { glide: 260, vol: 0.3, type: 'sine' })
+        playTone(refs, true, 480, 0.45, { glide: -180, vol: 0.22, type: 'triangle', delay: 0.08 })
+      }
+    },
+    sneeze: () => {
+      if (!isEnabled) return
+      playTone(refs, true, 650, 0.05, { glide: 350, vol: 0.35, type: 'square' })
+      playTone(refs, true, 160, 0.25, { glide: -110, vol: 0.38, type: 'sawtooth', delay: 0.04 })
+    },
+    thunder: () => {
+      if (!isEnabled) return
+      playTone(refs, true, 90, 0.85, { glide: -60, vol: 0.45, type: 'sawtooth' })
+    },
+    chime: () => {
+      if (!isEnabled) return
+      playTone(refs, true, 587.33, 0.35, { vol: 0.25, type: 'sine' })
+      playTone(refs, true, 880.0, 0.45, { vol: 0.25, delay: 0.08, type: 'sine' })
+    }
   }
-})
+}
