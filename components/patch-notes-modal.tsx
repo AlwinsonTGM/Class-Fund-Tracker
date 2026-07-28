@@ -24,6 +24,7 @@ const PATCH_NOTES: PatchEntry[] = [
     emoji: '⚡',
     changes: [
       { type: 'fix', text: 'Instantaneous Checklist Toggles — fixed a bug where officers had to wait up to 10 seconds per item update. Toggling payment status is now instantaneous (0ms UI latency) and supports rapid multi-student updates concurrently. (Special thanks to Dandan for reporting this bug!)' },
+      { type: 'fix', text: 'Week Selection Persistence — fixed an issue where marking a checklist item in Week 2 automatically reset the view back to Week 1 upon server revalidation.' },
       { type: 'improve', text: 'Non-Blocking Background Synchronization — replaced global UI lock with fine-grained per-item pending states and smooth background sync indicators.' },
       { type: 'improve', text: 'Parallel Officer Verification — optimized server authentication checks to run database queries concurrently for faster response times.' },
     ],

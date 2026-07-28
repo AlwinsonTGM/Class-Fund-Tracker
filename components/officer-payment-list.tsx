@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
 import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
@@ -37,6 +37,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
 
   const [selectedWeek, setSelectedWeek] = useState(1)
+  const hasInitializedWeek = useRef(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
   const [isExpanded, setIsExpanded] = useState(false)
@@ -45,10 +46,18 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set())
   const [poppingIds, setPoppingIds] = useState<Set<number>>(new Set())
 
-  // Sync selected week to the lowest week number initially
+  // Sync selected week to the lowest week number initially or if selected week is no longer valid
   useEffect(() => {
     if (sortedWeeks.length > 0) {
-      setSelectedWeek(sortedWeeks[0].week_number)
+      if (!hasInitializedWeek.current) {
+        setSelectedWeek(sortedWeeks[0].week_number)
+        hasInitializedWeek.current = true
+      } else {
+        const weekExists = sortedWeeks.some((w) => w.week_number === selectedWeek)
+        if (!weekExists) {
+          setSelectedWeek(sortedWeeks[0].week_number)
+        }
+      }
     }
   }, [weeks])
 

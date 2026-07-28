@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Search, AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { SubmitReceiptModal } from '@/components/submit-receipt-modal'
 
@@ -43,13 +43,22 @@ export function StudentPaymentList({ students = [], payments = [], weeks = [] }:
   
   // Set default selected week to the lowest week number, or 1 if empty
   const [selectedWeek, setSelectedWeek] = useState(1)
+  const hasInitializedWeek = useRef(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
   const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
     if (sortedWeeks.length > 0) {
-      setSelectedWeek(sortedWeeks[0].week_number)
+      if (!hasInitializedWeek.current) {
+        setSelectedWeek(sortedWeeks[0].week_number)
+        hasInitializedWeek.current = true
+      } else {
+        const weekExists = sortedWeeks.some((w) => w.week_number === selectedWeek)
+        if (!weekExists) {
+          setSelectedWeek(sortedWeeks[0].week_number)
+        }
+      }
     }
   }, [weeks])
 

@@ -67,6 +67,7 @@ A modern, responsive, and secure web application designed to track class fund co
 
 ### ⚡ 23. Officer Student Checklist Instantaneous Toggles & Non-Blocking Sync (v1.26)
 - **Instantaneous Checklist Toggles**: Eliminated the 10-second blocking delay when marking student payments. Toggling payment status is now instantaneous (0ms UI latency) and supports rapid multi-student updates concurrently. *(Special thanks to Dandan for reporting this bug!)*
+- **Week Selection Persistence**: Preserved the active week dropdown state (`useRef` guarded) so toggling a student's payment status in Week 2 no longer resets the view back to Week 1 on server revalidation.
 - **Non-Blocking Background Sync**: Replaced global UI locks with fine-grained per-item pending keys (`pendingKeys`) and smooth animated sync indicators (`Loader2`).
 - **Parallel Officer Verification**: Optimized server authentication checks to run database queries (`moderators` and `officers`) concurrently with `Promise.all` and `.maybeSingle()`.
 
