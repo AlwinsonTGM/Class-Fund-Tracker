@@ -157,18 +157,18 @@ export function BalanceCard({ balance }: BalanceCardProps) {
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-background/60 sm:text-xs">Class Treasury</p>
           <div className="flex flex-col gap-0.5">
             <h2 id="balance-heading" className="text-xs font-medium text-background/60 sm:text-sm">Total Fund Balance</h2>
-            <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-2xl font-bold tracking-tight text-background sm:text-4xl md:text-5xl" style={{ wordBreak: 'break-word' }}>
+            <div className="relative inline-flex items-center gap-2.5 flex-nowrap min-w-0 max-w-full">
+              <p className="text-2xl font-bold tracking-tight text-background sm:text-4xl md:text-5xl truncate shrink-0">
                 {formattedBalance}
               </p>
               {delta !== null && (
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold tracking-wide animate-bounce ${
+                  className={`inline-flex shrink-0 items-center px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 ${
                     delta > 0
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
                       : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
                   }`}
-                  style={{ animationDuration: '600ms', animationIterationCount: '2' }}
+                  style={{ animation: 'stagger-in 300ms var(--ease-spring-smooth) both' }}
                 >
                   {formattedDelta}
                 </span>
