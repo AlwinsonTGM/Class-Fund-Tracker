@@ -101,13 +101,13 @@ export function FinancialAuditReportModal({
 
   const modalContent = isOpen && (
     <div
-      className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:static print:z-auto print:block"
+      className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:static print:z-auto print:block financial-audit-modal-portal"
       role="dialog"
       aria-modal="true"
       aria-labelledby="audit-report-title"
     >
       {/* Modal Card container */}
-      <div className="bg-card text-card-foreground border border-border rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden print:max-h-none print:border-none print:shadow-none print:rounded-none print:w-full print:bg-white print:text-black">
+      <div className="bg-card text-card-foreground border border-border rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden print:max-h-none print:border-none print:shadow-none print:rounded-none print:w-full print:bg-white print:text-black print:overflow-visible print:p-0 print:static">
         
         {/* Modal Top Bar (Hidden on print) */}
         <div className="flex items-center justify-between border-b border-border px-3 sm:px-6 py-3 sm:py-4 bg-muted/40 print:hidden shrink-0 gap-2">
@@ -167,10 +167,10 @@ export function FinancialAuditReportModal({
         </div>
 
         {/* Scrollable Printable Statement Body */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-foreground print:p-6 print:overflow-visible print:text-black">
+        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-foreground print:p-0 print:overflow-visible print:text-black print:space-y-5">
           
           {/* Statement Header */}
-          <div className="border-b border-border pb-4 print:border-black">
+          <div className="border-b border-border pb-4 print:border-black print:pb-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-foreground print:text-black">
@@ -188,11 +188,11 @@ export function FinancialAuditReportModal({
           </div>
 
           {/* Financial Summary Metric Cards Grid */}
-          <div>
+          <div className="print-break-inside-avoid">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground print:text-gray-700 mb-3 flex items-center gap-1.5">
               <PieChart className="h-4 w-4 print:hidden" /> Summary Metrics
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 print:grid-cols-4 print:gap-3">
               <div className="p-2.5 sm:p-4 rounded-2xl bg-muted/50 border border-border print:bg-white print:border-gray-300">
                 <p className="text-xs font-medium text-muted-foreground print:text-gray-600">Total Collections</p>
                 <p className="text-base sm:text-xl md:text-2xl font-bold text-foreground print:text-black mt-1">
@@ -221,7 +221,7 @@ export function FinancialAuditReportModal({
           </div>
 
           {/* Recorded Expenses Breakdown Table */}
-          <div>
+          <div className="print-break-inside-avoid">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground print:text-gray-700 mb-3">
               Expenses Breakdown
             </h3>
@@ -230,7 +230,7 @@ export function FinancialAuditReportModal({
                 No recorded expenses found.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border print:border-gray-300">
+              <div className="overflow-x-auto rounded-xl border border-border print:border-gray-300 print:overflow-visible">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-muted/60 border-b border-border print:bg-gray-100 print:border-gray-300">
@@ -264,8 +264,8 @@ export function FinancialAuditReportModal({
           </div>
 
           {/* Official Signatures Block */}
-          <div className="pt-8 border-t border-border print:border-gray-300 mt-8">
-            <div className="flex flex-row justify-between items-end gap-8 pt-4">
+          <div className="pt-8 border-t border-border print:border-gray-300 mt-8 print:mt-6 print:pt-4 print-break-inside-avoid">
+            <div className="flex flex-row justify-between items-end gap-8 pt-4 print:pt-2">
               <div className="flex-1 text-center">
                 <div className="border-b border-foreground/40 print:border-black pb-1 font-semibold text-xs text-foreground print:text-black">
                   Prepared by: Class Treasurer

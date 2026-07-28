@@ -327,3 +327,49 @@ button, a, input, select, label, [role="button"] {
     color: var(--foreground);
   }
 }
+
+/* ─── Print Styles for Financial Audit Report Statement ─── */
+@media print {
+  @page {
+    size: portrait;
+    margin: 12mm 15mm;
+  }
+
+  /* Hide all elements under body except the portal container for the financial audit modal */
+  body > :not(.financial-audit-modal-portal) {
+    display: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .financial-audit-modal-portal {
+    position: static !important;
+    display: block !important;
+    inset: auto !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+  }
+
+  .print-break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+

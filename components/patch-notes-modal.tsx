@@ -23,6 +23,7 @@ const PATCH_NOTES: PatchEntry[] = [
     title: 'Desktop Approval Queue Placement, Mobile Queue Notification Sign & Week Selector Layout Fix',
     emoji: '🔔',
     changes: [
+      { type: 'fix', text: 'Financial Audit PDF Print Isolation — fixed PDF print export where background dashboard pages were included prior to the statement. Dashboard elements are now completely hidden during print, generating a clean PDF statement starting on page 1.' },
       { type: 'improve', text: 'Digital Proof Approval Queue Desktop Placement — moved the digital proof approval queue directly under the Total Fund Balance on desktop screens for quick access.' },
       { type: 'new', text: 'Mobile Queue Notification Sign & Badges — added an animated glowing notification sign badge to the approval queue panel header and Portal bottom nav icon whenever pending proof uploads exist.' },
       { type: 'fix', text: 'Mobile Week Selector Alignment & Truncation — fixed mobile edge overflow and text alignment for the "Selected Week" dropdown so long date range options fit cleanly without spilling over.' },
