@@ -259,22 +259,28 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
     }
   }, [user])
 
+  const unplayedVideoIndicesRef = useRef<number[]>([])
+
   // Video Queueing & Playback Effects for Multiverse Mode
-  const getRandomVideoIndex = () => {
-    if (MULTIVERSE_VIDEOS.length <= 1) return 0
-    let nextIdx = Math.floor(Math.random() * MULTIVERSE_VIDEOS.length)
-    while (nextIdx === lastVideoIndexRef.current) {
-      nextIdx = Math.floor(Math.random() * MULTIVERSE_VIDEOS.length)
+  const getNextRandomVideoUrl = () => {
+    if (MULTIVERSE_VIDEOS.length === 0) return ''
+    if (unplayedVideoIndicesRef.current.length === 0) {
+      const indices = Array.from({ length: MULTIVERSE_VIDEOS.length }, (_, i) => i)
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[indices[i], indices[j]] = [indices[j], indices[i]]
+      }
+      unplayedVideoIndicesRef.current = indices
     }
-    lastVideoIndexRef.current = nextIdx
-    return nextIdx
+    const nextIdx = unplayedVideoIndicesRef.current.pop()!
+    return MULTIVERSE_VIDEOS[nextIdx]
   }
 
   useEffect(() => {
     if (gameMode === 'multiverse' && gameState === 'PLAYING' && score >= 6) {
       if (!videoSrcA && !videoSrcB) {
-        const idx = getRandomVideoIndex()
-        setVideoSrcA(MULTIVERSE_VIDEOS[idx])
+        const nextUrl = getNextRandomVideoUrl()
+        setVideoSrcA(nextUrl)
         setActiveVideoSlot('A')
       }
     }
@@ -291,6 +297,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
       }
       setVideoSrcA('')
       setVideoSrcB('')
+      unplayedVideoIndicesRef.current = []
     }
   }, [gameMode, gameState, score])
 
@@ -311,8 +318,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
 
     if (videoEl.duration - videoEl.currentTime <= 1.5) {
       isVideoTransitioningRef.current = true
-      const nextIdx = getRandomVideoIndex()
-      const nextUrl = MULTIVERSE_VIDEOS[nextIdx]
+      const nextUrl = getNextRandomVideoUrl()
 
       if (activeVideoSlot === 'A') {
         setVideoSrcB(nextUrl)
@@ -331,8 +337,7 @@ export function FlappyBirdGame({ user }: FlappyBirdGameProps) {
   const handleVideoEnded = () => {
     if (gameState !== 'PLAYING' || gameMode !== 'multiverse') return
     if (isVideoTransitioningRef.current) return
-    const nextIdx = getRandomVideoIndex()
-    const nextUrl = MULTIVERSE_VIDEOS[nextIdx]
+    const nextUrl = getNextRandomVideoUrl()
 
     if (activeVideoSlot === 'A') {
       setVideoSrcB(nextUrl)

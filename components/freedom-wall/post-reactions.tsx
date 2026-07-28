@@ -12,9 +12,8 @@ import {
   saveUserReactions
 } from './constants'
 
-export function PostReactions(_props: { postId: number; colorKey: string; user?: UserType | null }) {
-  return null
-}
+export function PostReactions({ postId, colorKey, user }: { postId: number; colorKey: string; user?: UserType | null }) {
+  const [reactions, setReactions] = useState<Record<string, number>>({})
   const [userHasReacted, setUserHasReacted] = useState<Record<string, boolean>>({})
   const [showPicker, setShowPicker] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -85,6 +84,7 @@ export function PostReactions(_props: { postId: number; colorKey: string; user?:
   }
 
   const reactionEntries = Object.entries(reactions).filter(([, count]) => count > 0 || reactions[DEFAULT_REACTION] !== undefined)
+  const colors = COLOR_MAP[colorKey] || COLOR_MAP.yellow
 
   return (
     <div className="relative flex flex-wrap items-center gap-1 mt-2 pt-2 border-t border-black/5 dark:border-white/5">

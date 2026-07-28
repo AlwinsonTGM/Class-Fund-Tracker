@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useTransition } from 'react'
+import React, { useState, useEffect } from 'react'
 import { togglePaymentStatus } from '@/app/officer-dashboard/actions'
-import { Search, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 
 interface Student {
@@ -42,7 +42,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   const [isExpanded, setIsExpanded] = useState(false)
   const [payments, setPayments] = useState<Payment[]>(initialPayments)
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({})
-  const [isPending, startTransition] = useTransition()
+  const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set())
   const [poppingIds, setPoppingIds] = useState<Set<number>>(new Set())
 
   // Sync selected week to the lowest week number initially
@@ -52,10 +52,50 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
     }
   }, [weeks])
 
-  // Sync payments state when initialPayments prop updates from the server
+  // Sync payments state when initialPayments prop updates from the server,
+  // preserving any in-flight optimistic updates for pending items.
   useEffect(() => {
-    setPayments(initialPayments)
-  }, [initialPayments])
+    setPayments((prevLocal) => {
+      if (pendingKeys.size === 0) {
+        return initialPayments
+      }
+
+      const updated = [...initialPayments]
+
+      pendingKeys.forEach((key) => {
+        const [studentIdStr, weekNumStr] = key.split('-')
+        const studentId = Number(studentIdStr)
+        const weekNum = Number(weekNumStr)
+
+        const localPaid = prevLocal.some(
+          (p) => p.student_id === studentId && p.week_number === weekNum && p.status === 'paid'
+        )
+
+        const existingIdx = updated.findIndex(
+          (p) => p.student_id === studentId && p.week_number === weekNum
+        )
+
+        if (localPaid) {
+          if (existingIdx >= 0) {
+            updated[existingIdx] = { ...updated[existingIdx], status: 'paid' }
+          } else {
+            updated.push({
+              id: Date.now() + Math.random(),
+              student_id: studentId,
+              week_number: weekNum,
+              status: 'paid'
+            })
+          }
+        } else {
+          if (existingIdx >= 0) {
+            updated.splice(existingIdx, 1)
+          }
+        }
+      })
+
+      return updated
+    })
+  }, [initialPayments, pendingKeys])
 
   // Get active week info
   const activeWeek = sortedWeeks.find((w) => w.week_number === selectedWeek)
@@ -91,56 +131,92 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
   // Limit visible items unless expanded
   const visibleStudents = isExpanded ? displayedStudents : displayedStudents.slice(0, 15)
 
-  // Toggle function
+  // Toggle function - handles rapid multiple clicks smoothly without blocking UI
   const handleToggle = async (studentId: number, studentName: string, currentlyPaid: boolean) => {
     const targetPaid = !currentlyPaid
-    const errorKey = `${studentId}-${selectedWeek}`
+    const key = `${studentId}-${selectedWeek}`
 
-    // Clear previous error
+    // Clear previous error for this item
     setLocalErrors((prev) => {
+      if (!prev[key]) return prev
       const next = { ...prev }
-      delete next[errorKey]
+      delete next[key]
       return next
     })
 
-    // Optimistically update local payments state
-    let backupPayments = [...payments]
-    if (targetPaid) {
-      const optPayment: Payment = {
-        id: Date.now(),
-        student_id: studentId,
-        week_number: selectedWeek,
-        status: 'paid'
-      }
-      setPayments((prev) => [...prev, optPayment])
-    } else {
-      setPayments((prev) =>
-        prev.filter((p) => !(p.student_id === studentId && p.week_number === selectedWeek))
-      )
-    }
+    // Track as pending
+    setPendingKeys((prev) => new Set(prev).add(key))
 
-    // Call the Server Action
-    startTransition(async () => {
-      try {
-        const result = await togglePaymentStatus(studentId, selectedWeek, targetPaid, studentName)
-        if (!result || !result.success) {
-          throw new Error('Save failed')
-        }
-        toast.success(
-          `${studentName} marked as ${targetPaid ? 'Paid' : 'Unpaid'} for Week ${selectedWeek}.`,
-          'Payment Status Updated'
+    // Optimistically update local payments state immediately
+    setPayments((prev) => {
+      if (targetPaid) {
+        const exists = prev.some(
+          (p) => p.student_id === studentId && p.week_number === selectedWeek && p.status === 'paid'
         )
-      } catch (err: any) {
-        console.error('Error toggling payment status:', err)
-        setPayments(backupPayments)
-        const msg = err.message || 'Failed to save payment status change.'
-        setLocalErrors((prev) => ({
+        if (exists) return prev
+        return [
           ...prev,
-          [errorKey]: msg
-        }))
-        toast.error(msg, 'Update Failed')
+          {
+            id: Date.now(),
+            student_id: studentId,
+            week_number: selectedWeek,
+            status: 'paid'
+          }
+        ]
+      } else {
+        return prev.filter(
+          (p) => !(p.student_id === studentId && p.week_number === selectedWeek)
+        )
       }
     })
+
+    try {
+      const result = await togglePaymentStatus(studentId, selectedWeek, targetPaid, studentName)
+      if (!result || !result.success) {
+        throw new Error(result?.error || 'Save failed')
+      }
+      toast.success(
+        `${studentName} marked as ${targetPaid ? 'Paid' : 'Unpaid'} for Week ${selectedWeek}.`,
+        'Payment Status Updated'
+      )
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save payment status change.'
+      console.error('Error toggling payment status:', err)
+
+      // Targeted rollback for ONLY this student & week if server save failed
+      setPayments((prev) => {
+        if (currentlyPaid) {
+          const exists = prev.some(
+            (p) => p.student_id === studentId && p.week_number === selectedWeek && p.status === 'paid'
+          )
+          if (exists) return prev
+          return [
+            ...prev,
+            {
+              id: Date.now(),
+              student_id: studentId,
+              week_number: selectedWeek,
+              status: 'paid'
+            }
+          ]
+        } else {
+          return prev.filter(
+            (p) => !(p.student_id === studentId && p.week_number === selectedWeek)
+          )
+        }
+      })
+      setLocalErrors((prev) => ({
+        ...prev,
+        [key]: errorMsg
+      }))
+      toast.error(errorMsg, 'Update Failed')
+    } finally {
+      setPendingKeys((prev) => {
+        const next = new Set(prev)
+        next.delete(key)
+        return next
+      })
+    }
   }
 
   return (
@@ -267,6 +343,7 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
                 const isPaid = isStudentPaid(student.id)
                 const errorKey = `${student.id}-${selectedWeek}`
                 const hasError = localErrors[errorKey]
+                const isItemPending = pendingKeys.has(errorKey)
 
                 return (
                   <li
@@ -292,14 +369,16 @@ export function OfficerPaymentList({ students = [], initialPayments = [], weeks 
 
                     <div className="flex items-center gap-3 shrink-0">
                       <label className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 cursor-pointer select-none p-1">
-                        <span className="hidden text-sm text-muted-foreground sm:inline">
+                        <span className="hidden text-sm text-muted-foreground sm:inline-flex items-center gap-1.5">
                           {isPaid ? 'Paid' : 'Unpaid'}
+                          {isItemPending && (
+                            <Loader2 className="h-3 w-3 animate-spin text-primary shrink-0" />
+                          )}
                         </span>
-                        <div className={`${poppingIds.has(student.id) ? 'anim-check-pop' : ''}`}>
+                        <div className={`${poppingIds.has(student.id) ? 'anim-check-pop' : ''} relative flex items-center justify-center`}>
                           <input
                             type="checkbox"
                             checked={isPaid}
-                            disabled={isPending}
                             onChange={() => {
                               setPoppingIds((prev) => new Set(prev).add(student.id))
                               setTimeout(() => {

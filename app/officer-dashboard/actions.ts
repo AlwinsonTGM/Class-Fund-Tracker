@@ -12,28 +12,16 @@ async function verifyOfficerStatus() {
     throw new Error('Unauthorized: You must be logged in as an officer.')
   }
 
-  // 2. Verify whitelist membership in moderators table
-  const { data: moderator } = await supabase
-    .from('moderators')
-    .select('email')
-    .eq('email', user.email)
-    .single()
+  // 2. Verify whitelist membership in moderators or officers table in parallel
+  const [modRes, offRes] = await Promise.all([
+    supabase.from('moderators').select('email').eq('email', user.email).maybeSingle(),
+    supabase.from('officers').select('email').eq('email', user.email).maybeSingle()
+  ])
 
-  let isOfficer = false
-  try {
-    const { data: officer, error: offError } = await supabase
-      .from('officers')
-      .select('email')
-      .eq('email', user.email)
-      .single()
-    if (!offError && officer) {
-      isOfficer = true
-    }
-  } catch (err) {
-    console.warn('Officers table query failed inside verifyOfficerStatus:', err)
-  }
+  const isModerator = !!modRes.data
+  const isOfficer = !!offRes.data
 
-  if (!moderator && !isOfficer) {
+  if (!isModerator && !isOfficer) {
     throw new Error('Access Denied: You do not have officer privileges.')
   }
 
