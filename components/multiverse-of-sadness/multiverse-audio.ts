@@ -100,12 +100,29 @@ export function playSigh(refs: AudioRefs, soundEnabled: boolean, vol = 0.2) {
   } catch (e) {}
 }
 
-export type SoundMode = 'multiverse' | 'original' | 'off'
+export type SoundMode = 'multiverse' | 'original' | 'flappy' | 'off'
 
 export interface AudioVolumes {
   video: number
   flap: number
   score: number
+}
+
+// Play a short WAV file from /flappy/audio/ by cloning the audio element for overlap
+const _flappyPool: Record<string, HTMLAudioElement | null> = {}
+function playFlappyWav(src: string, vol = 1) {
+  if (typeof window === 'undefined') return
+  try {
+    let base = _flappyPool[src]
+    if (!base) {
+      base = new window.Audio(src)
+      base.preload = 'auto'
+      _flappyPool[src] = base
+    }
+    const clone = base.cloneNode() as HTMLAudioElement
+    clone.volume = Math.max(0, Math.min(1, vol))
+    clone.play().catch(() => {})
+  } catch (e) {}
 }
 
 export const createSfxManager = (
@@ -120,7 +137,10 @@ export const createSfxManager = (
   return {
     flap: () => {
       if (!isEnabled || flapVol <= 0) return
-      if (soundMode === 'original') {
+      if (soundMode === 'flappy') {
+        // Real original flappy bird wing WAV
+        playFlappyWav('/flappy/audio/sfx_wing.wav', flapVol * 0.9)
+      } else if (soundMode === 'original') {
         // Classic Flappy 8-Bit Jump sound (high square pitch sweep up 520Hz -> 820Hz)
         playTone(refs, true, 520, 0.06, { glide: 300, vol: 0.35 * flapVol, type: 'square' })
       } else {
@@ -131,7 +151,10 @@ export const createSfxManager = (
     },
     score: () => {
       if (!isEnabled || scoreVol <= 0) return
-      if (soundMode === 'original') {
+      if (soundMode === 'flappy') {
+        // Real original flappy bird point/ting WAV
+        playFlappyWav('/flappy/audio/sfx_point.wav', scoreVol * 0.9)
+      } else if (soundMode === 'original') {
         // Classic Flappy 8-Bit Point Sound (2-tone high pitch ping: B5 -> E6)
         playTone(refs, true, 987.77, 0.08, { vol: 0.3 * scoreVol, type: 'square' })
         playTone(refs, true, 1318.51, 0.16, { vol: 0.35 * scoreVol, delay: 0.06, type: 'square' })

@@ -11,7 +11,7 @@ import {
   COMMENT_POOL,
   TUTORIAL_POUPS,
   ANIME_ATTACKS,
-  MULTIVERSE_VIDEOS,
+
   NEAR_MISS_QUOTES,
   UniverseConfig,
   RarityTier,
@@ -38,7 +38,9 @@ import { MultiverseDeadOverlay } from './ui/multiverse-dead-overlay'
 import { MultiverseUniverseCard } from './ui/multiverse-universe-card'
 import { MultiverseSidePanel } from './ui/multiverse-side-panel'
 import { MultiverseDexModal } from './ui/multiverse-dex-modal'
+import { MultiverseBetaModal } from './ui/multiverse-beta-modal'
 import { getFusionKey } from './multiverse-fusions'
+import { loadCustomAssetsForUniverse } from './custom-assets'
 
 const SPEED = 150
 const GRAV = 950.0
@@ -52,18 +54,12 @@ export function MultiverseGameStandalone() {
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const screenRef = useRef<HTMLDivElement | null>(null)
 
-  // Video slots for crossfading
-  const videoRefA = useRef<HTMLVideoElement | null>(null)
-  const videoRefB = useRef<HTMLVideoElement | null>(null)
-  const [videoSrcA, setVideoSrcA] = useState<string>('')
-  const [videoSrcB, setVideoSrcB] = useState<string>('')
-  const [activeVideoSlot, setActiveVideoSlot] = useState<'A' | 'B'>('A')
-  const unplayedVideoIndicesRef = useRef<number[]>([])
-  const isVideoTransitioningRef = useRef<boolean>(false)
-  const offscreenCtxRef = useRef<CanvasRenderingContext2D | null>(null)
+
 
   // Audio Context State Ref
   const audioRefs = useRef<AudioRefs>({ audioCtx: null, masterGain: null, rainGain: null })
+  // sfxRef always holds the up-to-date SFX manager so game loop closures never go stale
+  const sfxRef = useRef(createSfxManager({ audioCtx: null, masterGain: null, rainGain: null }, 'multiverse', { video: 0.45, flap: 0.8, score: 0.8 }))
 
   // UI States
   const [mode, setMode] = useState<'start' | 'play' | 'dead'>('start')
@@ -75,10 +71,10 @@ export function MultiverseGameStandalone() {
   const [runUnis, setRunUnis] = useState(0)
   const [currentUniIndex, setCurrentUniIndex] = useState(0)
   const [soundMode, setSoundMode] = useState<SoundMode>('multiverse')
-  const [pixelatedVideo, setPixelatedVideo] = useState(true)
   const [volumes, setVolumes] = useState<AudioVolumes>({ video: 0.45, flap: 0.8, score: 0.8 })
 
-  // Multiverse Dex & Ban State
+  // Multiverse Dex & Beta Modal State
+  const [isBetaModalOpen, setIsBetaModalOpen] = useState(true)
   const [isDexOpen, setIsDexOpen] = useState(false)
   const [unlockedUniIds, setUnlockedUniIds] = useState<string[]>(['rain'])
   const [unlockedFusionKeys, setUnlockedFusionKeys] = useState<string[]>([])
@@ -232,6 +228,11 @@ export function MultiverseGameStandalone() {
     }
 
     sceneryRef.current = { buildings: b, skyW: x, clouds, puddles }
+
+    // Pre-load bird images for every universe so they're ready before gameplay starts
+    for (let i = 0; i < UNIVERSE_CONFIGS.length; i++) {
+      loadCustomAssetsForUniverse(i)
+    }
   }, [])
 
   const updateVolumes = (newVols: Partial<AudioVolumes>) => {
@@ -252,20 +253,18 @@ export function MultiverseGameStandalone() {
     if (audioRefs.current.audioCtx && audioRefs.current.audioCtx.state === 'suspended') {
       audioRefs.current.audioCtx.resume().catch(() => {})
     }
-    // Enable background video audio on user interaction if sound is on
-    const activeVideo = activeVideoSlot === 'A' ? videoRefA.current : videoRefB.current
-    if (activeVideo && soundMode !== 'off') {
-      activeVideo.muted = volumes.video === 0
-      activeVideo.volume = Math.max(0, Math.min(1, volumes.video))
-    }
   }
 
+  // Always build sfx from the live audioRefs so it never captures a stale null context
   const sfx = createSfxManager(audioRefs.current, soundMode, volumes)
+  // Keep sfxRef current so the game loop closure always has the latest manager
+  sfxRef.current = sfx
 
   const cycleSoundMode = () => {
     setSoundMode(prev => {
       if (prev === 'multiverse') return 'original'
-      if (prev === 'original') return 'off'
+      if (prev === 'original') return 'flappy'
+      if (prev === 'flappy') return 'off'
       return 'multiverse'
     })
     initAudio()
@@ -300,20 +299,7 @@ export function MultiverseGameStandalone() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Video deck shuffle helper
-  const getNextRandomVideoUrl = () => {
-    if (MULTIVERSE_VIDEOS.length === 0) return ''
-    if (unplayedVideoIndicesRef.current.length === 0) {
-      const indices = Array.from({ length: MULTIVERSE_VIDEOS.length }, (_, i) => i)
-      for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[indices[i], indices[j]] = [indices[j], indices[i]]
-      }
-      unplayedVideoIndicesRef.current = indices
-    }
-    const nextIdx = unplayedVideoIndicesRef.current.pop()!
-    return MULTIVERSE_VIDEOS[nextIdx]
-  }
+
 
   // Record witnessed universe to state & localStorage
   const unlockUniverse = (id: string) => {
@@ -379,7 +365,7 @@ export function MultiverseGameStandalone() {
       setRunUnis(S.current.runUnis)
       S.current.flash = 1.0
       S.current.justShifted = true
-      sfx.portal()
+      sfxRef.current.portal()
     }
 
   }
@@ -400,73 +386,7 @@ export function MultiverseGameStandalone() {
     return UNIVERSE_CONFIGS.findIndex(u => u.id === picked.id)
   }
 
-  // Video Queueing & Playback Effects for Multiverse Mode
-  useEffect(() => {
-    if (score >= 6 && mode === 'play' && (!videoSrcA || !videoSrcB)) {
-      const firstUrl = getNextRandomVideoUrl()
-      const secondUrl = getNextRandomVideoUrl()
-      setVideoSrcA(firstUrl)
-      setVideoSrcB(secondUrl)
-      setActiveVideoSlot('A')
-    }
-  }, [score, mode, videoSrcA, videoSrcB])
 
-  useEffect(() => {
-    const activeVideo = activeVideoSlot === 'A' ? videoRefA.current : videoRefB.current
-    const inactiveVideo = activeVideoSlot === 'A' ? videoRefB.current : videoRefA.current
-
-    if (inactiveVideo) {
-      inactiveVideo.pause()
-    }
-
-    if (activeVideo && mode === 'play' && score >= 6) {
-      activeVideo.muted = soundMode === 'off' || volumes.video === 0
-      activeVideo.volume = soundMode === 'off' ? 0 : Math.max(0, Math.min(1, volumes.video))
-      activeVideo.play().catch(() => {
-        activeVideo.muted = true
-        activeVideo.play().catch(() => {})
-      })
-    } else {
-      if (videoRefA.current) videoRefA.current.pause()
-      if (videoRefB.current) videoRefB.current.pause()
-    }
-  }, [activeVideoSlot, videoSrcA, videoSrcB, mode, score, soundMode, volumes.video])
-
-  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    if (mode !== 'play') return
-    const videoEl = e.currentTarget
-    if (!videoEl.duration || isVideoTransitioningRef.current) return
-
-    if (videoEl.duration - videoEl.currentTime <= 1.5) {
-      isVideoTransitioningRef.current = true
-      const nextUrl = getNextRandomVideoUrl()
-
-      if (activeVideoSlot === 'A') {
-        setVideoSrcB(nextUrl)
-        setActiveVideoSlot('B')
-      } else {
-        setVideoSrcA(nextUrl)
-        setActiveVideoSlot('A')
-      }
-
-      setTimeout(() => {
-        isVideoTransitioningRef.current = false
-      }, 1500)
-    }
-  }
-
-  const handleVideoEnded = () => {
-    if (mode !== 'play') return
-    if (isVideoTransitioningRef.current) return
-    const nextUrl = getNextRandomVideoUrl()
-    if (activeVideoSlot === 'A') {
-      setVideoSrcB(nextUrl)
-      setActiveVideoSlot('B')
-    } else {
-      setVideoSrcA(nextUrl)
-      setActiveVideoSlot('A')
-    }
-  }
 
   const spawnTear = (x: number, y: number, count = 1, isDie = false) => {
     for (let i = 0; i < count; i++) {
@@ -496,7 +416,7 @@ export function MultiverseGameStandalone() {
       S.current.slowmoT = 0.75
       addFloat(130 + 34, S.current.birdY - 26, pick(NEAR_MISS_QUOTES))
       spawnTear(130, S.current.birdY + 6, 3, true)
-      sfx.near()
+      sfxRef.current.near()
     }
   }
 
@@ -508,9 +428,6 @@ export function MultiverseGameStandalone() {
     S.current.runs++
     setRunsCount(S.current.runs)
 
-    // Stop video playback & audio immediately on death
-    if (videoRefA.current) videoRefA.current.pause()
-    if (videoRefB.current) videoRefB.current.pause()
 
     S.current.best = Math.max(S.current.best, S.current.score)
     setBest(S.current.best)
@@ -523,7 +440,7 @@ export function MultiverseGameStandalone() {
 
     S.current.shake = 1
     spawnTear(130, S.current.birdY, 14, true)
-    sfx.die()
+    sfxRef.current.die()
 
     setEpitaphText(msg)
   }
@@ -572,7 +489,7 @@ export function MultiverseGameStandalone() {
     }
     const u = UNIVERSE_CONFIGS[S.current.uniIndex]
 
-    // Insomnia 100ms Input Queue Lag
+    // Insomnia 60ms Input Queue Lag (intentional mechanic, reduced from 100ms)
     if (u.insomnia) {
       setTimeout(() => {
         if (S.current.mode === 'play') {
@@ -580,9 +497,9 @@ export function MultiverseGameStandalone() {
           S.current.birdWing = 1
           S.current.flaps++
           setFlapsCount(S.current.flaps)
-          sfx.flap()
+          sfxRef.current.flap()
         }
-      }, 100)
+      }, 60)
       return
     }
 
@@ -590,7 +507,7 @@ export function MultiverseGameStandalone() {
     S.current.birdWing = 1
     S.current.flaps++
     setFlapsCount(S.current.flaps)
-    sfx.flap()
+    sfxRef.current.flap()
   }
 
   // Physics Delta Update
@@ -670,22 +587,25 @@ export function MultiverseGameStandalone() {
       }
     }
 
-    // Snow Flakes Generator
+    // Snow Flakes Generator — spawn distributed across full screen for immediate visibility
     if (u.snow) {
       if (S.current.snow.length < 25) {
         S.current.snow.push({
           x: Math.random() * W,
-          y: -10,
+          // Spawn at random Y positions so snow is visible immediately, not just from top
+          y: S.current.snow.length < 20 ? Math.random() * (H - GROUND) : -10,
           vx: (Math.random() - 0.5) * 15,
-          vy: 35 + Math.random() * 25,
-          t: 0,
-          size: 1.5 + Math.random() * 2
+          vy: 28 + Math.random() * 20,
+          t: Math.random() * 10, // stagger drift phase
+          size: 1.5 + Math.random() * 2.5
         })
       }
       for (let i = S.current.snow.length - 1; i >= 0; i--) {
         const s = S.current.snow[i]
         s.y += s.vy * dt
-        s.x += s.vx * dt
+        // Gentle horizontal drift oscillation
+        s.x += (s.vx + Math.sin((s.t || 0) * 1.2) * 8) * dt
+        s.t = (s.t || 0) + dt
         if (s.y > H - GROUND) S.current.snow.splice(i, 1)
       }
     }
@@ -695,7 +615,7 @@ export function MultiverseGameStandalone() {
       if (Math.random() < dt * 0.25) {
         S.current.flash = 1.0
         S.current.shake = 0.8
-        sfx.thunder()
+        sfxRef.current.thunder()
       }
     }
 
@@ -706,7 +626,7 @@ export function MultiverseGameStandalone() {
         S.current.sneezeTimer = 3 + Math.random() * 3
         S.current.birdVy = FLAPV * 1.2
         addFloat(130, S.current.birdY - 20, 'ACHOO! 🤧', '#f87171')
-        sfx.sneeze()
+        sfxRef.current.sneeze()
       }
     }
 
@@ -785,7 +705,8 @@ export function MultiverseGameStandalone() {
 
       const effectiveGrav = (GRAV * u.grav) + extraWind
       S.current.birdVy += effectiveGrav * dt
-      S.current.birdVy = clamp(S.current.birdVy, u.grav > 0 ? -MAXV : -50, u.grav > 0 ? MAXV : 50)
+      // For negative gravity (flip universe), clamp symmetrically using full MAXV range
+      S.current.birdVy = clamp(S.current.birdVy, -MAXV, MAXV)
       S.current.birdY += S.current.birdVy * dt
 
       const targetRot = clamp(S.current.birdVy * 0.0028 * u.grav, -0.6, 1.2)
@@ -795,16 +716,16 @@ export function MultiverseGameStandalone() {
       const curSpeed = SPEED * u.speed
       S.current.groundOff = (S.current.groundOff + curSpeed * dt) % 48
 
+      // Apply any pending queued universe shift (even during therapy break, so pipes resume after exit)
+      if (S.current.queuedUniverseShiftIdx !== null) {
+        const shiftTo = S.current.queuedUniverseShiftIdx
+        S.current.queuedUniverseShiftIdx = null
+        applyUniverse(shiftTo, true)
+      }
+
       // Spawn Pipes (Therapy Break suppresses pipe spawns)
       if (!u.therapyBreak) {
         const lastP = S.current.pipes[S.current.pipes.length - 1]
-
-        // Apply any pending queued universe shift right as the new pipe is about to spawn!
-        if (S.current.queuedUniverseShiftIdx !== null) {
-          const shiftTo = S.current.queuedUniverseShiftIdx
-          S.current.queuedUniverseShiftIdx = null
-          applyUniverse(shiftTo, true)
-        }
 
         // Re-evaluate current universe config after possible shift
         const curU = UNIVERSE_CONFIGS[S.current.uniIndex]
@@ -818,7 +739,8 @@ export function MultiverseGameStandalone() {
 
         // Do not spawn a new pipe while approaching an unpassed Herald shift pipe
         if (!lastP || (lastP.x < W - minSpacing && (!lastP.isHerald || lastP.passed))) {
-          let gapH = 118
+          // Deep End gets a wider gap due to different physics feel
+          let gapH = curU.deepEnd ? 160 : 118
           if (curU.longGoodbye) {
             S.current.lastPipeGap = Math.max(88, S.current.lastPipeGap - 2)
             gapH = S.current.lastPipeGap
@@ -915,7 +837,7 @@ export function MultiverseGameStandalone() {
           p.passed = true
           S.current.score++
           setScore(S.current.score)
-          sfx.score()
+          sfxRef.current.score()
 
           // Anime Attack Name Popup
           if (u.anime) {
@@ -958,11 +880,11 @@ export function MultiverseGameStandalone() {
       const birdBox = { l: 130 - 9, r: 130 + 9, t: S.current.birdY - 8, b: S.current.birdY + 8 }
 
       if (birdBox.b >= H - GROUND) {
-        die(pick(DEATH_EPITAPHS))
+        die(u.grav < 0 ? 'gravity tried to save you. it could not.' : pick(DEATH_EPITAPHS))
         return
       }
-      if (birdBox.t <= -20 && u.grav > 0) {
-        die('the sky is not a shelter.')
+      if (birdBox.t <= -20) {
+        die(u.grav < 0 ? 'even upside-down, you found the ceiling.' : 'the sky is not a shelter.')
         return
       }
 
@@ -998,11 +920,7 @@ export function MultiverseGameStandalone() {
         renderGameFrame(
           ctx,
           S.current,
-          sceneryRef.current,
-          pixelatedVideo,
-          activeVideoSlot === 'A' ? videoRefA.current : videoRefB.current,
-          offscreenCanvasRef.current,
-          offscreenCtxRef.current
+          sceneryRef.current
         )
       }
 
@@ -1011,60 +929,28 @@ export function MultiverseGameStandalone() {
 
     animId = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(animId)
-  }, [pixelatedVideo, activeVideoSlot])
-
-  // Setup Offscreen Canvas for Downsampling Video
-  useEffect(() => {
-    const offCanvas = document.createElement('canvas')
-    offCanvas.width = 64
-    offCanvas.height = 85
-    offscreenCanvasRef.current = offCanvas
-    offscreenCtxRef.current = offCanvas.getContext('2d')
   }, [])
 
   return (
     <div className="multiverse-rain relative w-full min-h-screen bg-[#0a0f16] text-[#c9d6e2] flex flex-col justify-between font-['Space_Grotesk'] overflow-y-auto overflow-x-hidden select-none">
       <div className="atmo-vig" />
 
-      {/* Background Video Elements for Crossfading */}
-      <video
-        ref={videoRefA}
-        src={videoSrcA}
-        muted={soundMode === 'off'}
-        playsInline
-        onTimeUpdate={handleVideoTimeUpdate}
-        onEnded={handleVideoEnded}
-        className={`fixed inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none z-0 ${
-          score >= 6 && mode === 'play' && activeVideoSlot === 'A' ? 'opacity-35' : 'opacity-0'
-        }`}
-      />
-      <video
-        ref={videoRefB}
-        src={videoSrcB}
-        muted={soundMode === 'off'}
-        playsInline
-        onTimeUpdate={handleVideoTimeUpdate}
-        onEnded={handleVideoEnded}
-        className={`fixed inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none z-0 ${
-          score >= 6 && mode === 'play' && activeVideoSlot === 'B' ? 'opacity-35' : 'opacity-0'
-        }`}
-      />
+
 
       <div className="relative z-10 w-full max-w-[1080px] mx-auto px-4 sm:px-6 py-[30px] pb-[44px] flex flex-col justify-between min-h-screen">
         {/* Header Bar */}
         <MultiverseHeader
           soundMode={soundMode}
           onCycleSoundMode={cycleSoundMode}
-          pixelatedVideo={pixelatedVideo}
-          setPixelatedVideo={setPixelatedVideo}
           onOpenDex={() => setIsDexOpen(true)}
+          onOpenBetaModal={() => setIsBetaModalOpen(true)}
           unlockedCount={unlockedUniIds.length}
           totalCount={UNIVERSE_CONFIGS.length}
           best={best}
           volumes={volumes}
           onUpdateVolumes={updateVolumes}
-          onTestFlap={() => { initAudio(); sfx.flap() }}
-          onTestScore={() => { initAudio(); sfx.score() }}
+          onTestFlap={() => { initAudio(); sfxRef.current.flap() }}
+          onTestScore={() => { initAudio(); sfxRef.current.score() }}
         />
 
         {/* Main Game Screen & Side Panel Container */}
@@ -1120,6 +1006,12 @@ export function MultiverseGameStandalone() {
         unlockedFusionKeys={unlockedFusionKeys}
         bannedUniId={bannedUniId}
         onSetBannedUni={setBannedUniId}
+      />
+
+      {/* Beta Notice & Disclaimer Modal */}
+      <MultiverseBetaModal
+        isOpen={isBetaModalOpen}
+        onClose={() => setIsBetaModalOpen(false)}
       />
 
     </div>

@@ -1,5 +1,6 @@
 import { UniverseConfig, UNIVERSE_CONFIGS } from './multiverse-config'
 import { GameStateRef, PipeObj, SceneryState } from './multiverse-types'
+import { loadCustomAssetsForUniverse, getCustomBirdImg } from './custom-assets'
 
 export const W = 480
 export const H = 640
@@ -293,6 +294,13 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: PipeObj, isVoid = fal
   ctx.restore()
 }
 
+// Ensure custom assets are loaded when rendering any frame
+export function ensureCustomAssetsLoaded(S: GameStateRef) {
+  loadCustomAssetsForUniverse(S.uniIndex)
+}
+
+
+
 
 export function drawBird(
   ctx: CanvasRenderingContext2D,
@@ -309,6 +317,18 @@ export function drawBird(
   ctx.rotate(rot)
 
   if (ghost) ctx.globalAlpha = 0.28
+
+  // If a custom bird image is loaded, render it for the main (non-ghost) bird only.
+  // Ghost and echo birds always use the default vector so they remain visually distinct.
+  if (!ghost) {
+    const customBirdImg = getCustomBirdImg()
+    if (customBirdImg) {
+      ctx.drawImage(customBirdImg, -40, -40, 80, 80)
+      ctx.restore()
+      return
+    }
+  }
+
   ctx.fillStyle = ghost ? '#8fb0c6' : isNoir ? '#94a3b8' : isVoid ? '#0284c7' : '#dfc076'
   ctx.beginPath()
   ctx.ellipse(0, 0, 13, 11, 0, 0, TAU)
@@ -384,12 +404,11 @@ export function drawBird(
 export function renderGameFrame(
   ctx: CanvasRenderingContext2D,
   S: GameStateRef,
-  scenery: SceneryState,
-  pixelatedVideo: boolean,
-  activeVideo: HTMLVideoElement | null,
-  offscreenCanvas: HTMLCanvasElement | null,
-  offscreenCtx: CanvasRenderingContext2D | null
+  scenery: SceneryState
 ) {
+  // Ensure the current universe's custom bird image is being loaded
+  loadCustomAssetsForUniverse(S.uniIndex)
+
   const u = UNIVERSE_CONFIGS[S.uniIndex]
 
   ctx.save()
@@ -415,26 +434,11 @@ export function renderGameFrame(
     ctx.fillRect(-24, -24, W + 48, H + 48)
   } else {
     // Standard Sky Background
-    ctx.save()
-    if (S.score >= 6 && !pixelatedVideo) {
-      ctx.globalAlpha = 0.55
-    }
     const g = ctx.createLinearGradient(0, 0, 0, H)
     g.addColorStop(0, u.sky[0])
     g.addColorStop(1, u.sky[1])
     ctx.fillStyle = g
     ctx.fillRect(-24, -24, W + 48, H + 48)
-    ctx.restore()
-  }
-
-  // Pixelated Background Video Downsampling Layer
-  if (S.score >= 6 && pixelatedVideo && activeVideo && activeVideo.readyState >= 2 && offscreenCanvas && offscreenCtx) {
-    offscreenCtx.drawImage(activeVideo, 0, 0, offscreenCanvas.width, offscreenCanvas.height)
-    ctx.save()
-    ctx.globalAlpha = 0.55
-    ctx.imageSmoothingEnabled = false
-    ctx.drawImage(offscreenCanvas, -24, -24, W + 48, H + 48)
-    ctx.restore()
   }
 
   // Soup Broth Particle Steam
@@ -510,13 +514,23 @@ export function renderGameFrame(
     }
   }
 
-  // Snow Particles
+  // Snow Particles — rendered as 6-arm snowflake crosses
   if (u.snow && S.snow.length) {
-    ctx.fillStyle = '#ffffff'
+    ctx.strokeStyle = 'rgba(220, 240, 255, 0.88)'
+    ctx.lineWidth = 1
     for (const s of S.snow) {
+      const r = s.size || 2
+      const cx = s.x, cy = s.y
       ctx.beginPath()
-      ctx.arc(s.x, s.y, s.size || 2, 0, TAU)
-      ctx.fill()
+      // Horizontal arm
+      ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy)
+      // Vertical arm
+      ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r)
+      // Diagonal arms (smaller)
+      const d = r * 0.65
+      ctx.moveTo(cx - d, cy - d); ctx.lineTo(cx + d, cy + d)
+      ctx.moveTo(cx + d, cy - d); ctx.lineTo(cx - d, cy + d)
+      ctx.stroke()
     }
   }
 
