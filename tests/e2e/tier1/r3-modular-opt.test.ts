@@ -47,16 +47,16 @@ export function getTier1R3Tests(projectRoot: string): TestCase[] {
     },
     {
       id: 'T1-R3-03',
-      name: 'Flappy Bird Modular Subcomponent Structure',
+      name: 'Study Hub Modular Subcomponent Structure',
       tier: 'Tier 1',
       category: 'R3: Modularization',
-      description: 'Verify Flappy Bird game feature is isolated in components/flappy-bird/',
+      description: 'Verify Study Hub feature is isolated in components/study-hub/',
       fn: () => {
-        const flappyDir = path.join(projectRoot, 'components', 'flappy-bird')
-        const inspection = inspectDirectoryModules(flappyDir)
+        const studyHubDir = path.join(projectRoot, 'components', 'study-hub')
+        const inspection = inspectDirectoryModules(studyHubDir)
 
-        assert.strictEqual(inspection.hasModularStructure, true, 'Flappy Bird directory should have modular files')
-        assert.ok(inspection.totalFiles >= 3, `Flappy Bird directory should contain >=3 modular files, found ${inspection.totalFiles}`)
+        assert.strictEqual(inspection.hasModularStructure, true, 'Study Hub directory should have modular files')
+        assert.ok(inspection.totalFiles >= 3, `Study Hub directory should contain >=3 modular files, found ${inspection.totalFiles}`)
       }
     },
     {

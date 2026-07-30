@@ -9,8 +9,6 @@ import { TasksSection, Task } from '@/components/tasks-section'
 import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { InlineLogin } from '@/components/inline-login'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
-import { BirdButton } from '@/components/flappy-bird/bird-button'
-import { MultiverseButton } from '@/components/multiverse-button'
 import { Home, ClipboardList, MessageSquare, Lock, FileText } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
@@ -18,28 +16,7 @@ import { signOutAction } from '@/app/login/actions'
 
 import type { User } from '@supabase/supabase-js'
 import { AuditLogItem } from '@/components/recent-activity'
-import { Course, StudyMaterial, ClassDocument } from '@/components/study-hub/types'
-
-interface FallingDogie {
-  src: string
-  left: number
-  top: number
-  speedY: number
-  width: number
-  rotation: number
-  rotationSpeed: number
-}
-
-const DOGIE_GIFS = [
-  '/akosidogie/akosidogie.gif',
-  '/akosidogie/batute-akosidogie.gif',
-  '/akosidogie/dogietankbuild.gif',
-  '/akosidogie/dsasadas.gif',
-  '/akosidogie/meme-excitement.gif',
-  '/akosidogie/puwede.gif',
-  '/akosidogie/shelo-akosidogie.gif',
-  '/akosidogie/shh-akosidogie.gif'
-]
+import { Course, StudyMaterial } from '@/components/study-hub/types'
 
 export interface ContainerStudent {
   id: number
@@ -87,7 +64,6 @@ interface PublicTabsContainerProps {
   posts: FreedomPost[]
   courses: Course[]
   materials: StudyMaterial[]
-  classDocs?: ClassDocument[]
   postsError?: boolean
   tasksError?: boolean
   materialsError?: boolean
@@ -104,7 +80,6 @@ export function PublicTabsContainer({
   posts,
   courses,
   materials,
-  classDocs = [],
   tasksError = false,
   postsError = false,
   materialsError = false,
@@ -116,69 +91,9 @@ export function PublicTabsContainer({
 
   const [mounted, setMounted] = useState(false)
 
-  // Dogie Easter Egg states
-  const [eggClicks, setEggClicks] = useState(0)
-  const [dogieActive, setDogieActive] = useState(false)
-  const [dogies, setDogies] = useState<FallingDogie[]>([])
-
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  // Dogie animation loop
-  useEffect(() => {
-    if (!dogieActive) return
-
-    const count = 12
-    const initial: FallingDogie[] = Array.from({ length: count }).map(() => ({
-      src: DOGIE_GIFS[Math.floor(Math.random() * DOGIE_GIFS.length)],
-      left: Math.random() * 90,
-      top: Math.random() * -800 - 150,
-      speedY: Math.random() * 0.4 + 0.25,
-      width: Math.random() * 60 + 50,
-      rotation: Math.random() * 360,
-      rotationSpeed: Math.random() * 0.3 - 0.15
-    }))
-    setDogies(initial)
-
-    let active = true
-    let lastTime = performance.now()
-
-    const update = (time: number) => {
-      if (!active) return
-      const delta = time - lastTime
-      lastTime = time
-
-      setDogies(prev =>
-        prev.map(d => {
-          let newTop = d.top + d.speedY * (delta * 0.1)
-          let newRotation = d.rotation + d.rotationSpeed * (delta * 0.1)
-
-          if (newTop > (typeof window !== 'undefined' ? window.innerHeight : 800) + 150) {
-            newTop = -150
-            return {
-              ...d,
-              left: Math.random() * 90,
-              top: -150,
-              speedY: Math.random() * 0.4 + 0.25,
-              width: Math.random() * 60 + 50,
-              rotation: Math.random() * 360,
-              rotationSpeed: Math.random() * 0.3 - 0.15
-            }
-          }
-          return { ...d, top: newTop, rotation: newRotation }
-        })
-      )
-
-      requestAnimationFrame(update)
-    }
-
-    const animFrame = requestAnimationFrame(update)
-    return () => {
-      active = false
-      cancelAnimationFrame(animFrame)
-    }
-  }, [dogieActive])
 
   // Read URL search params on mount to handle redirects from /login
   useEffect(() => {
@@ -221,29 +136,6 @@ export function PublicTabsContainer({
 
   return (
     <div className="pb-28 relative">
-      {/* Dogie Easter Egg Falling Container */}
-      {dogieActive && (
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-10]">
-          {dogies.map((dogie, i) => (
-            <img
-              key={i}
-              src={dogie.src}
-              style={{
-                position: 'absolute',
-                left: `${dogie.left}%`,
-                top: `${dogie.top}px`,
-                width: `${dogie.width}px`,
-                height: 'auto',
-                opacity: 0.16,
-                transform: `rotate(${dogie.rotation}deg)`,
-                pointerEvents: 'none',
-              }}
-              alt="easter egg"
-            />
-          ))}
-        </div>
-      )}
-
       {/* Auto-popup patch notes on first visit */}
       <PatchNotesModal />
 
@@ -260,8 +152,6 @@ export function PublicTabsContainer({
             <div className="flex items-center gap-1.5 shrink-0">
               <ThemeToggle />
               <PatchNotesButton />
-              <BirdButton />
-              <MultiverseButton />
             </div>
 
             {user && (
@@ -342,7 +232,6 @@ export function PublicTabsContainer({
             tasks={tasks}
             dbError={materialsError}
             user={user}
-            initialClassDocs={classDocs}
           />
         </div>
 

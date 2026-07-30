@@ -35,103 +35,37 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Card Loading Backdrops**: Tasks being deleted or updated display clear `Deleting...` or `Updating...` overlays immediately, removing transaction lag confusion.
 - **Sign-Out Feedback**: Sign-out buttons instantly render a spinning loader and display `Signing out...` on click.
 
+### 📚 6. Study Hub & Multi-Column Reviewer Explorer (v1.31)
+- **Review Materials Focus**: Streamlined Study Hub to focus 100% on student review materials (quiz notes, exam reviewers, lecture notes) and removed unused class document subtabs.
+- **Approved Materials Multi-Column Grid**: Display approved reviewers in a responsive 2-4 column card grid positioned directly below the main projection viewer.
+- **PDF Viewer Whitespace Fix & Zoom Controls**: Eliminated forced vertical blank space beneath the PDF embed viewer on desktop and added zoom controls (75%, 100%, 125%, 150%).
+- **Sticky Search & Filter Sidebar**: Mobile and desktop sticky left sidebar (`position: sticky; top: 80px`) with smooth collapse/expand toggle for searching by course, category, and topic type.
+
 ### ☁️ 7. Cloud Sync & Fluid Glass Navigation (v1.6)
 - **Interactive Toast Notifications**: Instant sliding alert cards notify users of live transactions.
-- **Database-Backed Class Documents & Song Attachments**: Stored centrally in Supabase for cross-device sync.
+- **Cloud Song Attachments**: Stored centrally in Supabase for cross-device sync.
 - **Liquid Glass Navigation Bar**: Refined bottom nav capsule into a rounded liquid glass pill with specular highlights.
 
-### 🎮 8. Flappy Bird Arcade, Multi-Theme & Realtime Leaderboard (v1.8 - v1.16)
-- **Flappy Bird Mini-Game**: Built with an HTML5 Canvas engine implementing original gravity, flap physics, and infinite parallax scrolling.
-- **Multi-Theme Canvas Environments**: Features 4 distinct visual themes (Classic Farm, Cyberpunk Night, Desert Sunset, Deep Ocean) with custom sky gradients, environment silhouettes, glowing neon grid lines, and thematic pipe designs.
-- **Automatic Theme Randomization**: Every new game round automatically picks a fresh visual theme, with a manual theme selector on the start menu.
-- **Realtime Global Leaderboard (v1.16)**: Live synchronization streaming high scores in real time across Classic, Zen, and Multiverse modes with strict mode score isolation and mode-specific loading screens.
-- **Mobile Touch Input Protection (v1.8)**: Prevents accidental restarts on touchscreens using input cooldowns (`gameOverTimeRef`) and strict event propagation blocks (`e.stopPropagation()`) on container overlays.
-- **Leaderboard Table Reset (v1.8)**: Added a Clear Table server action and interactive modal reset button to wipe old score entries.
-- **Game Over Mode Switching**: Switch seamlessly between Classic, Zen, and Multiverse modes after dying or return to the main menu directly on the Game Over screen.
-- **Synthesized Retro Audio**: Web Audio API synthesized sound effects for flap, score chime, hit thud, and falling whistle drop death.
-- **Online Sync vs. Offline Fallback**: Real-time status indicator showing database sync status.
-- **Guest & User Handle Customization**: Authenticated users automatically save player handles, while guest players can customize their handle anytime for section rankings.
-
-### 🎨 21. Multiverse of Sadness Canonical Design System & Typography Restoration (v1.24)
-- **Original Design System Restoration**: Restored exact typography (`Special Elite` for titles, numbers, epitaphs & `Space Grotesk` for body, taglines, HUD labels, stats, keybindings).
-- **HUD & Death Screen Stats**: Restored tears counter (`tears ×X`) under emotional damage, 4-stat death block (`emotional damage`, `tears shed`, `universes felt`, `best damage`), and flap count warning line.
-- **Google Fonts & Canvas Text Rendering**: Loaded `Special Elite` and `Space Grotesk` via Google Fonts preconnect/imports and added `document.fonts.load` on mount for canvas `Special Elite` text rendering.
-- **Ambient Dark Rain Background**: Restored dual-layer seamless ambient rain animations (`fallA` / `fallB` keyframes) and atmospheric vignette (`.atmo-vig`) on background.
-- **Strict GEMINI.md Guidelines**: Updated `GEMINI.md` with comprehensive, strict design system rules to preserve canonical styling across future AI updates.
-
-### 🔮 24. Multiverse of Sadness II Official Launch & Fusion Dex (v1.29)
-- **Official Standalone Mode**: Full standalone flappy mode featuring 42 base universes of emotional rain weather, physics, cinema, fourth-wall, and cursed anomalies.
-- **Fusion Dex (861 Combinations)**: Complete cataloging of all 861 pairwise universe combinations ($\binom{42}{2} = 861$) with signature handcrafted lore and dynamic procedural descriptions.
-- **Purple Hub Portal Button**: Glowing purple hub button with smooth atmospheric gate transitions ("ENTERING MULTIVERSE II...") connecting the main Section Hub to the Multiverse app.
-- **Fast Dex Windowing & Search**: Ultra-fast Dex UI with real-time search, rarity tags, status filters, and 24-item pagination controls.
-
-### 🚰 22. Multiverse of Sadness Gameplay Slowdown Removal & Pipe Generation Balancing (v1.25)
-- **Impossible Pipe Generation Fixed**: Added a vertical delta constraint (`maxDelta = 110px`) between consecutive pipe gaps, eliminating physically unpassable pipe gap jumps.
-- **Removed Gameplay Slowdown**: Removed unwanted slow-motion time scaling during near-miss popups while maintaining floating quote text, tear particles, and sound effects.
-- **Balanced Spacing & Drifting**: Increased horizontal pipe clearance (171px gap) and capped drifting pipe amplitudes for smoother reaction time.
-- **Long Goodbye Gap Limit**: Set a fair minimum pipe gap (`88px`) in shrinking gap universes so gameplay stays challenging yet completely beatable.
-
-### ⚡ 23. Officer Student Checklist Real-Time Sync, Animations & Mobile Corner Toast (v1.26)
-- **Mobile Floating Corner Balance Toast**: Mobile users get a floating corner balance window (`sm:hidden`, fixed at `bottom-20 right-3.5`) displaying total fund balance updates in real-time with counting animation and `+₱5.00` / `-₱5.00` delta badges when toggling payments.
+### ⚡ 6. Officer Student Checklist Real-Time Sync, Animations & Mobile Toast (v1.26)
+- **Mobile Floating Corner Balance Toast**: Mobile users get a floating corner balance window displaying total fund balance updates in real-time with counting animation and `+₱5.00` / `-₱5.00` delta badges when toggling payments.
 - **Real-Time Animated Total Fund Balance**: Balance Card smoothly animates numeric transitions over 400ms (`requestAnimationFrame` ease-out cubic lerp counter) with glow pulse highlights and floating delta badges.
-- **Instantaneous Checklist Toggles & Real-Time Sync**: Eliminated UI lag when marking student payments. Toggling payment status is instantaneous (0ms UI latency), supports rapid multi-student updates, and updates the total fund balance in real-time across the portal.
-- **Week Selection Persistence**: Preserved active week dropdown state (`useRef` guarded) so toggling a student's payment status in Week 2 no longer resets the view back to Week 1 on server revalidation.
-- **Non-Blocking Background Sync**: Replaced global UI locks with fine-grained per-item pending keys (`pendingKeys`) and smooth animated sync indicators (`Loader2`).
-- **Parallel Officer Verification**: Optimized server authentication checks to run database queries (`moderators` and `officers`) concurrently with `Promise.all` and `.maybeSingle()`.
+- **Instantaneous Checklist Toggles & Real-Time Sync**: Toggling payment status is instantaneous (0ms UI latency), supports rapid multi-student updates, and updates total fund balance in real-time across the portal.
+- **Week Selection Persistence**: Preserved active week dropdown state so toggling a student's payment status in Week 2 no longer resets the view back to Week 1.
+- **Non-Blocking Background Sync**: Replaced global UI locks with fine-grained per-item pending keys (`pendingKeys`) and smooth animated sync indicators.
+- **Parallel Officer Verification**: Optimized server authentication checks to run database queries concurrently with `Promise.all`.
 
-### 🏢 24. Classmate Management, Current Week Automation, Confetti Celebration & Layout Refinements (v1.27)
+### 🏢 7. Classmate Management, Current Week Automation, Confetti Celebration & Layout Refinements (v1.27)
 - **Full Classmate Management (Add, Edit, Delete)**: Added complete student CRUD capabilities with an Add Classmate toolbar button, Edit modal, and Moderator-only Delete classmate action with confirmation modals and detailed audit logging.
-- **Auto-Select Week for Today**: Built `findCurrentWeekNumber(weeks)` date range parser that automatically detects and selects the active week corresponding to today's date so officers and students don't need to manually switch week dropdowns each session.
-- **Celebratory Week Completion & Confetti**: When 100% of class fund contributions for a week are collected, falling confetti (`ConfettiCanvas`) and a Thank You pop-up modal trigger automatically (persisted via `localStorage`), displaying a **"Week Completed — 100% Fund Collected"** badge and freezing the list from further edits.
-- **Mobile Portal Tab Layout**: Reordered section elements on mobile screens (`< lg`) so the Officer Student Checklist sits directly below Total Balance, followed by Approval Queue, Audit Exports, Manage Weeks, and Recent Activity, preserving the 2-column desktop layout.
+- **Auto-Select Week for Today**: Automatically detects and selects the active week corresponding to today's date so officers and students don't need to manually switch week dropdowns each session.
+- **Celebratory Week Completion & Confetti**: When 100% of class fund contributions for a week are collected, falling confetti (`ConfettiCanvas`) and a Thank You pop-up modal trigger automatically, displaying a **"Week Completed — 100% Fund Collected"** badge and freezing the list from further edits.
+- **Mobile Portal Tab Layout**: Reordered section elements on mobile screens (`< lg`) so the Officer Student Checklist sits directly below Total Balance.
 - **Default Closed Containers**: Financial Audit & CSV Exports, Digital Approval Queue, Manage Class Weeks, and Recent Activity start neatly collapsed by default.
-- **"Updated live" Text Stability**: Added `whitespace-nowrap shrink-0` to prevent "Updated live" text from flickering onto two lines when balance delta badges appear.
-- **Financial Audit Report Week Sync**: Updated Outstanding Dues in the financial statement to dynamically calculate dues as of the current week ("As of Wk 2") instead of defaulting to Week 1.
+- **Financial Audit Report Week Sync**: Updated Outstanding Dues in the financial statement to dynamically calculate dues as of the current week instead of defaulting to Week 1.
 - **Compact CSV Exports Layout**: Re-arranged CSV export buttons into a clean, horizontal flex/grid row to save vertical space on PC screens.
 
 
 
-### 🖥️ 20. PC Desktop Layout Alignment & Dex Redesign (v1.23)
-- **PC Desktop Side-by-Side Layout**: Fixed side panels (*Now Showing*, *Controls*, *Porting Notes*) so they align side-by-side with the 480x640 game canvas in a centered container on PC desktop views.
-- **Multiverse Dex Redesign**: Overhauled the Multiverse Dex modal with `Special Elite` headers, `Space Grotesk` typography, dark rain background panels (`#0e1622` / `#111b29`), `#22344a` borders, and `#d9a441` amber highlights.
-- **Header & Overlay Pill Consistency**: Standardized top header controls, modal category tabs, and death screen retry buttons to the original `.pill` / `.pill.amber` and `#again` amber glow design systems.
-
-### 🎨 19. Multiverse of Sadness Original Design Restoration & Pill Button System (v1.22)
-- **Original "Now Showing" Restoration**: Restored the 2-column grid layout (`grid-cols-[32px_1fr]`), monospace universe numbers (`.pnum`), active `"· now"` state indicator, panel footer notes, Controls, and Porting Notes sections.
-- **Pill Button Design System**: Standardized all header buttons, navigation links, and modal filter tabs to the original `.pill` / `.pill.amber` uppercase tracking border design (`border border-[#22344a]` / `border border-[rgba(217,164,65,0.45)]`).
-- **Classic Action Button Styling**: Applied the signature `#again` amber-bordered uppercase action button styling to the death screen retry button.
-- **Strict Design Consistency Rule**: Added strict guidelines in `GEMINI.md` enforcing canonical HTML/CSS design preservation for all present and future Multiverse of Sadness components.
-
-### 🌌 18. Multiverse of Sadness Expansion: 40 Universes, Dex, Fusions & Bans (v1.21)
-- **35 New Universes**: Expanded the dimension set to 40 complete universes across 6 distinct flavors (*Physics that hurts*, *Weather of the soul*, *Fourth-wall*, *Cinema of sadness*, *Online/absurd*, and *Cursed*).
-- **Rarity Tiers**: Categorized universes into Common (70%), Uncommon (25%), and Cursed (5%) weighted spawns with distinct announcement badges.
-- **Multiverse Dex**: Interactive modal tracking progress ("X / 40 Witnessed"), displaying locked silhouettes, quotes, lore details, and discovery status.
-- **Universe Fusion Mode (Score ≥ 30)**: Score ≥ 30 triggers simultaneous hybrid universe transitions combining 2 active universes at once (e.g. `NOIR × TAX SEASON`).
-- **Avoid One Truth (Universe Ban)**: Players can select 1 universe to exclude per run directly from the Multiverse Dex.
-- **Custom Visual Rendering Layers**: Added unique visual effects for Noir hat, VHS scanlines & timestamps, Silent Film intertitles, Memory vignette, Underwater bubbles, Autumn leaves, Snow, Fog, and Hologram pipes.
-
-### 🏗️ 17. Multiverse of Sadness II Modular Codebase Refactoring (v1.20)
-- **Modular Architecture**: Decoupled the monolithic 1,435-line `multiverse-game-standalone.tsx` file into clear single-responsibility modules under `components/multiverse-of-sadness/`.
-- **Isolated Audio & Renderer Engines**: Extracted Web Audio API synthesizer manager (`multiverse-audio.ts`) and HTML5 2D Canvas rendering routines (`multiverse-renderer.ts`).
-- **Extracted UI Subcomponents**: Isolated interface elements into dedicated files under `components/multiverse-of-sadness/ui/` (`Header`, `HUD`, `StartOverlay`, `DeadOverlay`, `UniverseCard`, and `SidePanel`).
-
-### 📽️ 16. Multiverse of Sadness II Video Randomization Pool & 0-Lag GPU Acceleration (v1.19)
-- **Fisher-Yates Shuffled Video Deck**: Implemented a non-repeating video queue pool for Multiverse of Sadness mode. When reaching Level/Score 6, videos are drawn randomly from an 18-video pool without repeating any video during the same session until all 18 videos have been shown.
-- **0-Lag Hardware Accelerated Video Mode**: Offloaded video background playback from 60 FPS canvas `drawImage` readbacks to hardware-accelerated HTML5 `<video>` GPU compositor layers (`z-0`), eliminating main thread frame drops and GPU texture readback lag.
-- **Cached Offscreen Context**: Optimized pixelated video downsampling by caching the offscreen 2D rendering context (`offscreenCtxRef`) to avoid context lookup allocations inside `requestAnimationFrame`.
-- **Session Queue Reset**: Synchronized video queue resets on gameover and restart across both standalone (`/multiverse-of-sadness`) and embedded Flappy Bird modes.
-
-### 🌧️ 15. Multiverse of Sadness II Standalone Experience & Custom Engine (v1.18)
-- **Dedicated Standalone Route**: Accessible via direct URL navigation (`/multiverse-of-sadness`), completely isolated from the standard Flappy Bird game page.
-- **Qwen Atmospheric Design**: Replicates Qwen’s visual aesthetics featuring dark radial page background, ambient cascading CSS rain simulation, Google Fonts (`Special Elite` & `Space Grotesk`), HUD header, unicard animation banners, glassmorphism panels (*Now Showing*, *Controls*, *Modding Notes*), and philosophical death epitaph overlays.
-- **5 Dynamic Universe Shifts**: Environment shifts every 5 pipes (*The One Where It Rains*, *Monday.* gray desaturation, *The Upside-Down-ish* inverted gravity, *The Echo* ghost bird replay, and *Drama Universe* 44px letterboxing).
-- **Echo Ghost & Near-Miss Slow-Mo**: Records previous run frame coordinates (`{ y, rot }`) to render a translucent ghost bird flying alongside the player, with near-miss time dilation (0.32x speed) on tight gaps.
-- **Sob Physics & Apologetic Pipes**: Bird periodically cries with tear particle bursts and dips gravity, while pipes display floating apologies (`"sorry :("`, `"my bad..."`) and internal monologue thought bubbles.
-- **Retro Pixelated Video Downsampling**: Dynamic 160×120 offscreen canvas matrix downsampling for a 16-bit retro music video aesthetic, paired with WebAudio synthesized rain noise, sighs, piano flap/score tones, and descending violin death sounds.
-- **Modular Text & Music Config**: Centralized [`multiverse-config.ts`](file:///c:/Users/PC/Documents/Transparency/class-fund-tracker/components/multiverse-of-sadness/multiverse-config.ts) array registry allowing instant editing or addition of subtitles, lyrics, thought bubbles, apology quotes, and epitaphs.
-- **Synchronized Main Game Physics**: Physics constants (`GRAV = 950`, `FLAPV = -320`, `MAXV = 520`) perfectly matched to main Flappy Bird jump weight and gravity.
-
-### 💳 10. Digital Receipts, Financial Audit Reports & Mobile Ergonomics Overhaul (v1.10)
+### 💳 8. Digital Receipts, Financial Audit Reports & Mobile Ergonomics Overhaul (v1.10)
 - **Digital Proof of Payment Uploads**: Students can submit screenshot proof of payment (GCash/Maya receipts) with reference numbers when paying weekly dues.
 - **Officer Receipt Approval Queue**: Whitelisted officers on `/officer-dashboard` receive a dedicated approval queue featuring receipt image previews, zoom modals, status filters, and 1-click Approve/Reject actions.
 - **Exportable Financial Audit Reports**: 1-click RFC 4180-compliant CSV exports for collection matrices and expense logs, alongside printable PDF financial summary statements.
@@ -146,7 +80,7 @@ A modern, responsive, and secure web application designed to track class fund co
 ### 📱 11. Mobile Officer Ergonomics, Slide-Over Sidebar & Header Refactoring (v1.11)
 - **Officer Sidebar Menu Drawer**: Added a slide-over navigation drawer providing single-tap access to officer tools, financial audit exports, expense recording, theme preferences, and sign out.
 - **Spacious Dashboard Header**: Restored full unscrolled header layout with prominent left-aligned "Officer Dashboard" heading and portal subtitle.
-- **Logical Toolbar Grouping**: Organized essential financial actions (Financial Audit Report & Record Expense) on the left side, and settings/extras (Flappy Bird arcade game, Patch Notes, Theme Toggle, Sidebar Drawer) on the right side.
+- **Logical Toolbar Grouping**: Organized essential financial actions (Financial Audit Report & Record Expense) on the left side, and settings/extras (Patch Notes, Theme Toggle, Sidebar Drawer) on the right side.
 - **Compact Mobile Logo Buttons**: Optimized Record Expense and Financial Audit Report buttons to sleek circular logo icon buttons on mobile screens with hold/hover tooltips.
 - **Hysteresis Anti-Flicker Scroll**: Resolved sticky header scroll oscillation by implementing a hysteresis scroll threshold (> 45px enter, < 10px exit).
 - **Sticky Bar Mobile Alignment**: Fixed scrolled sticky bar layout so the Officer Dashboard title and action icons remain aligned horizontally on a single row without truncation or layout shifts.

@@ -12,8 +12,6 @@ import { FreedomWall, FreedomPost } from '@/components/freedom-wall'
 import { AddExpenseModal } from '@/components/add-expense-modal'
 import { StudentPaymentList } from '@/components/student-payment-list'
 import { PatchNotesModal, PatchNotesButton } from '@/components/patch-notes-modal'
-import { BirdButton } from '@/components/flappy-bird/bird-button'
-import { MultiverseButton } from '@/components/multiverse-button'
 import { Home, ClipboardList, MessageSquare, ShieldAlert, DollarSign, FileText, LogOut } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { StudyHub } from '@/components/study-hub'
@@ -28,30 +26,9 @@ import {
   downloadCSV
 } from '@/lib/csv-exporter'
 
-interface FallingDogie {
-  src: string
-  left: number
-  top: number
-  speedY: number
-  width: number
-  rotation: number
-  rotationSpeed: number
-}
-
-const DOGIE_GIFS = [
-  '/akosidogie/akosidogie.gif',
-  '/akosidogie/batute-akosidogie.gif',
-  '/akosidogie/dogietankbuild.gif',
-  '/akosidogie/dsasadas.gif',
-  '/akosidogie/meme-excitement.gif',
-  '/akosidogie/puwede.gif',
-  '/akosidogie/shelo-akosidogie.gif',
-  '/akosidogie/shh-akosidogie.gif'
-]
-
 import type { User } from '@supabase/supabase-js'
 import { AuditLogItem } from '@/components/recent-activity'
-import { Course, StudyMaterial, ClassDocument } from '@/components/study-hub/types'
+import { Course, StudyMaterial } from '@/components/study-hub/types'
 
 export interface ContainerStudent {
   id: number
@@ -99,7 +76,6 @@ interface OfficerTabsContainerProps {
   posts: FreedomPost[]
   courses: Course[]
   materials: StudyMaterial[]
-  classDocs?: ClassDocument[]
   receipts?: ReceiptItem[]
   tasksError?: boolean
   postsError?: boolean
@@ -118,7 +94,6 @@ export function OfficerTabsContainer({
   posts,
   courses,
   materials,
-  classDocs = [],
   receipts = [],
   tasksError = false,
   postsError = false,
@@ -131,11 +106,6 @@ export function OfficerTabsContainer({
   const [addTaskTrigger, setAddTaskTrigger] = useState(false)
   const [addPostTrigger, setAddPostTrigger] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-
-  // Dogie Easter Egg states
-  const [eggClicks, setEggClicks] = useState(0)
-  const [dogieActive, setDogieActive] = useState(false)
-  const [dogies, setDogies] = useState<FallingDogie[]>([])
 
   // Hidden button ref to trigger AddExpenseModal from BottomNav
   const addExpenseBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -177,29 +147,6 @@ export function OfficerTabsContainer({
 
   return (
     <div className="pb-28 relative">
-      {/* Dogie Easter Egg Falling Container */}
-      {dogieActive && (
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-10]">
-          {dogies.map((dogie, i) => (
-            <img
-              key={i}
-              src={dogie.src}
-              style={{
-                position: 'absolute',
-                left: `${dogie.left}%`,
-                top: `${dogie.top}px`,
-                width: `${dogie.width}px`,
-                height: 'auto',
-                opacity: 0.16,
-                transform: `rotate(${dogie.rotation}deg)`,
-                pointerEvents: 'none',
-              }}
-              alt="easter egg"
-            />
-          ))}
-        </div>
-      )}
-
       {/* Auto-popup patch notes on first visit */}
       <PatchNotesModal />
       
@@ -254,8 +201,6 @@ export function OfficerTabsContainer({
                 <AddExpenseModal />
               </div>
 
-              <BirdButton />
-              <MultiverseButton />
               <PatchNotesButton />
               <ThemeToggle />
               <form 
@@ -345,7 +290,6 @@ export function OfficerTabsContainer({
             tasks={tasks}
             dbError={materialsError}
             user={user}
-            initialClassDocs={classDocs}
           />
         </div>
 

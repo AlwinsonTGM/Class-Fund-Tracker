@@ -24,6 +24,7 @@ export function EmbedViewerModal({
 }: EmbedViewerModalProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleInput, setTitleInput] = useState('')
+  const [zoomLevel, setZoomLevel] = useState<number>(100)
 
   useEffect(() => {
     setIsEditingTitle(false)
@@ -50,11 +51,13 @@ export function EmbedViewerModal({
 
   if (!selectedMaterial) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border/60 rounded-2xl bg-muted/10 min-h-[300px] md:min-h-[400px]">
-        <div className="h-10 w-10 opacity-30 mb-2.5 flex items-center justify-center">📄</div>
-        <h3 className="text-xs font-extrabold text-foreground">Select a Reviewer</h3>
-        <p className="text-[10px] max-w-xs mt-1 leading-normal">
-          Click on any material on the right to project it here. Google Drive files and PDFs will display inside our embed viewer!
+      <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border/60 rounded-3xl bg-muted/10 min-h-[240px] md:min-h-[320px] shadow-inner">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 text-xl">
+          📚
+        </div>
+        <h3 className="text-sm font-extrabold text-foreground">Select a Reviewer Material</h3>
+        <p className="text-xs max-w-sm mt-1 leading-normal text-muted-foreground">
+          Click any module card in the list below to project and view its PDF, notes, or Google Drive contents right here.
         </p>
       </div>
     )
@@ -64,11 +67,20 @@ export function EmbedViewerModal({
   const course = courses.find(c => c.id === selectedMaterial.course_id)
 
   return (
-    <div className="flex flex-col h-full justify-between gap-4">
+    <div className="flex flex-col gap-4">
       {/* Header Details */}
-      <div className="flex items-start justify-between border-b border-border/40 pb-3 gap-2">
+      <div className="flex items-start justify-between border-b border-border/40 pb-3 gap-2 flex-wrap">
         <div className="min-w-0 flex-1">
-          <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">{selectedMaterial.category} Reviewer</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">
+              {selectedMaterial.category} Reviewer
+            </span>
+            {course && (
+              <span className="text-[9px] font-bold text-sky-700 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded">
+                {course.code}
+              </span>
+            )}
+          </div>
           
           {isEditingTitle ? (
             <div className="flex items-center gap-1.5 mt-1.5 max-w-md">
@@ -100,7 +112,7 @@ export function EmbedViewerModal({
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-1 group">
-              <h3 className="text-sm font-extrabold text-foreground truncate">{selectedMaterial.title}</h3>
+              <h3 className="text-base font-extrabold text-foreground truncate">{selectedMaterial.title}</h3>
               <button
                 onClick={() => {
                   setTitleInput(selectedMaterial.title)
@@ -116,30 +128,55 @@ export function EmbedViewerModal({
 
           <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground font-semibold flex-wrap">
             <span>Submitted by: <strong>{selectedMaterial.submitted_by}</strong></span>
-            <span>•</span>
-            {course && <span>Course: <strong>{course.code}</strong></span>}
           </div>
         </div>
         
-        {/* Moderator Action */}
-        {user && (
-          <button
-            onClick={() => onDeleteMaterial(selectedMaterial.id)}
-            className="size-11 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded-full cursor-pointer transition-colors"
-            title="Delete reviewer"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
+        {/* Right Header Actions: Zoom & Moderator Delete */}
+        <div className="flex items-center gap-2">
+          {embedInfo.isEmbeddable && (
+            <div className="flex items-center border border-border rounded-xl p-1 bg-muted/30 text-xs font-semibold">
+              <span className="text-[10px] text-muted-foreground px-1.5 font-bold uppercase">Zoom:</span>
+              {[75, 100, 125, 150].map(zoom => (
+                <button
+                  key={zoom}
+                  onClick={() => setZoomLevel(zoom)}
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                    zoomLevel === zoom
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {zoom}%
+                </button>
+              ))}
+            </div>
+          )}
+
+          {user && (
+            <button
+              onClick={() => onDeleteMaterial(selectedMaterial.id)}
+              className="size-9 min-h-[36px] min-w-[36px] flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded-xl cursor-pointer transition-colors border border-red-500/20"
+              title="Delete reviewer"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Projection Container */}
-      <div className="flex-1 flex flex-col min-h-[400px] md:min-h-[700px] lg:min-h-[780px] w-full">
+      <div className="w-full">
         {embedInfo.isEmbeddable && embedInfo.embedUrl ? (
-          <div className={`w-full h-[450px] sm:h-[550px] md:h-[720px] lg:h-[800px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative ${isDragging ? 'pointer-events-none' : ''}`}>
+          <div className={`w-full h-[450px] sm:h-[520px] md:h-[580px] rounded-2xl overflow-hidden border border-border/40 bg-muted/20 relative shadow-inner ${isDragging ? 'pointer-events-none' : ''}`}>
             <iframe
               src={embedInfo.embedUrl}
-              className="w-full h-full border-0 absolute inset-0 z-10 touch-auto"
+              style={{
+                width: `${10000 / zoomLevel}%`,
+                height: `${10000 / zoomLevel}%`,
+                transform: `scale(${zoomLevel / 100})`,
+                transformOrigin: '0 0'
+              }}
+              className="border-0 absolute inset-0 z-10 touch-auto"
               title={selectedMaterial.title}
               allow="autoplay"
             />
@@ -149,24 +186,24 @@ export function EmbedViewerModal({
             </div>
           </div>
         ) : (
-          <div className="flex-1 border border-border/60 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center bg-muted/25">
+          <div className="border border-border/60 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-muted/25 min-h-[220px]">
             <HelpCircle className="h-10 w-10 text-muted-foreground/45 mb-2.5" />
             <h4 className="text-xs font-bold text-foreground">Link Cannot Be Embedded Directly</h4>
             <p className="text-[10px] text-muted-foreground max-w-xs mt-1 leading-normal">
               This link ({embedInfo.type}) cannot be previewed inside the webpage because the site owner restricts embedded framing. Click the button below to open and access the material.
             </p>
-            <code className="bg-muted px-2 py-1 border border-border rounded-xl font-mono text-[9px] mt-3 select-all max-w-[200px] truncate">{selectedMaterial.link}</code>
+            <code className="bg-muted px-2 py-1 border border-border rounded-xl font-mono text-[9px] mt-3 select-all max-w-[240px] truncate">{selectedMaterial.link}</code>
           </div>
         )}
       </div>
 
       {/* Link Redirect Footer */}
-      <div className="flex items-center gap-2.5 pt-3 border-t border-border/40">
+      <div className="flex items-center gap-2.5 pt-2 border-t border-border/40">
         {selectedMaterial.link.startsWith('data:application/pdf') ? (
           <a
             href={selectedMaterial.link}
             download={`${selectedMaterial.title.replace(/[^a-z0-9_-]/gi, '_')}.pdf`}
-            className="flex-1 min-h-[44px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-2xl py-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center"
+            className="flex-1 min-h-[42px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-xl py-2.5 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs text-center"
           >
             <ExternalLink className="h-4 w-4" />
             Download PDF File 📥
@@ -176,7 +213,7 @@ export function EmbedViewerModal({
             href={selectedMaterial.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 min-h-[44px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-2xl py-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center"
+            className="flex-1 min-h-[42px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-xl py-2.5 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs text-center"
           >
             <ExternalLink className="h-4 w-4" />
             Open Reviewer & Download 📥

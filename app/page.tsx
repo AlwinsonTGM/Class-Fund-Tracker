@@ -83,12 +83,6 @@ export default async function Page() {
     .select('*')
     .order('created_at', { ascending: false })
 
-  // Fetch both approved and pending materials for display
-  const { data: dbClassDocs, error: classDocsError } = await supabase
-    .from('class_documents')
-    .select('*')
-    .order('created_at', { ascending: false })
-
   if (studentsError) console.warn('Error fetching students:', studentsError.message)
   if (paymentsError) console.warn('Error fetching payments:', paymentsError.message)
   if (expensesError) console.warn('Error fetching expenses:', expensesError.message)
@@ -98,7 +92,6 @@ export default async function Page() {
   if (postsError) console.warn('Error fetching freedom posts:', postsError.message)
   if (coursesError) console.warn('Error fetching courses:', coursesError.message)
   if (materialsError) console.warn('Error fetching study materials:', materialsError.message)
-  if (classDocsError) console.warn('Error fetching class documents:', classDocsError.message)
 
   const studentsList = dbStudents || []
   const paymentsList = dbPayments || []
@@ -108,7 +101,6 @@ export default async function Page() {
   const postsList = dbPosts || []
   const coursesList = dbCourses || []
   const materialsList = dbMaterials || []
-  const classDocsList = dbClassDocs || []
 
   // Perform in-memory join to bypass Supabase's relation schema cache delay
   const tasksList = (dbTasks || []).map(task => ({
@@ -129,7 +121,6 @@ export default async function Page() {
           posts={postsList}
           courses={coursesList}
           materials={materialsList}
-          classDocs={classDocsList}
           tasksError={!!tasksError}
           postsError={!!postsError}
           materialsError={!!materialsError}

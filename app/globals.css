@@ -1,39 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Space+Grotesk:ital,wght@0,400;0,500;0,700;1,400&display=swap');
 @import 'tailwindcss';
-
-/* Ambient page rain for Multiverse of Sadness */
-@keyframes fallA { to { background-position: 0 64px, 0 0; } }
-@keyframes fallB { to { background-position: 0 52px, 0 0; } }
-
-.multiverse-rain::before,
-.multiverse-rain::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-.multiverse-rain::before {
-  background-image:
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(10,15,22,.92) 22px 64px),
-    repeating-linear-gradient(102deg, transparent 0 64px, rgba(150,182,214,.07) 64px 65px, transparent 65px 128px);
-  animation: fallA .85s linear infinite;
-}
-.multiverse-rain::after {
-  background-image:
-    repeating-linear-gradient(180deg, transparent 0 16px, rgba(10,15,22,.9) 16px 52px),
-    repeating-linear-gradient(99deg, transparent 0 44px, rgba(150,182,214,.045) 44px 45px, transparent 45px 90px);
-  animation: fallB 1.4s linear infinite;
-  opacity: .85;
-}
-
-.atmo-vig {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(120% 100% at 50% 30%, transparent 58%, rgba(2,4,8,.5));
-}
 
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';

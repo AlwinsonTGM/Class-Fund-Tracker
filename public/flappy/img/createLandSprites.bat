@@ -1,1 +1,0 @@
-sprite "land_*.png" landSprite 2048 -noscale

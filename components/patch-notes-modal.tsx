@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.29'
+const CURRENT_VERSION = '1.31'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -18,16 +18,27 @@ interface PatchEntry {
 
 const PATCH_NOTES: PatchEntry[] = [
   {
-    version: '1.29',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness II Launch & Fusion Dex (861 Combinations)',
-    emoji: '🔮',
+    version: '1.31',
+    date: 'July 30, 2026',
+    title: 'Study Hub Redesign, Class Documents Streamlining & Approved Materials Multi-Column Grid',
+    emoji: '📚',
     changes: [
-      { type: 'new', text: 'Multiverse of Sadness II Official Launch — full standalone flappy mode featuring 42 base universes of emotional rain weather, physics, cinema, fourth-wall, and cursed anomalies.' },
-      { type: 'new', text: 'Fusion Dex (861 Combinations) — cataloging every possible pairwise universe combination with signature lore and dynamic procedural descriptions.' },
-      { type: 'new', text: 'Purple Hub Portal Button — added a purple atmospheric button in the main section hub with smooth portal gate transitions.' },
-      { type: 'improve', text: 'Streamlined Side Panel UI — removed legacy porting notes container for a cleaner desktop layout.' },
-      { type: 'improve', text: 'Fast Dex Windowing & Search — search and filter 861 fusions effortlessly with search inputs, pagination, and rarity badges.' }
+      { type: 'improve', text: 'Study Hub Streamlining — removed unused Class Documents subtabs to focus Study Hub 100% on Review Materials (quiz notes, exam reviewers, study resources).' },
+      { type: 'new', text: 'Approved Materials Multi-Column Grid — converted the approved materials list from a narrow vertical side panel into a full-width, responsive CSS grid (2-4 columns) positioned directly under the viewer.' },
+      { type: 'fix', text: 'PDF Viewer Layout & Whitespace Fix — eliminated excessive forced vertical blank space below the PDF embed viewer container on desktop screens.' },
+      { type: 'new', text: 'Sticky Search & Filter Sidebar & Zoom Controls — added sticky positioning with collapse toggle for the search & filter panel, plus interactive PDF zoom controls (75%-150%).' }
+    ],
+  },
+  {
+    version: '1.30',
+    date: 'July 30, 2026',
+    title: 'Game Suite Decoupling, Token Optimization & Core Feature Focus',
+    emoji: '🚀',
+    changes: [
+      { type: 'new', text: 'Decoupled Game Suite & Standalone Export — Flappy Bird Arcade & Multiverse of Sadness II have been fully exported into a dedicated standalone repository (multiverse-of-sadness).' },
+      { type: 'improve', text: 'Token & Performance Optimization — removed ~60 MB of game video/audio assets and 20+ game components to drastically reduce bundle size and preserve development token budget.' },
+      { type: 'improve', text: 'Developer Statement — "Decoupled the games to focus token budget and development time on core class fund tools and transparency features. I cant sustain developing the game suite while building class fund tools and vibe-coding, but I have a lot of fun ideas for class features to build ahead. Hope yall understand!"' },
+      { type: 'improve', text: 'Clean Codebase & Documentation — scrubbed game references across README, documentation, and interface toolbars to keep the Transparency Portal 100% focused on class fund tracking.' }
     ],
   },
   {
@@ -72,107 +83,6 @@ const PATCH_NOTES: PatchEntry[] = [
     ],
   },
   {
-    version: '1.25',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness: Gameplay Slowdown Removal & Pipe Generation Balancing',
-    emoji: '🚰',
-    changes: [
-      { type: 'fix', text: 'Impossible Pipe Generation Fixed — added a vertical delta constraint (max 110px jump) between consecutive pipe gap heights to prevent unpassable pipe placements.' },
-      { type: 'fix', text: 'Removed Gameplay Slowdown — removed unwanted slow-motion time scaling when near-miss text pops up while retaining floating text quotes, tear particles, and sound effects.' },
-      { type: 'improve', text: 'Pipe Spacing & Drift Balancing — increased horizontal pipe clearance between columns and balanced drifting pipe amplitudes for smoother reaction time.' },
-      { type: 'improve', text: 'Long Goodbye Minimum Gap — set a fair minimum pipe gap (88px) in shrinking gap universes so gameplay remains challenging yet completely beatable.' },
-    ],
-  },
-  {
-    version: '1.24',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness: Canonical Design & Typography System Restoration',
-    emoji: '🎨',
-    changes: [
-      { type: 'fix', text: 'Original HTML/CSS Design System Restoration — restored exact typography (Special Elite for titles, numbers, epitaphs & Space Grotesk for body, taglines, HUD labels, stats, keybindings).' },
-      { type: 'fix', text: 'HUD & Death Screen Stats — restored tears counter (tears ×X) under emotional damage, 4-stat death block (emotional damage, tears shed, universes felt, best damage), and flap count warning line.' },
-      { type: 'improve', text: 'Google Fonts & Canvas Text Rendering — loaded Special Elite and Space Grotesk via Google Fonts preconnect/imports and added document.fonts.load on mount for canvas Special Elite text rendering.' },
-      { type: 'improve', text: 'Ambient Dark Rain Background — restored dual-layer seamless ambient rain animations (fallA / fallB keyframes) and atmospheric vignette (.atmo-vig) on background.' },
-      { type: 'improve', text: 'Strict GEMINI.md Design Guidelines — updated GEMINI.md with comprehensive, strict design system rules to preserve canonical styling across future AI updates.' },
-    ],
-  },
-  {
-    version: '1.23',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness: PC Desktop Side-by-Side Layout & Dex Redesign',
-    emoji: '🖥️',
-    changes: [
-      { type: 'fix', text: 'PC Desktop Layout Alignment — fixed side panels ("Now Showing", "Controls", "Porting Notes") so they align side-by-side with the game canvas in a centered container on PC desktop views.' },
-      { type: 'improve', text: 'Multiverse Dex Overhaul — redesigned the Multiverse Dex modal with Special Elite headers, Space Grotesk typography, dark rain background panels (#0e1622 / #111b29), #22344a borders, and amber accents.' },
-      { type: 'improve', text: 'Header & Death Screen Consistency — restored .pill uppercase control button styling for top header bar and applied signature #again amber glow styling to the death screen retry button.' },
-    ],
-  },
-  {
-    version: '1.22',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness: Original "Now Showing" Panel & Pill Button System',
-    emoji: '🎨',
-    changes: [
-      { type: 'improve', text: 'Original "Now Showing" Restoration — restored the exact 2-column grid layout, monospace universe numbers, active "· now" state indicators, panel footer notes, Controls, and Porting Notes sections.' },
-      { type: 'improve', text: 'Pill Button Design System — standardized all header controls, modal tabs, and secondary buttons to the original `.pill` / `.pill.amber` border-tracking design.' },
-      { type: 'improve', text: 'Classic Action Button Styling — applied the signature `#again` amber-bordered uppercase action button styling to the death screen retry button.' },
-      { type: 'improve', text: 'Strict AI Design Consistency Rule — established project guidelines in GEMINI.md to strictly maintain the original HTML/CSS design aesthetic for current and future Multiverse of Sadness UI components.' },
-    ],
-  },
-  {
-    version: '1.21',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness Expansion: 40 Universes, Dex, Fusions & Bans',
-    emoji: '🌌',
-    changes: [
-      { type: 'new', text: '35 New Universes — expanded the dimension set to 40 complete universes across 6 flavors (Physics that hurts, Weather of the soul, Fourth-wall, Cinema of sadness, Online/absurd, and Cursed).' },
-      { type: 'new', text: 'Rarity Tiers — categorized universes into Common (70%), Uncommon (25%), and Cursed (5%) weighted spawns with distinct announcement badges.' },
-      { type: 'new', text: 'Multiverse Dex — interactive modal tracking progress ("X / 40 Witnessed"), displaying locked silhouettes, quotes, lore details, and discovery status.' },
-      { type: 'new', text: 'Universe Fusion Mode (Score ≥ 30) — score >= 30 triggers simultaneous hybrid universe transitions combining 2 active universes at once (e.g. NOIR × TAX SEASON).' },
-      { type: 'new', text: 'Avoid One Truth (Universe Ban) — players can select 1 universe to exclude per run directly from the Multiverse Dex.' },
-      { type: 'improve', text: 'Custom Visual Rendering Layers — added unique visual effects for Noir hat, VHS scanlines & timestamps, Silent Film intertitles, Memory vignette, Underwater bubbles, Autumn leaves, Snow, Fog, and Hologram pipes.' },
-    ],
-  },
-  {
-    version: '1.20',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness II Modular Codebase Refactoring',
-    emoji: '🏗️',
-    changes: [
-      { type: 'improve', text: 'Modular Architecture — split monolithic 1,435-line game file into decoupled single-responsibility modules: multiverse-types.ts, multiverse-audio.ts, multiverse-renderer.ts, and UI subcomponents.' },
-      { type: 'improve', text: 'Isolated Web Audio Engine — modularized Web Audio synthesizer and sound effects manager into dedicated audio utilities.' },
-      { type: 'improve', text: 'Clean Canvas Renderer — separated 2D HTML5 Canvas rendering routines for pipes, bird physics, rain, scenery, thought bubbles, and CRT effects.' },
-      { type: 'improve', text: 'UI Component Extraction — created dedicated UI subcomponents for Header, HUD, Start Overlay, Death Overlay, Universe Transition Card, and Sidebar Panel.' },
-    ],
-  },
-  {
-    version: '1.19',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness II Video Randomization Pool & 0-Lag GPU Acceleration',
-    emoji: '📽️',
-    changes: [
-      { type: 'new', text: 'Non-Repeating Video Randomization Deck — implemented a Fisher-Yates shuffled queue pool ensuring background videos chosen at level 6 never repeat during a gameplay run until all 18 videos are played.' },
-      { type: 'improve', text: '0-Lag Hardware-Accelerated Video Mode — moved standard video rendering from main-thread canvas drawImage calls to native HTML5 GPU compositor layers, eliminating frame drops.' },
-      { type: 'improve', text: 'Offscreen Context Optimization — cached 2d offscreen canvas context in pixelated video mode to prevent requestAnimationFrame allocation overhead.' },
-      { type: 'fix', text: 'Video Queue Reset on Restart — properly reset active video slots and shuffle pool on gameover and restart across both standalone and embedded Flappy Bird modes.' },
-    ],
-  },
-  {
-    version: '1.18',
-    date: 'July 28, 2026',
-    title: 'Multiverse of Sadness II Standalone Experience & Custom Engine',
-    emoji: '🌧️',
-    changes: [
-      { type: 'new', text: 'Standalone Multiverse Experience — dedicated route (/multiverse-of-sadness) featuring Qwen’s dark atmospheric aesthetic, cascading rain, Special Elite typography, glassmorphism panels, and philosophical epitaphs.' },
-      { type: 'new', text: '5 Dynamic Universe Shifts — shifting environments every 5 pipes (The One Where It Rains, Monday gray desaturation, The Upside-Down-ish inverted gravity, The Echo ghost replay, and Drama Universe letterboxing).' },
-      { type: 'new', text: 'Echo Ghost & Near-Miss Slow-Mo — records previous run trajectories for translucent ghost flight alongside the player, with near-miss time dilation (0.32x speed).' },
-      { type: 'new', text: 'Sob Physics & Apologetic Pipes — bird periodically cries with tear particle bursts and dips gravity, while pipes display floating apologies and bird internal monologue thought bubbles.' },
-      { type: 'new', text: 'Retro Pixelated Video Downsampling — dynamic 16-bit video matrix downsampler for a retro music video aesthetic, paired with WebAudio synthesized atmospheric rain, sighs, piano tones, and descending violin death sounds.' },
-      { type: 'improve', text: 'Modular Text & Music Config — centralized multiverse-config.ts array registry allowing instant editing or addition of subtitles, lyrics, thought bubbles, apology quotes, and epitaphs.' },
-      { type: 'improve', text: 'Synchronized Physics Parameters — updated standalone Multiverse physics engine constants to match main Flappy Bird jump weight and gravity perfectly.' },
-    ],
-  },
-  {
     version: '1.17',
     date: 'July 27, 2026',
     title: 'Dashboard Filter Alignments, Mobile Ergonomics & Manage Weeks Refactoring',
@@ -186,18 +96,7 @@ const PATCH_NOTES: PatchEntry[] = [
       { type: 'improve', text: 'Manage Class Weeks Layout & Full-Width Add Button — wrapped week management panel in a CollapsibleSection and aligned the Add Week button to span full container width.' },
     ],
   },
-  {
-    version: '1.16',
-    date: 'July 27, 2026',
-    title: 'Flappy Bird Multiverse Leaderboard Fix & Mode Score Isolation',
-    emoji: '🕹️',
-    changes: [
-      { type: 'fix', text: 'Multiverse Leaderboard Loading Screen — fixed leaderboard modal display text to correctly show "Loading Multiverse Mode...", purple theme animations, and "Multiverse Best" instead of Classic mode labels.' },
-      { type: 'fix', text: 'Strict Game Mode Score Isolation — disabled legacy automatic cross-mode score copying in server actions so scores achieved in Classic, Zen, and Multiverse modes remain strictly separated.' },
-      { type: 'fix', text: 'Instant Game Mode Physics Sync — synchronized physics engine state immediately upon selecting mode pills to prevent score submission race conditions on game start.' },
-      { type: 'improve', text: 'Clean High Score Fallbacks — removed legacy single-mode localStorage key fallback to prevent historical scores from bleeding into mode-specific personal bests.' },
-    ],
-  },
+
   {
     version: '1.15',
     date: 'July 27, 2026',
@@ -254,7 +153,7 @@ const PATCH_NOTES: PatchEntry[] = [
     changes: [
       { type: 'new', text: 'Officer Sidebar Menu Drawer — added a slide-over navigation drawer providing single-tap access to officer tools, financial audit exports, expense recording, theme preferences, and sign out.' },
       { type: 'improve', text: 'Spacious Dashboard Header — restored full unscrolled header layout with prominent left-aligned "Officer Dashboard" heading and portal subtitle.' },
-      { type: 'improve', text: 'Logical Toolbar Grouping — organized essential financial actions (Financial Audit Report & Record Expense) on the left side, and settings/extras (Flappy Bird arcade game, Patch Notes, Theme Toggle, Sidebar Drawer) on the right side.' },
+      { type: 'improve', text: 'Logical Toolbar Grouping — organized essential financial actions (Financial Audit Report & Record Expense) on the left side, and settings/extras (Patch Notes, Theme Toggle, Sidebar Drawer) on the right side.' },
       { type: 'improve', text: 'Compact Mobile Logo Buttons — optimized Record Expense and Financial Audit Report buttons to sleek circular logo icon buttons on mobile screens with hold/hover tooltips.' },
       { type: 'fix', text: 'Hysteresis Anti-Flicker Scroll — resolved sticky header scroll oscillation by implementing a hysteresis scroll threshold (> 45px enter, < 10px exit).' },
       { type: 'fix', text: 'Sticky Bar Mobile Alignment — fixed scrolled sticky bar layout so the Officer Dashboard title and action icons remain aligned horizontally on a single row without truncation or layout shifts.' },
