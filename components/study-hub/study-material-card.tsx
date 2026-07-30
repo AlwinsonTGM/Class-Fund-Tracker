@@ -44,20 +44,26 @@ export function StudyMaterialCard({
   return (
     <button
       onClick={() => onSelect(mat)}
-      className={`flex flex-col justify-between p-4 min-h-[120px] rounded-2xl border text-left cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md select-none ${
+      className={`flex flex-col justify-between p-4 min-h-[100px] rounded-2xl border text-left cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md select-none press-spring anim-card-scale-in ${
         isSelected
           ? 'bg-card border-primary shadow-sm ring-2 ring-primary/20'
           : 'bg-card hover:bg-card/90 border-border/80 text-muted-foreground hover:text-foreground'
       }`}
     >
       <div>
-        <div className="flex items-center justify-between w-full gap-2 mb-1">
-          <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-            isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-          }`}>
-            {mat.category}
+        <div className="flex items-center justify-between w-full gap-2 mb-1.5">
+          <span className="text-[10px] text-muted-foreground/80 font-mono font-medium truncate">
+            by {mat.submitted_by || 'Anonymous'}
           </span>
-          <span className="text-[10px] opacity-70 truncate font-mono">by {mat.submitted_by}</span>
+          {(mat.link.startsWith('data:application/pdf') || mat.link.toLowerCase().endsWith('.pdf')) ? (
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-red-500/10 text-red-600 dark:text-red-400 shrink-0">
+              📄 PDF File
+            </span>
+          ) : (
+            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-primary/10 text-primary shrink-0">
+              🔗 Web Link
+            </span>
+          )}
         </div>
 
         {isEditing ? (
@@ -108,22 +114,6 @@ export function StudyMaterialCard({
             )}
           </div>
         )}
-
-        {mat.description && (
-          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">
-            {mat.description}
-          </p>
-        )}
-      </div>
-      
-      <div className="flex flex-wrap gap-1 mt-2.5 text-[9px] font-bold">
-        {(mat.link.startsWith('data:application/pdf') || mat.link.toLowerCase().endsWith('.pdf')) && (
-          <span className="bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-md">📄 PDF File</span>
-        )}
-        {course && <span className="bg-sky-500/10 text-sky-700 dark:text-sky-400 px-1.5 py-0.5 rounded-md">{course.code}</span>}
-        {mat.study_type === 'week' && <span className="bg-purple-500/10 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded-md">Week {mat.week_number}</span>}
-        {mat.study_type === 'lesson' && mat.lesson_name && <span className="bg-green-500/10 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-md truncate max-w-[100px]">{mat.lesson_name}</span>}
-        {mat.study_type === 'task' && mat.task_name && <span className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-1.5 py-0.5 rounded-md truncate max-w-[100px]">{mat.task_name}</span>}
       </div>
     </button>
   )

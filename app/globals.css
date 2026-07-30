@@ -102,6 +102,19 @@ html.dark {
   50%      { box-shadow: 0 0 16px 4px rgba(var(--primary-rgb, 22, 131, 91), 0.10); }
 }
 
+@keyframes accordion-down {
+  from { height: 0; opacity: 0; transform: translateY(-4px); }
+  to   { height: var(--radix-accordion-content-height, auto); opacity: 1; transform: translateY(0); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height, auto); opacity: 1; transform: translateY(0); }
+  to   { height: 0; opacity: 0; transform: translateY(-4px); }
+}
+@keyframes card-scale-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* ─── Animation Utility Classes ─── */
 .anim-modal-overlay-in  { animation: modal-overlay-in 350ms var(--ease-spring-smooth) both; }
 .anim-modal-overlay-out { animation: modal-overlay-out 150ms var(--ease-swift) both; }
@@ -111,8 +124,19 @@ html.dark {
 .anim-slide-out-left    { animation: slide-out-left 450ms var(--ease-spring-smooth) both; }
 .anim-fade-slide-in     { animation: fade-slide-in 350ms var(--ease-spring-smooth) both; }
 .anim-stagger-in        { animation: stagger-in 400ms var(--ease-spring-smooth) both; }
+.anim-card-scale-in     { animation: card-scale-in 350ms var(--ease-spring-smooth) both; }
 .anim-note-spawn        { animation: note-spawn-zoom 520ms var(--ease-spring-snappy) both; }
 .anim-theme-spin        { animation: theme-spin 500ms var(--ease-spring-snappy); }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-slide-in,
+  .anim-stagger-in,
+  .anim-card-scale-in,
+  .anim-modal-card-in {
+    animation: none !important;
+    transform: none !important;
+  }
+}
 
 /* ─── Interactive Press Effect ─── */
 .press-spring {

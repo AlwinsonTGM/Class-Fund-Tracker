@@ -78,13 +78,14 @@ export function StudyHub({
   // Review Materials state
   const [materials, setMaterials] = useState<StudyMaterial[]>(initialMaterials)
   const [selectedMaterial, setSelectedMaterial] = useState<StudyMaterial | null>(null)
+  const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({})
 
-  // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [selectedStudyType, setSelectedStudyType] = useState<string>('all')
-  const [isFilterCollapsed, setIsFilterCollapsed] = useState(false)
+  const toggleSubject = (subjectKey: string) => {
+    setOpenSubjects(prev => ({
+      ...prev,
+      [subjectKey]: !prev[subjectKey]
+    }))
+  }
 
   // Submission Form State
   const [showSubmitModal, setShowSubmitModal] = useState(false)
@@ -146,12 +147,12 @@ export function StudyHub({
       title: submitTitle.trim(),
       description: submitDescription.trim() || undefined,
       link: submitLink.trim(),
-      category: submitCategory,
-      study_type: submitStudyType,
+      category: submitCategory || 'Other',
+      study_type: submitStudyType || 'lesson',
       course_id: submitCourseId ? Number(submitCourseId) : null,
       week_number: submitWeekNumber ? Number(submitWeekNumber) : null,
-      lesson_name: submitStudyType === 'lesson' ? submitLessonName.trim() : null,
-      task_name: submitStudyType === 'task' ? submitTaskName.trim() : null,
+      lesson_name: submitLessonName.trim() || null,
+      task_name: submitTaskName.trim() || null,
       submitted_by: submitContributor.trim() || 'Anonymous'
     }
 
@@ -304,20 +305,46 @@ export function StudyHub({
   const approvedMaterials = materials.filter(m => m.approved)
   const pendingMaterials = materials.filter(m => !m.approved)
 
-  const filteredApproved = approvedMaterials.filter(m => {
-    const matchSearch = 
-      m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (m.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+  // Soft, eye-friendly color themes per subject
+  const COURSE_THEMES = [
+    { bg: 'bg-emerald-500/10 hover:bg-emerald-500/15 border-emerald-500/20 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30', text: 'text-emerald-800 dark:text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300' },
+    { bg: 'bg-sky-500/10 hover:bg-sky-500/15 border-sky-500/20 dark:bg-sky-950/20 dark:hover:bg-sky-950/30', text: 'text-sky-800 dark:text-sky-300', badge: 'bg-sky-500/20 text-sky-800 dark:text-sky-300' },
+    { bg: 'bg-violet-500/10 hover:bg-violet-500/15 border-violet-500/20 dark:bg-violet-950/20 dark:hover:bg-violet-950/30', text: 'text-violet-800 dark:text-violet-300', badge: 'bg-violet-500/20 text-violet-800 dark:text-violet-300' },
+    { bg: 'bg-amber-500/10 hover:bg-amber-500/15 border-amber-500/20 dark:bg-amber-950/20 dark:hover:bg-amber-950/30', text: 'text-amber-800 dark:text-amber-300', badge: 'bg-amber-500/20 text-amber-800 dark:text-amber-300' },
+    { bg: 'bg-teal-500/10 hover:bg-teal-500/15 border-teal-500/20 dark:bg-teal-950/20 dark:hover:bg-teal-950/30', text: 'text-teal-800 dark:text-teal-300', badge: 'bg-teal-500/20 text-teal-800 dark:text-teal-300' },
+    { bg: 'bg-rose-500/10 hover:bg-rose-500/15 border-rose-500/20 dark:bg-rose-950/20 dark:hover:bg-rose-950/30', text: 'text-rose-800 dark:text-rose-300', badge: 'bg-rose-500/20 text-rose-800 dark:text-rose-300' },
+    { bg: 'bg-indigo-500/10 hover:bg-indigo-500/15 border-indigo-500/20 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/30', text: 'text-indigo-800 dark:text-indigo-300', badge: 'bg-indigo-500/20 text-indigo-800 dark:text-indigo-300' }
+  ]
+
+  // Group materials by course_id
+  const groupedByCourse = React.useMemo(() => {
+    const groups: Array<{ course: Course | null; key: string; materials: StudyMaterial[] }> = []
     
-    const matchCourse = selectedCourseId === 'all' || String(m.course_id) === selectedCourseId
-    const matchCategory = selectedCategory === 'all' || m.category === selectedCategory
-    const matchType = selectedStudyType === 'all' || m.study_type === selectedStudyType
-    
-    return matchSearch && matchCourse && matchCategory && matchType
-  })
+    courses.forEach(course => {
+      const courseMats = approvedMaterials.filter(m => m.course_id === course.id)
+      if (courseMats.length > 0) {
+        groups.push({
+          course,
+          key: `course-${course.id}`,
+          materials: courseMats
+        })
+      }
+    })
+
+    const uncategorizedMats = approvedMaterials.filter(m => !m.course_id || !courses.some(c => c.id === m.course_id))
+    if (uncategorizedMats.length > 0) {
+      groups.push({
+        course: null,
+        key: 'course-uncategorized',
+        materials: uncategorizedMats
+      })
+    }
+
+    return groups
+  }, [approvedMaterials, courses])
 
   return (
-    <div className="flex flex-col gap-6 anim-fade-slide-in">
+    <div className="flex flex-col gap-6 w-full anim-fade-slide-in">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between items-start gap-4 border-b border-border/40 pb-4">
         <div>
@@ -356,17 +383,12 @@ export function StudyHub({
                 <div key={mat.id} className="bg-card border border-amber-500/20 dark:border-amber-900/40 rounded-2xl p-4 shadow-sm flex flex-col gap-3 justify-between">
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between gap-1.5">
-                      <span className="text-[8px] font-bold text-amber-700 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">{mat.category}</span>
                       <span className="text-[9px] text-muted-foreground truncate font-mono">by {mat.submitted_by}</span>
                     </div>
                     <h4 className="text-xs font-bold text-foreground truncate">{mat.title}</h4>
-                    {mat.description && <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{mat.description}</p>}
                     
                     <div className="flex flex-wrap gap-1 mt-1 text-[8px] font-bold">
-                      {course && <span className="bg-blue-500/10 text-blue-700 px-1 py-0.25 rounded">{course.code}</span>}
-                      {mat.study_type === 'week' && <span className="bg-purple-500/10 text-purple-700 px-1 py-0.25 rounded">Week {mat.week_number}</span>}
-                      {mat.study_type === 'lesson' && mat.lesson_name && <span className="bg-green-500/10 text-green-700 px-1 py-0.25 rounded truncate max-w-[80px]">{mat.lesson_name}</span>}
-                      {mat.study_type === 'task' && mat.task_name && <span className="bg-indigo-500/10 text-indigo-700 px-1 py-0.25 rounded truncate max-w-[80px]">{mat.task_name}</span>}
+                      {course && <span className="bg-blue-500/10 text-blue-700 px-1 py-0.25 rounded">{course.code} — {course.name}</span>}
                     </div>
                     {mat.link.startsWith('data:application/pdf') ? (
                       <div className="text-[9px] text-red-600 dark:text-red-400 font-bold mt-1 flex items-center gap-1 bg-red-500/10 px-1.5 py-0.5 rounded-md w-fit">
@@ -403,151 +425,128 @@ export function StudyHub({
         </div>
       )}
 
-      {/* Main Grid: Search/Filter Sidebar (Left 280px) & Content Area (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Search & Filter Panel (Sticky Left Sidebar) */}
-        <aside className="lg:col-span-3 lg:sticky lg:top-20 bg-card border border-border rounded-3xl p-4 shadow-sm flex flex-col gap-4 max-h-[calc(100vh-100px)] overflow-y-auto custom-scrollbar">
-          <div className="flex items-center justify-between border-b border-border/40 pb-2">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-foreground">
-              <Filter className="h-4 w-4 text-primary" />
-              <span>Search & Filter</span>
-            </div>
+      {/* Main Full-Width Section: Viewer on Top, Subject Accordions Below */}
+      <main className="flex flex-col gap-6 w-full">
+        {/* Lecture / PDF Embed Viewer */}
+        <section className="bg-card border border-border rounded-3xl p-5 shadow-sm anim-card-scale-in">
+          <EmbedViewerModal
+            selectedMaterial={selectedMaterial}
+            courses={courses}
+            user={user}
+            onDeleteMaterial={handleDelete}
+            onUpdateTitle={handleUpdateTitle}
+          />
+        </section>
 
-            <button
-              onClick={() => setIsFilterCollapsed(!isFilterCollapsed)}
-              className="lg:hidden p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              {isFilterCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-            </button>
+        {/* Approved Materials by Subject (Collapsible Accordions - Closed by Default) */}
+        <section className="flex flex-col gap-4 w-full">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-sm font-extrabold text-foreground tracking-tight flex items-center gap-2">
+              <span>Subject Reviewers</span>
+              <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                {groupedByCourse.length} Subject{groupedByCourse.length !== 1 ? 's' : ''} • {approvedMaterials.length} Material{approvedMaterials.length !== 1 ? 's' : ''}
+              </span>
+            </h3>
           </div>
 
-          <div className={`flex flex-col gap-4 ${isFilterCollapsed ? 'hidden lg:flex' : 'flex'}`}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search reviews..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full text-xs rounded-xl border border-border bg-background pl-9 pr-4 py-2.5 text-foreground focus:outline-none focus:border-primary transition-all"
-              />
+          {groupedByCourse.length === 0 ? (
+            <div className="bg-card border border-border border-dashed rounded-3xl py-12 px-4 text-center text-muted-foreground">
+              <Search className="h-6 w-6 mx-auto opacity-40 mb-2" />
+              <p className="text-xs font-bold text-foreground">No Study Materials Available</p>
+              <p className="text-[11px] mt-0.5">Click "Submit Reviewer" to add materials for your class!</p>
             </div>
+          ) : (
+            <div className="flex flex-col gap-3.5 w-full">
+              {groupedByCourse.map((group, idx) => {
+                const isOpen = !!openSubjects[group.key]
+                const theme = COURSE_THEMES[idx % COURSE_THEMES.length]
+                const fullSubjectTitle = group.course 
+                  ? `${group.course.code} — ${group.course.name}` 
+                  : 'General / Uncategorized Materials'
 
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Course:</span>
-              <select
-                value={selectedCourseId}
-                onChange={e => setSelectedCourseId(e.target.value)}
-                className="w-full text-xs rounded-xl border border-border bg-background p-2.5 focus:outline-none focus:border-primary text-foreground"
-              >
-                <option value="all">All Courses</option>
-                {courses.map(c => (
-                  <option key={c.id} value={String(c.id)}>{c.code} - {c.name}</option>
-                ))}
-              </select>
+                return (
+                  <div 
+                    key={group.key}
+                    className={`border rounded-2xl overflow-hidden transition-all duration-200 anim-stagger-in ${theme.bg}`}
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    {/* Subject Header Toggle */}
+                    <button
+                      onClick={() => toggleSubject(group.key)}
+                      className="w-full min-h-[52px] px-5 py-3.5 flex items-center justify-between text-left cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 pr-2">
+                        <span className={`text-xs font-black tracking-tight truncate ${theme.text}`}>
+                          {fullSubjectTitle}
+                        </span>
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 ${theme.badge}`}>
+                          {group.materials.length} Reviewer{group.materials.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      <div className={`p-1.5 rounded-full ${theme.badge} shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </button>
+
+                    {/* Collapsible Card Grid Content */}
+                    {isOpen && (
+                      <div className="p-4 pt-1 border-t border-border/20 bg-card/60 backdrop-blur-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                          {group.materials.map(mat => {
+                            const isSelected = selectedMaterial?.id === mat.id
+                            return (
+                              <StudyMaterialCard
+                                key={mat.id}
+                                mat={mat}
+                                isSelected={isSelected}
+                                course={group.course || undefined}
+                                onSelect={setSelectedMaterial}
+                                onUpdateTitle={handleUpdateTitle}
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Category:</span>
-              <select
-                value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
-                className="w-full text-xs rounded-xl border border-border bg-background p-2.5 focus:outline-none focus:border-primary text-foreground"
-              >
-                <option value="all">All Categories</option>
-                <option value="Quiz">Quiz Reviewer</option>
-                <option value="Exam">Exam Reviewer</option>
-                <option value="Lecture">Lecture Notes</option>
-                <option value="Other">Other Material</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Topic Type:</span>
-              <select
-                value={selectedStudyType}
-                onChange={e => setSelectedStudyType(e.target.value)}
-                className="w-full text-xs rounded-xl border border-border bg-background p-2.5 focus:outline-none focus:border-primary text-foreground"
-              >
-                <option value="all">All Topic Types</option>
-                <option value="lesson">Lesson-based</option>
-                <option value="week">Week-based</option>
-                <option value="task">Task-based</option>
-              </select>
-            </div>
-
-            <div className="mt-2 p-3 bg-muted/40 rounded-2xl border border-border/30 text-[10px] text-muted-foreground flex flex-col gap-1">
-              <span>📚 Total Materials: <strong>{approvedMaterials.length}</strong></span>
-              <span>💡 Filter Matches: <strong>{filteredApproved.length}</strong></span>
-              {user && <span>⏳ Pending Review: <strong>{pendingMaterials.length}</strong></span>}
-            </div>
-          </div>
-        </aside>
-
-        {/* Right Main Section: Viewer on Top, Approved Materials Grid Below */}
-        <main className="lg:col-span-9 flex flex-col gap-6 w-full">
-          {/* Lecture / PDF Embed Viewer */}
-          <section className="bg-card border border-border rounded-3xl p-5 shadow-sm">
-            <EmbedViewerModal
-              selectedMaterial={selectedMaterial}
-              courses={courses}
-              user={user}
-              onDeleteMaterial={handleDelete}
-              onUpdateTitle={handleUpdateTitle}
-            />
-          </section>
-
-          {/* Approved Materials Grid Section */}
-          <section className="flex flex-col gap-3">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="text-sm font-extrabold text-foreground tracking-tight">
-                Approved Study Materials ({filteredApproved.length})
-              </h3>
-              {selectedCourseId !== 'all' || selectedCategory !== 'all' || searchQuery ? (
-                <button
-                  onClick={() => {
-                    setSearchQuery('')
-                    setSelectedCourseId('all')
-                    setSelectedCategory('all')
-                    setSelectedStudyType('all')
-                  }}
-                  className="text-[11px] font-bold text-primary hover:underline"
-                >
-                  Reset Filters
-                </button>
-              ) : null}
-            </div>
-
-            {filteredApproved.length === 0 ? (
-              <div className="bg-card border border-border border-dashed rounded-3xl py-12 px-4 text-center text-muted-foreground">
-                <Search className="h-6 w-6 mx-auto opacity-40 mb-2" />
-                <p className="text-xs font-bold text-foreground">No Study Materials Found</p>
-                <p className="text-[11px] mt-0.5">Try clearing filters or click "Submit Reviewer" to add one!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredApproved.map(mat => {
-                  const isSelected = selectedMaterial?.id === mat.id
-                  const course = courses.find(c => c.id === mat.course_id)
-                  return (
-                    <StudyMaterialCard
-                      key={mat.id}
-                      mat={mat}
-                      isSelected={isSelected}
-                      course={course}
-                      onSelect={setSelectedMaterial}
-                      onUpdateTitle={handleUpdateTitle}
-                    />
-                  )
-                })}
-              </div>
-            )}
-          </section>
-        </main>
-      </div>
+          )}
+        </section>
+      </main>
 
       {/* Dynamic Submission Modal */}
       <AddStudyMaterialModal
+        showSubmitModal={showSubmitModal}
+        onClose={() => setShowSubmitModal(false)}
+        submitSuccessMsg={submitSuccessMsg}
+        setSubmitSuccessMsg={setSubmitSuccessMsg}
+        submitError={submitError}
+        setSubmitError={setSubmitError}
+        submitTitle={submitTitle}
+        setSubmitTitle={setSubmitTitle}
+        submitDescription={submitDescription}
+        setSubmitDescription={setSubmitDescription}
+        submitLink={submitLink}
+        setSubmitLink={setSubmitLink}
+        submitCategory={submitCategory}
+        setSubmitCategory={setSubmitCategory}
+        submitStudyType={submitStudyType}
+        setSubmitStudyType={setSubmitStudyType}
+        submitCourseId={submitCourseId}
+        setSubmitCourseId={setSubmitCourseId}
+        submitWeekNumber={submitWeekNumber}
+        setSubmitWeekNumber={setSubmitWeekNumber}
+        submitLessonName={submitLessonName}
+        setSubmitLessonName={setSubmitLessonName}
+        submitTaskName={submitTaskName}
+        setSubmitTaskName={setSubmitTaskName}
+        submitContributor={submitContributor}
+        setSubmitContributor={setSubmitContributor}
+        onSubmit={handleSubmit}
+        isPending={isPending}
         showSubmitModal={showSubmitModal}
         onClose={() => setShowSubmitModal(false)}
         submitSuccessMsg={submitSuccessMsg}

@@ -206,7 +206,7 @@ export function EmbedViewerModal({
             className="flex-1 min-h-[42px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-xl py-2.5 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs text-center"
           >
             <ExternalLink className="h-4 w-4" />
-            Download PDF File 📥
+            Download PDF File
           </a>
         ) : (
           <a
@@ -216,7 +216,7 @@ export function EmbedViewerModal({
             className="flex-1 min-h-[42px] text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 rounded-xl py-2.5 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs text-center"
           >
             <ExternalLink className="h-4 w-4" />
-            Open Reviewer & Download 📥
+            Open Reviewer & Download
           </a>
         )}
       </div>

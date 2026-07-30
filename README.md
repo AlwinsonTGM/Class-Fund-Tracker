@@ -35,11 +35,12 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Card Loading Backdrops**: Tasks being deleted or updated display clear `Deleting...` or `Updating...` overlays immediately, removing transaction lag confusion.
 - **Sign-Out Feedback**: Sign-out buttons instantly render a spinning loader and display `Signing out...` on click.
 
-### 📚 6. Study Hub & Multi-Column Reviewer Explorer (v1.31)
-- **Review Materials Focus**: Streamlined Study Hub to focus 100% on student review materials (quiz notes, exam reviewers, lecture notes) and removed unused class document subtabs.
-- **Approved Materials Multi-Column Grid**: Display approved reviewers in a responsive 2-4 column card grid positioned directly below the main projection viewer.
-- **PDF Viewer Whitespace Fix & Zoom Controls**: Eliminated forced vertical blank space beneath the PDF embed viewer on desktop and added zoom controls (75%, 100%, 125%, 150%).
-- **Sticky Search & Filter Sidebar**: Mobile and desktop sticky left sidebar (`position: sticky; top: 80px`) with smooth collapse/expand toggle for searching by course, category, and topic type.
+### 📚 6. Study Hub & Subject Accordion Explorer (v1.32)
+- **Full-Width Subject Accordions**: Redesigned Study Hub layout to 100% full width, organizing reviewers under subject-based collapsible accordions that start closed by default.
+- **Eye-Friendly Soft Color Coding**: Styled subject accordion headers with soft, comfortable pastel color themes (emerald, sky blue, violet, amber, teal, rose, indigo) for both light and dark mode.
+- **Simplified Reviewer Cards & Submission Form**: Optimized reviewer cards by focusing on contributor info, module title editing, and clear file indicators (📄 PDF File / 🔗 Web Link), while streamlining the submission form.
+- **Embedded PDF Viewer & Projection**: Approved PDF reviewers render directly inside the embedded projection viewer iframe with 1-click download capabilities.
+- **Hardware-Accelerated Entrance Animations**: Smooth entrance animations with staggered subject accordion reveals and card scale-ins on expansion.
 
 ### ☁️ 7. Cloud Sync & Fluid Glass Navigation (v1.6)
 - **Interactive Toast Notifications**: Instant sliding alert cards notify users of live transactions.

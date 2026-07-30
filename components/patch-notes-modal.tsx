@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.31'
+const CURRENT_VERSION = '1.32'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,19 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.32',
+    date: 'July 30, 2026',
+    title: 'Study Hub Layout Overhaul, Subject Dropdown Accordions & Staggered Animations',
+    emoji: '📚',
+    changes: [
+      { type: 'new', text: 'Full-Width Subject Accordions — redesigned Study Hub layout to full width, organizing reviewers under subject-based collapsible accordions that are closed by default.' },
+      { type: 'new', text: 'Eye-Friendly Soft Color Coding — styled subject accordion headers with soft, comfortable pastel color themes (emerald, sky blue, violet, amber, teal, rose, indigo) optimized for both light and dark mode.' },
+      { type: 'improve', text: 'Simplified Reviewer Cards — optimized reviewer cards by removing category and topic badges, focusing on contributor details, title editing, and clear file indicators (📄 PDF File / 🔗 Web Link).' },
+      { type: 'improve', text: 'Streamlined Submission Modal — simplified "Submit Reviewer" form by removing description, category, and scope inputs while displaying full subject names (e.g. CS 101 — Intro to CS).' },
+      { type: 'new', text: 'Hardware-Accelerated Entrance Animations — added smooth opening entrance animations with staggered accordion reveals and card scale-ins.' }
+    ],
+  },
   {
     version: '1.31',
     date: 'July 30, 2026',

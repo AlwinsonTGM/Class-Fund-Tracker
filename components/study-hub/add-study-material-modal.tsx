@@ -287,141 +287,29 @@ export function AddStudyMaterialModal({
                 </div>
               )}
 
-              {/* Description */}
+              {/* Course Reference (Subject Full Name) */}
               <div className="flex flex-col gap-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Short Description</label>
-                <textarea
-                  placeholder="Include details about coverage, authors, etc. (optional)"
-                  value={submitDescription}
-                  onChange={e => setSubmitDescription(e.target.value)}
-                  rows={2}
-                  className="w-full text-xs rounded-xl border border-border bg-background p-2.5 text-foreground focus:outline-none focus:border-primary transition-all resize-none"
-                />
-              </div>
-
-              {/* Link */}
-              <div className="flex flex-col gap-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Material Link *</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="e.g. Google Drive sharing URL, PDF link"
-                  value={submitLink}
-                  onChange={e => setSubmitLink(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-border bg-background p-2.5 text-foreground focus:outline-none focus:border-primary transition-all"
-                />
-                <span className="text-[8px] text-amber-600 dark:text-amber-500 font-bold px-1.5 py-0.5 bg-amber-500/10 rounded-lg w-fit">
-                  ⚠️ Note: Ensure your Google Drive file permissions are set to "Anyone with the link can view"!
-                </span>
-              </div>
-
-              {/* Category */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Category</label>
-                <select
-                  value={submitCategory}
-                  onChange={e => setSubmitCategory(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-border bg-background p-2.5 focus:outline-none focus:border-primary text-foreground"
-                >
-                  <option value="Quiz">Quiz Reviewer</option>
-                  <option value="Exam">Exam Reviewer</option>
-                  <option value="Lecture">Lecture Notes</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              {/* Course */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Course Reference</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Subject / Course Reference *</label>
                 <select
                   value={submitCourseId}
                   onChange={e => setSubmitCourseId(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-border bg-background p-2.5 focus:outline-none focus:border-primary text-foreground"
+                  className="w-full text-xs rounded-xl border border-border bg-background p-2.5 min-h-[44px] focus:outline-none focus:border-primary text-foreground"
                 >
-                  <option value="">None / General</option>
+                  <option value="">General / Uncategorized</option>
                   {courses.map(c => (
-                    <option key={c.id} value={String(c.id)}>{c.code}</option>
+                    <option key={c.id} value={String(c.id)}>
+                      {c.code} — {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
-
-              {/* Study Type Selection */}
-              <div className="flex flex-col gap-1.5 col-span-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Target Scope</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'lesson', label: 'Lesson' },
-                    { id: 'week', label: 'Week' },
-                    { id: 'task', label: 'Task' }
-                  ].map(t => (
-                    <button
-                      type="button"
-                      key={t.id}
-                      onClick={() => setSubmitStudyType(t.id)}
-                      className={`min-h-[44px] py-2 px-2.5 border rounded-xl text-[10px] font-bold cursor-pointer transition-all flex items-center justify-center ${
-                        submitStudyType === t.id
-                          ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                          : 'border-border bg-background text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {t.label} Type
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Subcategories */}
-              {submitStudyType === 'lesson' && (
-                <div className="flex flex-col gap-1.5 col-span-2 anim-fade-in">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Lesson Name / Topic Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Lesson 3: Limits & Continuity"
-                    value={submitLessonName}
-                    onChange={e => setSubmitLessonName(e.target.value)}
-                    className="w-full text-xs rounded-xl border border-border bg-background p-2.5 min-h-[44px] text-foreground focus:outline-none focus:border-primary transition-all"
-                  />
-                </div>
-              )}
-
-              {submitStudyType === 'week' && (
-                <div className="flex flex-col gap-1.5 col-span-2 anim-fade-in">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Target Calendar Week</label>
-                  <select
-                    value={submitWeekNumber}
-                    onChange={e => setSubmitWeekNumber(e.target.value)}
-                    className="w-full text-xs rounded-xl border border-border bg-background p-2.5 min-h-[44px] focus:outline-none focus:border-primary text-foreground"
-                  >
-                    <option value="">Select Target Week</option>
-                    {weeks.map(w => (
-                      <option key={w.week_number} value={String(w.week_number)}>Week {w.week_number}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {submitStudyType === 'task' && (
-                <div className="flex flex-col gap-1.5 col-span-2 anim-fade-in">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Associated Task Reference</label>
-                  <select
-                    value={submitTaskName}
-                    onChange={e => setSubmitTaskName(e.target.value)}
-                    className="w-full text-xs rounded-xl border border-border bg-background p-2.5 min-h-[44px] focus:outline-none focus:border-primary text-foreground"
-                  >
-                    <option value="">Select Associated Task (optional)</option>
-                    {tasks.filter(t => !t.is_private).map(t => (
-                      <option key={t.id} value={t.title}>{t.title} ({t.task_type})</option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               {/* Contributor */}
               <div className="flex flex-col gap-1.5 col-span-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Contributor Name (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Jane Doe (leaves empty for Anonymous)"
+                  placeholder="e.g. Jane Doe (leave empty for Anonymous)"
                   value={submitContributor}
                   onChange={e => setSubmitContributor(e.target.value)}
                   className="w-full text-xs rounded-xl border border-border bg-background p-2.5 min-h-[44px] text-foreground focus:outline-none focus:border-primary transition-all"
