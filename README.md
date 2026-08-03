@@ -18,10 +18,11 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Personal Tasks**: Standard students can create private tasks. The visibility selector is locked to **Private** for non-officers.
 - **Ownership Security**: Edit, delete, and toggle actions check if `created_by` matches the logged-in user, keeping private tasks completely secure.
 
-### 🎵 3. Freedom Wall with Music & Reactions (v1.2)
-- **Sticky Notes**: Anonymous wall posts with customizable color pads.
-- **iTunes Song Attachments**: Search any track and embed an iTunes 30-second preview player (complete with album art, play/pause controls, and interactive progress bars).
-- **Emoji Reactions**: Discord-style reaction counters. Click existing reactions to increment them, or add any of the 24 curated emojis from the palette picker.
+### 🚧 3. Freedom Wall Temporary Rework & Maintenance Screen (v1.33)
+- **Temporary Rework Notice**: Restricted public and officer access to Freedom Wall posts and note editor, replacing the tab with a modern maintenance & rework screen.
+- **Personal Apology & Context**: Displays a personal note (*"I'm sorry, I didn't mean to..."*) and a transparent roadmap of ongoing upgrades for safer, cleaner, and better canvas physics & moderation.
+- **Modular Subcomponent Architecture**: Added `components/freedom-wall/under-rework.tsx` while preserving full component structure and code optimization.
+
 
 ### 🔐 4. KLD-Restricted Public Sign-Up & Spam-Free Wall Reactions (v1.4)
 - **School-Restricted Sign-Up**: Anyone with a `@kld.edu.ph` email domain can register, while others are strictly rejected.

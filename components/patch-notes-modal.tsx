@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.32'
+const CURRENT_VERSION = '1.33'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -18,7 +18,19 @@ interface PatchEntry {
 
 const PATCH_NOTES: PatchEntry[] = [
   {
+    version: '1.33',
+    date: 'August 3, 2026',
+    title: 'Freedom Wall Temporary Rework & Maintenance Screen',
+    emoji: '🚧',
+    changes: [
+      { type: 'new', text: 'Freedom Wall Rework Notice — temporarily restricted public and officer access to Freedom Wall posts and note editor, replacing the tab with a modern maintenance & rework screen.' },
+      { type: 'improve', text: 'Personal Apology & Rework Context — added a personal note ("I\'m sorry, I didn\'t mean to...") and transparent roadmap of ongoing upgrades for safer, cleaner, and better canvas physics & moderation.' },
+      { type: 'improve', text: 'Modular Subcomponent Architecture — added components/freedom-wall/under-rework.tsx while preserving full component structure and code optimization.' }
+    ],
+  },
+  {
     version: '1.32',
+
     date: 'July 30, 2026',
     title: 'Study Hub Layout Overhaul, Subject Dropdown Accordions & Staggered Animations',
     emoji: '📚',

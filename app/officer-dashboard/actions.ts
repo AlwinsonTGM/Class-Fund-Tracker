@@ -652,6 +652,7 @@ export async function addStudyMaterialAction(input: AddStudyMaterialInput) {
     if (insertError) throw insertError
 
     revalidatePath('/')
+    revalidatePath('/officer-dashboard')
     return { success: true }
   } catch (err: any) {
     console.error('Error adding study material:', err)
@@ -685,6 +686,7 @@ export async function approveStudyMaterialAction(id: number) {
     if (logError) console.error('Failed to log study material approval:', logError.message)
 
     revalidatePath('/')
+    revalidatePath('/officer-dashboard')
     return { success: true }
   } catch (err: any) {
     console.error('Error approving study material:', err)
@@ -718,6 +720,7 @@ export async function deleteStudyMaterialAction(id: number) {
     if (logError) console.error('Failed to log study material deletion:', logError.message)
 
     revalidatePath('/')
+    revalidatePath('/officer-dashboard')
     return { success: true }
   } catch (err: any) {
     console.error('Error deleting study material:', err)
@@ -752,6 +755,7 @@ export async function updateStudyMaterialTitleAction(id: number, title: string) 
     if (logError) console.error('Failed to log study material title update:', logError.message)
 
     revalidatePath('/')
+    revalidatePath('/officer-dashboard')
     return { success: true }
   } catch (err: any) {
     console.error('Error updating study material title:', err)

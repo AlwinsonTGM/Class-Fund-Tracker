@@ -22,6 +22,8 @@ import {
 import { FreedomPostCard } from './freedom-wall/freedom-post-card'
 import { PhysicsCanvas } from './freedom-wall/physics-canvas'
 import { SongMiniPlayer } from './freedom-wall/song-mini-player'
+import { UnderRework } from './freedom-wall/under-rework'
+
 
 // Dynamic imports for heavy components
 const AddPostModal = dynamic(
@@ -815,8 +817,15 @@ export function FreedomWall({
     }
   }
 
+  return <UnderRework />
+}
+
+/* Original JSX kept disabled during rework */
+function _DisabledFreedomWallJSX({ fallbackMode }: { fallbackMode?: boolean }) {
   return (
     <div className="flex flex-col gap-6">
+
+
       {fallbackMode && (
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400 leading-5 flex items-start gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
