@@ -19,7 +19,7 @@ export function UnderRework({ onNavigateHome }: UnderReworkProps) {
         <div className="relative flex items-center justify-center">
           <div className="absolute inset-0 rounded-full bg-amber-500/20 dark:bg-amber-500/30 animate-ping opacity-75" />
           <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 dark:from-amber-500/30 dark:to-orange-500/40 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-inner">
-            <Wrench className="h-10 w-10 sm:h-12 sm:w-12 animate-bounce" />
+            <Wrench className="h-10 w-10 sm:h-12 sm:w-12" />
           </div>
           <div className="absolute -bottom-1 -right-1 bg-background border border-border rounded-full p-1.5 shadow-md">
             <Lock className="h-4 w-4 text-muted-foreground" />

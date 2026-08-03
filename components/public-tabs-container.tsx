@@ -95,14 +95,44 @@ export function PublicTabsContainer({
     setMounted(true)
   }, [])
 
-  // Read URL search params on mount to handle redirects from /login
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId)
+    setAddPostTrigger(false)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('tab', tabId)
+      window.history.replaceState({}, '', url.toString())
+    }
+  }
+
+  // Read URL search params on mount to handle redirects & direct tab links
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
-      if (params.get('tab') === 'portal') {
-        setActiveTab('portal')
+      const tabParam = params.get('tab')
+      if (tabParam && ['home', 'tasks', 'study', 'freedom', 'portal'].includes(tabParam)) {
+        setActiveTab(tabParam)
       }
     }
+  }, [])
+
+  // Keyboard navigation shortcuts (1-5 to switch tabs)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target?.isContentEditable) {
+        return
+      }
+      if (e.key >= '1' && e.key <= '5') {
+        const tabMap = ['home', 'tasks', 'study', 'freedom', 'portal']
+        const targetTab = tabMap[parseInt(e.key) - 1]
+        if (targetTab) {
+          handleTabChange(targetTab)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   // Handle portal tab redirect only when authenticated
@@ -183,10 +213,7 @@ export function PublicTabsContainer({
             return (
               <button
                 key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id)
-                  setAddPostTrigger(false)
-                }}
+                onClick={() => handleTabChange(tab.id)}
                 className={`px-3.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 press-spring ${
                   isActive 
                     ? 'bg-card text-foreground shadow-sm border border-border/10' 

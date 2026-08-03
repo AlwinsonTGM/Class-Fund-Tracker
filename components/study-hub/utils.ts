@@ -104,7 +104,7 @@ export function parseObsidianMarkdown(md: string): string {
         const styles = getCalloutStyles(calloutBlock.type)
         const calloutContent = parseObsidianMarkdown(calloutBlock.lines.join('\n'))
         result.push(`
-          <div class="my-4 p-4 rounded-2xl border-l-4 ${styles.bg} ${styles.border} ${styles.text}">
+          <div class="my-4 p-4 rounded-2xl border ${styles.bg} ${styles.border} ${styles.text}">
             <div class="flex items-center gap-2 font-bold mb-1.5 text-xs uppercase tracking-wider">
               <span>${styles.icon}</span>
               <span>${calloutBlock.title || calloutBlock.type}</span>
@@ -161,7 +161,7 @@ export function parseObsidianMarkdown(md: string): string {
     }
 
     const inlineLine = line
-      .replace(/==(.*?)==/g, '<mark class="bg-yellow-200/80 dark:bg-yellow-800/80 text-slate-900 dark:text-zinc-100 rounded px-1.5 py-0.5 font-semibold">$1</mark>')
+      .replace(/==(.*?)==/g, '<mark class="bg-yellow-200 dark:bg-yellow-900/60 text-yellow-950 dark:text-yellow-100 rounded px-1.5 py-0.5 font-semibold">$1</mark>')
       .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-semibold">$2</span>')
       .replace(/\[\[([^\]]+)\]\]/g, '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-semibold">$1</span>')
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>')
@@ -174,7 +174,7 @@ export function parseObsidianMarkdown(md: string): string {
     const styles = getCalloutStyles(calloutBlock.type)
     const calloutContent = parseObsidianMarkdown(calloutBlock.lines.join('\n'))
     result.push(`
-      <div class="my-4 p-4 rounded-2xl border-l-4 ${styles.bg} ${styles.border} ${styles.text}">
+      <div class="my-4 p-4 rounded-2xl border ${styles.bg} ${styles.border} ${styles.text}">
         <div class="flex items-center gap-2 font-bold mb-1.5 text-xs uppercase tracking-wider">
           <span>${styles.icon}</span>
           <span>${calloutBlock.title || calloutBlock.type}</span>

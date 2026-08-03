@@ -115,7 +115,7 @@ export function PhysicsCanvas({
               transform: isDragging
                 ? 'scale(1.08) rotate(0deg)'
                 : `rotate(${angle}deg)`,
-              transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              transition: isDragging ? 'none' : 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
               animationDelay: `${idx * 85}ms`,
               willChange: isDragging ? 'left, top, transform' : 'auto',
               touchAction: 'none'
@@ -162,7 +162,7 @@ export function PhysicsCanvas({
           }}
           className="flex flex-col items-center justify-center pointer-events-none select-none"
         >
-          <div className="text-4xl animate-bounce">💣</div>
+          <div className="text-4xl animate-pulse">💣</div>
           <div className="bg-red-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-full shadow border border-white/20 animate-pulse mt-1">
             {bombCountdown}s
           </div>

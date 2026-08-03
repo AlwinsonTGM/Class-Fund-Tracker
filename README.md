@@ -18,7 +18,13 @@ A modern, responsive, and secure web application designed to track class fund co
 - **Personal Tasks**: Standard students can create private tasks. The visibility selector is locked to **Private** for non-officers.
 - **Ownership Security**: Edit, delete, and toggle actions check if `created_by` matches the logged-in user, keeping private tasks completely secure.
 
-### 🚧 3. Freedom Wall Temporary Rework & Maintenance Screen (v1.33)
+### 🎨 3. Design Polish, Accessibility & Keyboard Navigation (v1.34)
+- **Scrubbed AI-Slop & Vibe-Coding Giveaways**: Removed artificial `border-l-4` side borders and upgraded bouncy spring curves to smooth exponential deceleration curves (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- **Unread Patch Notes Indicator**: Converted the auto-opening patch notes modal into an unread notification dot badge on the header trigger button.
+- **URL & Keyboard Navigation Sync**: Active tabs sync to URL search parameters (`?tab=...`) and support instant numeric keyboard shortcuts (`1`-`5`).
+- **Accessibility Compliance**: Removed mobile viewport zoom restrictions (`userScalable`) to meet WCAG standards, sanitized em-dashes, and purged unused font imports.
+
+### 🚧 4. Freedom Wall Temporary Rework & Maintenance Screen (v1.33)
 - **Temporary Rework Notice**: Restricted public and officer access to Freedom Wall posts and note editor, replacing the tab with a modern maintenance & rework screen.
 - **Personal Apology & Context**: Displays a personal note (*"I'm sorry, I didn't mean to..."*) and a transparent roadmap of ongoing upgrades for safer, cleaner, and better canvas physics & moderation.
 - **Modular Subcomponent Architecture**: Added `components/freedom-wall/under-rework.tsx` while preserving full component structure and code optimization.

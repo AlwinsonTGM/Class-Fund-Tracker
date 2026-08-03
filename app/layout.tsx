@@ -19,18 +19,12 @@ export const viewport: Viewport = {
   themeColor: '#f5f7f4',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 }
-
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="bg-background" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Space+Grotesk:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
         <Script
           id="theme-initializer"
           strategy="beforeInteractive"

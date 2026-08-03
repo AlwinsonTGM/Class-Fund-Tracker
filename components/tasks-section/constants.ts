@@ -14,22 +14,22 @@ export const PRESELECTED_BG_PHOTOS = [
 
 export const PRIORITY_THEMES = {
   Urgent: {
-    border: 'border-l-4 border-l-rose-500 border-rose-500/20',
+    border: 'border border-rose-500/30',
     badge: 'text-rose-600 bg-rose-500/10 border-rose-500/20 dark:text-rose-400',
     dot: 'bg-rose-500 animate-pulse'
   },
   High: {
-    border: 'border-l-4 border-l-amber-500 border-amber-500/20',
+    border: 'border border-amber-500/30',
     badge: 'text-amber-600 bg-amber-500/10 border-amber-500/20 dark:text-amber-400',
     dot: 'bg-amber-500'
   },
   Medium: {
-    border: 'border-l-4 border-l-emerald-500 border-emerald-500/20',
+    border: 'border border-emerald-500/30',
     badge: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20 dark:text-emerald-400',
     dot: 'bg-emerald-500'
   },
   Low: {
-    border: 'border-l-4 border-l-muted-foreground/30 border-border/80',
+    border: 'border border-border/80',
     badge: 'text-muted-foreground bg-muted/60 border-border/50',
     dot: 'bg-muted-foreground/50'
   }

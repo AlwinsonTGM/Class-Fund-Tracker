@@ -240,13 +240,13 @@ export function TaskCardPreview({
 }) {
   return (
     <div 
-      className={`relative bg-card border border-border rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-sm ${
-        backgroundImage ? 'text-white' : ''
+      className={`relative bg-card border rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-sm ${
+        backgroundImage ? 'text-white border-border' : ''
       } ${
-        priority === 'Urgent' ? 'border-l-4 border-l-rose-500 border-rose-500/20' :
-        priority === 'High' ? 'border-l-4 border-l-amber-500 border-amber-500/20' :
-        priority === 'Medium' ? 'border-l-4 border-l-emerald-500 border-emerald-500/20' :
-        'border-l-4 border-l-muted-foreground/30 border-border/80'
+        priority === 'Urgent' ? 'border-rose-500/30' :
+        priority === 'High' ? 'border-amber-500/30' :
+        priority === 'Medium' ? 'border-emerald-500/30' :
+        'border-border'
       }`}
       style={backgroundImage ? {
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.90)), url(${backgroundImage})`,

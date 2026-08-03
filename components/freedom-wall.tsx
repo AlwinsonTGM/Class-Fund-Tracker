@@ -456,7 +456,7 @@ export function FreedomWall({
     transform: isZoomed
       ? 'scale(1) rotate(0deg)'
       : `scale(0.4) rotate(${(focusedPostId ? (focusedPostId % 13) - 6 : 0)}deg)`,
-    transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease-out',
+    transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease-out',
     zIndex: 9999,
   } : {}
 
