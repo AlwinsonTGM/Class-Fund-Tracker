@@ -107,26 +107,18 @@ export async function deleteLayerImage(mapId: string, layerId: string): Promise<
   }
 }
 
-import { DEFAULT_PLAZA_LAYERS } from '@/config/defaultLayers';
-
 /**
  * Restore all segmented cutout layers for a map. The draft (localStorage) holds the layer
- * metadata with an empty `url` (or static asset path); actual PNG data URIs come from IndexedDB.
- * Falls back to DEFAULT_PLAZA_LAYERS when no custom user draft exists.
+ * metadata with an empty `url`; the actual PNG data URIs come from IndexedDB.
  */
 export async function loadMapLayers(mapId: string): Promise<SegmentedLayer[]> {
   const draft = loadEditorDraft(mapId);
   const meta: Array<Partial<SegmentedLayer> & { id: string }> | undefined = draft?.layers;
-  const defaultLayers = mapId === 'plaza' ? DEFAULT_PLAZA_LAYERS : [];
-
-  if (!Array.isArray(meta) || meta.length === 0) {
-    return defaultLayers;
-  }
+  if (!Array.isArray(meta)) return [];
 
   const restored: SegmentedLayer[] = [];
   for (const item of meta) {
-    const idbUrl = await getLayerImage(mapId, item.id);
-    const url = idbUrl || item.url;
+    const url = await getLayerImage(mapId, item.id);
     if (!url) continue;
     restored.push({
       id: item.id,
@@ -143,8 +135,7 @@ export async function loadMapLayers(mapId: string): Promise<SegmentedLayer[]> {
       crop: item.crop,
     });
   }
-
-  return restored.length > 0 ? restored : defaultLayers;
+  return restored;
 }
 
 export function saveEditorDraft(mapId: string, data: any): void {
