@@ -1,9 +1,23 @@
 'use client';
 
-import React from 'react';
-import { PATHS, DECO } from '@/config/zones';
+import React, { useState, useEffect } from 'react';
+import { getBackgroundImage } from '@/lib/editorStorage';
 
-export const Ground: React.FC = () => {
+interface GroundProps {
+  mapId?: string;
+}
+
+export const Ground: React.FC<GroundProps> = ({ mapId = 'plaza' }) => {
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getBackgroundImage(mapId).then((url) => {
+      if (url) setBgUrl(url);
+    });
+  }, [mapId]);
+
+  const defaultBg = mapId === 'classroom' ? '/assets/backgrounds/classroom.png' : '/assets/backgrounds/world_map.png';
+
   return (
     <>
       {/* Ground Map Background */}
@@ -11,7 +25,7 @@ export const Ground: React.FC = () => {
         id="ground"
         className="absolute inset-0 bg-no-repeat"
         style={{
-          backgroundImage: 'url(/assets/backgrounds/world_map.png)',
+          backgroundImage: `url(${bgUrl || defaultBg})`,
           backgroundSize: '100% 100%',
           backgroundPosition: '0 0',
         }}

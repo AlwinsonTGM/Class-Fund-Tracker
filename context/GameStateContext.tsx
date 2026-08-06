@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GameState, PlayerProfile, PlayerEquipped } from '@/types/game';
+import { preloadAvatarCatalog } from '@/config/avatars';
 
 interface GameStateContextType {
   gameState: GameState;
@@ -40,39 +41,47 @@ export const GameStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [gameState, setGameState] = useState<GameState>(DEFAULT_GAME_STATE);
   const [activeModal, setActiveModal] = useState<'school' | 'vendor' | 'board' | 'help' | 'invite' | 'results' | 'reviewer' | null>(null);
 
-  // Load state from localStorage on mount + seed board bubbles
+  // Load state from localStorage on mount + seed board bubbles + preload avatar catalog
   useEffect(() => {
-    let loaded = DEFAULT_GAME_STATE;
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
+    const init = async () => {
+      // Preload full avatar catalog so getAvatarById resolves all 418+ sprites
+      // Await before setting state so rendering components have the catalog ready
+      await preloadAvatarCatalog();
+
+      let loaded = DEFAULT_GAME_STATE;
+      try {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          loaded = {
+            ...DEFAULT_GAME_STATE,
+            ...parsed,
+            equipped: { hat: null, goldtag: false, ...(parsed.equipped || {}) },
+            invites: { count: 0, joined: [], code: '', ...(parsed.invites || {}) },
+            flags: { fished: false, sold: false, quiz: false, rookie: false, ...(parsed.flags || {}) },
+          };
+        }
+      } catch (e) {
+        console.warn('Failed to load game state from localStorage', e);
+      }
+
+      // Seed default bulletin board notes if none exist
+      if (loaded.bubbles.length === 0) {
+        const now = Date.now();
         loaded = {
-          ...DEFAULT_GAME_STATE,
-          ...parsed,
-          equipped: { hat: null, goldtag: false, ...(parsed.equipped || {}) },
-          invites: { count: 0, joined: [], code: '', ...(parsed.invites || {}) },
-          flags: { fished: false, sold: false, quiz: false, rookie: false, ...(parsed.flags || {}) },
+          ...loaded,
+          bubbles: [
+            { author: 'TransferSam', color: '#ffd6e0', text: 'first day here, this place is cozy!', ts: now - 400000 },
+            { author: 'Gossip Gnome', color: '#d0f4de', pre: '🍄', text: 'premium gossip loading…', ts: now - 200000 },
+            { author: 'Mayor Pixel', color: '#d7e9ff', pre: '⭐', text: 'Check the Schoolhouse! 🏫', ts: now - 100000 },
+          ],
         };
       }
-    } catch (e) {
-      console.warn('Failed to load game state from localStorage', e);
-    }
 
-    // Seed default bulletin board notes if none exist
-    if (loaded.bubbles.length === 0) {
-      const now = Date.now();
-      loaded = {
-        ...loaded,
-        bubbles: [
-          { author: 'TransferSam', color: '#ffd6e0', text: 'first day here, this place is cozy!', ts: now - 400000 },
-          { author: 'Gossip Gnome', color: '#d0f4de', pre: '🍄', text: 'premium gossip loading…', ts: now - 200000 },
-          { author: 'Mayor Pixel', color: '#d7e9ff', pre: '⭐', text: 'Check the Schoolhouse! 🏫', ts: now - 100000 },
-        ],
-      };
-    }
+      setGameState(loaded);
+    };
 
-    setGameState(loaded);
+    init();
   }, []);
 
   // Sync to localStorage on state change
