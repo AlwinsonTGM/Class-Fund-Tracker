@@ -1,0 +1,26 @@
+import { Obstacle } from '@/types/game';
+
+export const OBSTACLES: Obstacle[] = [
+  { id: 'fountain', shape: 'circle', x: 1012, y: 712, radius: 88, width: 176, height: 176 },
+  { id: 'fishing pond', shape: 'rect', x: 103, y: 991, width: 504, height: 324 },
+  { id: 'rock', shape: 'circle', x: 837, y: 1224, radius: 32, width: 64, height: 64 },
+  { id: 'rock', shape: 'circle', x: 781, y: 1183, radius: 32, width: 64, height: 64 },
+  { id: 'rock', shape: 'circle', x: 731, y: 1217, radius: 20, width: 40, height: 40 },
+  { id: 'rock', shape: 'circle', x: 1357, y: 1127, radius: 28, width: 56, height: 56 },
+  { id: 'rock', shape: 'circle', x: 1310, y: 1093, radius: 28, width: 56, height: 56 },
+  { id: 'rock', shape: 'circle', x: 1278, y: 1124, radius: 28, width: 56, height: 56 },
+  { id: 'rock', shape: 'circle', x: 1846, y: 1058, radius: 84, width: 168, height: 168 },
+  { id: 'tree-bush', shape: 'circle', x: 1873, y: 455, radius: 84, width: 168, height: 168 },
+  { id: 'tree-bush', shape: 'circle', x: 2006, y: 455, radius: 84, width: 168, height: 168 },
+  { id: 'bush', shape: 'circle', x: 1625, y: 363, radius: 36, width: 72, height: 72 },
+  { id: 'bush', shape: 'circle', x: 1822, y: 363, radius: 36, width: 72, height: 72 },
+  { id: 'board', shape: 'rect', x: 1695, y: 313, width: 132, height: 132 },
+  { id: 'schoolhouse', shape: 'rect', x: 881, y: 17, width: 440, height: 284 },
+  { id: 'bush', shape: 'circle', x: 1515, y: 179, radius: 36, width: 72, height: 72 },
+  { id: 'bush', shape: 'circle', x: 1620, y: 147, radius: 36, width: 72, height: 72 },
+  { id: 'rock', shape: 'circle', x: 1590, y: 251, radius: 24, width: 48, height: 48 },
+  { id: 'rock', shape: 'circle', x: 660, y: 128, radius: 40, width: 80, height: 80 },
+  { id: 'rock', shape: 'circle', x: 617, y: 166, radius: 28, width: 56, height: 56 },
+  { id: 'general store', shape: 'rect', x: 364, y: 256, width: 188, height: 148 },
+  { id: 'portal', shape: 'rect', x: 199, y: 661, width: 160, height: 140 },
+];

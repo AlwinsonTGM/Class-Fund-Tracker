@@ -6,7 +6,14 @@ A modern, responsive, and secure web application designed to track class fund co
 
 ## 🚀 Key Features
 
-### 🔒 1. Google OAuth & Secure Account Whitelisting
+### 🎮 1. Freedom Wall 2D Pixel RPG Plaza (v1.35)
+- **Serverless Supabase Realtime Engine**: 100% serverless movement vector sync (\(x, y, dir, facing, walking\)) across connected players via Supabase Realtime Channels (`Presence` + `Broadcast`) at ~12.5Hz with overhead speech bubbles & emotes.
+- **Role-Based Identity & Overhead Badges**: Amber **`OFFICER`** badge with Crown icon & Gold gradient, Emerald **`STUDENT`** badge & Green tag, and Slate **`GUEST`** badge with auto-generated handle.
+- **Bulletin Board Integration**: Interact with the Plaza Bulletin Board (`E` key or click) to open sticky notes directly synced to Supabase `freedom_posts`.
+- **Dedicated Route (`/plaza`)**: Widescreen route ([`app/plaza/page.tsx`](file:///c:/Users/PC/Documents/Transparency/class-fund-tracker/app/plaza/page.tsx)) with 100% locked body scrolling and HUD `Exit Plaza` navigation.
+- **Pipoya Catalog & Character Customizer**: Full avatar catalog loaded asynchronously on-demand with NPC sprites and animated glowing portal.
+
+### 🔒 2. Google OAuth & Secure Account Whitelisting
 - **Unified Login**: Anyone can log in with their Google account.
 - **Role Isolation**: Only accounts registered in the `officers` and `moderators` tables are granted admin capabilities.
 - **Student View**: Non-officer students are limited to the public dashboard, checkbooks, and private tasks.

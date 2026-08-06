@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { ClipboardList, X, Check } from 'lucide-react'
 
 // ─── Patch Note Data ─────────────────────────────────────────────────────────
-const CURRENT_VERSION = '1.34'
+const CURRENT_VERSION = '1.35'
 const STORAGE_KEY = `cft_patch_seen_v${CURRENT_VERSION}`
 
 interface PatchEntry {
@@ -17,6 +17,22 @@ interface PatchEntry {
 }
 
 const PATCH_NOTES: PatchEntry[] = [
+  {
+    version: '1.35',
+    date: 'August 6, 2026',
+    title: '🎮 Freedom Wall 2D Pixel RPG Plaza Integration',
+    emoji: '🎮',
+    changes: [
+      { type: 'new', text: 'Serverless Realtime Multiplayer Engine - 100% serverless movement sync (x, y, dir, facing, walking) via Supabase Realtime Channels (~12.5Hz) with overhead speech bubbles & animated emotes.' },
+      { type: 'new', text: 'Role-Based Identity & Badges - Amber OFFICER badge with Crown icon, Emerald STUDENT badge, and Slate GUEST badge with auto-generated handle.' },
+      { type: 'new', text: 'Freedom Wall Bulletin Board Integration - walk up to the Bulletin Board and press E or click to open sticky notes directly synced to freedom_posts.' },
+      { type: 'new', text: 'Dedicated Widescreen Route (/plaza) - full-viewport route with 100% locked page scrolling, zero camera glitches, and top-right HUD Exit Plaza button.' },
+      { type: 'new', text: 'Plaza Live Chat & Security Rules - real-time chat drawer with overhead bubbles, members-only channel, and guest text restrictions to prevent spam.' },
+      { type: 'new', text: 'Pipoya Character Catalog & Customizer - full avatar catalog (Male/Female 01-18, Officers, Teachers, Animals) loaded on-demand, plus restored NPC sprites and animated portal.' },
+      { type: 'improve', text: 'Feature Locking & Scope Control - schoolhouse doors and portals locked with floating maintenance notices, and HUD bag/reset buttons removed for stability.' },
+      { type: 'improve', text: '"after 7days of nonstop development, kala ko madali haha" - Welcome to the Freedom Wall 2D Pixel RPG Plaza!' },
+    ],
+  },
   {
     version: '1.34',
     date: 'August 3, 2026',
@@ -424,13 +440,11 @@ export function PatchNotesModal({ forceOpen = false, onClose }: PatchNotesModalP
 
   useEffect(() => {
     setMounted(true)
-    return () => setMounted(false)
-  }, [])
-
-  // Respond to force-open (from the button)
-  useEffect(() => {
-    if (forceOpen) {
-      setVisible(true)
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem(STORAGE_KEY)
+      if (!seen || forceOpen) {
+        setVisible(true)
+      }
     }
   }, [forceOpen])
 

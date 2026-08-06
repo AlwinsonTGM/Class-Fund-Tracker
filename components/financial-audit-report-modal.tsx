@@ -71,7 +71,7 @@ export function FinancialAuditReportModal({
 
   // Determine active / elapsed weeks up to the current date / active week
   const sortedWeeks = [...weeks].sort((a, b) => a.week_number - b.week_number)
-  const currentWeekNum = findCurrentWeekNumber(weeks)
+  const currentWeekNum = findCurrentWeekNumber(weeks as any)
   const elapsedWeeksCount = sortedWeeks.filter((w) => w.week_number <= currentWeekNum).length || 1
 
   // Calculate total possible dues for elapsed weeks up to current week

@@ -1,0 +1,56 @@
+import { Module } from '@/types/game';
+
+export const MODULES: Module[] = [
+  {
+    id: 'photo',
+    title: 'The Solar Kitchen',
+    subject: 'Biology',
+    diff: 2,
+    reward: 25,
+    icon: '🌿',
+    monster: '👾',
+    mname: 'Quizling',
+    perfectItem: 'scholar',
+    scenes: [
+      { bg: '/assets/backgrounds/bgForest.png', sp: 'Professor Pixel', pos: 'left', fx: 'bounce', text: "Welcome, welcome! I'm Professor Pixel. Today we peek inside a leaf — the busiest kitchen in the world." },
+      { bg: '/assets/backgrounds/bgForest.png', sp: 'Professor Pixel', pos: 'left', fx: '', text: "Plants can't walk to a cafeteria. So they cook their own food from sunlight, water and air. That's photosynthesis." },
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'right', fx: '', text: "Think of a leaf as a solar-powered kitchen. Sunlight is the stove, water is a delivery truck, and CO₂ is the pantry." },
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'right', fx: 'bounce', text: "Inside every plant cell are tiny chefs called chloroplasts. They catch light and turn it into sugar — plant candy!" },
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'left', fx: '', text: "And the best part? They release oxygen as a bonus — the very air you're breathing right now." },
+      { bg: '/assets/backgrounds/bgForest.png', sp: 'Professor Pixel', pos: 'left', fx: 'bounce', text: "So every tree is a quiet little bakery, feeding itself and the planet. Alright — let's see if that stuck. Ready for a challenge?" },
+    ],
+    questions: [
+      { q: "What is the 'stove' that powers photosynthesis?", c: ["Soil", "Sunlight", "Wind", "Rain"], a: 1, e: "Sunlight provides the energy that chloroplasts capture." },
+      { q: "Where does photosynthesis mainly happen?", c: ["Roots", "Bark", "Chloroplasts in leaves", "Flowers"], a: 2, e: "Chloroplasts in the leaves hold the green pigment chlorophyll." },
+      { q: "Which gas do plants take IN?", c: ["Oxygen", "Carbon dioxide", "Nitrogen", "Helium"], a: 1, e: "Plants absorb CO₂ from the air and use its carbon." },
+      { q: "What do plants make for themselves?", c: ["Protein shakes", "Sugar (glucose)", "Salt", "Vitamins only"], a: 1, e: "Glucose is the food plants build and store." },
+      { q: "What bonus gas do plants release?", c: ["CO₂", "Steam", "Oxygen", "Smoke"], a: 2, e: "Oxygen is the by-product we happily breathe." },
+    ],
+  },
+  {
+    id: 'double',
+    title: 'The Doubling Spell',
+    subject: 'Math',
+    diff: 3,
+    reward: 25,
+    icon: '🐲',
+    monster: '🐲',
+    mname: 'Doubling Dragon',
+    perfectItem: 'goldtag',
+    scenes: [
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'left', fx: '', text: "Ah, a math adventurer! Legend says a wise inventor asked a king for rice — one grain on the first square of a chessboard…" },
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'left', fx: 'bounce', text: "…two on the second, four on the third, doubling every time. The king laughed. Then he went bankrupt." },
+      { bg: '/assets/backgrounds/bgNight.png', sp: 'Professor Pixel', pos: 'right', fx: '', text: "That's the power of 2. 2, 4, 8, 16, 32… it looks slow at first, then it explodes like fireworks." },
+      { bg: '/assets/backgrounds/bgNight.png', sp: 'Professor Pixel', pos: 'right', fx: 'bounce', text: "By square 20, that rice would cover a mountain. Doubling feels gentle — until it isn't." },
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'left', fx: '', text: "We write it as 2ⁿ. Small n, cosmic numbers. Your computer thinks in exactly this language: bits, bytes, doubling." },
+      { bg: '/assets/backgrounds/bgClass.png', sp: 'Professor Pixel', pos: 'left', fx: 'bounce', text: "So next time something 'just doubles', respect it. Ready to face the Doubling Dragon?" },
+    ],
+    questions: [
+      { q: "What comes next: 2, 4, 8, …?", c: ["10", "12", "16", "64"], a: 2, e: "Each term doubles: 8 × 2 = 16." },
+      { q: "2⁵ equals…", c: ["10", "25", "32", "64"], a: 2, e: "2×2×2×2×2 = 32." },
+      { q: "Doubling a number is the same as multiplying by…", c: ["1", "2", "4", "n"], a: 1, e: "To double is to multiply by 2." },
+      { q: "Square 5 holds 2⁴ grains. How many?", c: ["8", "16", "32", "5"], a: 1, e: "2⁴ = 16 grains." },
+      { q: "Why did the king go bankrupt?", c: ["Rice was pricey", "Doubling grows explosively", "The inventor cheated", "He ate it all"], a: 1, e: "Exponential doubling outruns any treasury." },
+    ],
+  },
+];
