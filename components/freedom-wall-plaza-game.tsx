@@ -31,7 +31,7 @@ function PlazaGameContent({
   onCloseAddTrigger,
   isDedicatedPage = false
 }: FreedomWallPlazaGameProps) {
-  const { gameState, setProfile, activeModal, openModal, closeModal } = useGameState()
+  const { gameState, setProfile, activeModal, openModal, closeModal, resetSave } = useGameState()
 
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [unreadChatCount, setUnreadChatCount] = useState(0)
@@ -45,6 +45,17 @@ function PlazaGameContent({
     : user
     ? 'student'
     : 'guest'
+
+  // Clear stale auto-generated profiles that were created without character
+  // selection (they lack a `role` field). This forces the TitleScreen to appear.
+  useEffect(() => {
+    if (gameState.profile && !gameState.profile.role) {
+      resetSave()
+    }
+  }, [gameState.profile, resetSave])
+
+  // Show TitleScreen when there's no profile or profile has no role (stale)
+  const needsTitleScreen = !gameState.profile || !gameState.profile.role
 
   // Default nickname hint for TitleScreen
   let defaultNickname = ''
@@ -178,7 +189,7 @@ function PlazaGameContent({
   return (
     <div className="relative w-full h-full overflow-hidden select-none bg-[#17301c]">
       {/* Title Screen for Character Creation & Selection */}
-      {!gameState.profile && (
+      {needsTitleScreen && (
         <TitleScreen
           userRole={userRole}
           defaultNickname={defaultNickname}

@@ -6,7 +6,7 @@ import { PIPOYA_AVATARS, filterAvatarsByRole } from '@/config/pipoyaSprites';
 import { Avatar } from '@/types/game';
 import { useGameState } from '@/context/GameStateContext';
 import { playSfx } from '@/lib/sfx';
-import { Leaf, Lightbulb, Mail, Shield, BookOpen, Gift, Lock, ArrowRight } from 'lucide-react';
+import { Leaf, Lightbulb, Shield, BookOpen, Gift, Lock, ArrowRight, Crown, ShieldCheck, User } from 'lucide-react';
 
 const TIPS = [
   'Walk to the pond and fish — then sell at the General Store.',
@@ -32,9 +32,10 @@ interface TitleScreenProps {
 
 export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', defaultNickname = '' }) => {
   const { gameState, setProfile } = useGameState();
-  const [selectedRole, setSelectedRole] = useState<'student' | 'officer' | 'teacher' | 'dev'>(
-    userRole === 'officer' ? 'officer' : 'student'
-  );
+
+  // Map auth role to the internal filterAvatarsByRole format
+  const filterRole: 'student' | 'officer' | 'teacher' | 'dev' = userRole === 'officer' ? 'officer' : 'student';
+
   const [activeTab, setActiveTab] = useState<CategoryTab>(userRole === 'officer' ? 'officer' : 'male_female');
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>(
     userRole === 'officer' ? 'pipoya_officer_01-1_png' : 'pipoya_male_01-1_png'
@@ -44,6 +45,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
   const [nickname, setNickname] = useState(defaultNickname);
   const [tipIdx, setTipIdx] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [fullCatalogAvatars, setFullCatalogAvatars] = useState<Avatar[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -59,33 +61,66 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
     return () => clearInterval(interval);
   }, []);
 
-  // Filter avatars based on active tab and selected role
+  // Load the full pipoya catalog JSON on mount (418+ sprites)
+  useEffect(() => {
+    fetch('/assets/pipoya/pipoya_catalog.json')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const mapped: Avatar[] = data
+            .filter((item: { accessRole: string }) => item.accessRole !== 'enemy' && item.accessRole !== 'boss' && item.accessRole !== 'npc_only')
+            .map((item: { id: string; name: string; url: string; category: string; accessRole: string; gridType: string }) => ({
+              id: `pipoya_${item.id}`,
+              name: item.name,
+              img: item.url,
+              photo: item.url,
+              isAnimated: true,
+              category: item.category,
+              accessRole: item.accessRole,
+              gridType: item.gridType,
+              isPipoya32: true,
+            }));
+          setFullCatalogAvatars(mapped);
+        }
+      })
+      .catch((err) => console.warn('Failed to load full pipoya catalog:', err));
+  }, []);
+
+  // Use full catalog when loaded, fall back to static catalog
+  const allAvailableAvatars = useMemo(() => {
+    const pipoya = fullCatalogAvatars.length > 0 ? fullCatalogAvatars : PIPOYA_AVATARS;
+    return [...DEFAULT_AVATARS, ...pipoya];
+  }, [fullCatalogAvatars]);
+
+  // Filter avatars based on active tab and user's actual role
   const tabAvatars = useMemo(() => {
     let list: Avatar[] = [];
     if (activeTab === 'default') {
       list = DEFAULT_AVATARS;
     } else if (activeTab === 'male_female') {
-      list = PIPOYA_AVATARS.filter((a) => a.category === 'Male' || a.category === 'Female');
+      list = allAvailableAvatars.filter((a) => a.category === 'Male' || a.category === 'Female');
     } else if (activeTab === 'school') {
-      list = PIPOYA_AVATARS.filter((a) => a.category?.startsWith('School Uniform'));
+      list = allAvailableAvatars.filter((a) => a.category?.startsWith('School Uniform'));
     } else if (activeTab === 'officer') {
-      list = PIPOYA_AVATARS.filter((a) => a.accessRole === 'officer');
+      list = allAvailableAvatars.filter((a) => a.accessRole === 'officer' || a.category === 'Officer / Soldier');
     } else if (activeTab === 'teacher') {
-      list = PIPOYA_AVATARS.filter((a) => a.accessRole === 'teacher');
+      list = allAvailableAvatars.filter((a) => a.accessRole === 'teacher');
     } else if (activeTab === 'event') {
-      list = PIPOYA_AVATARS.filter((a) => a.accessRole === 'dev_event' || a.accessRole === 'locked_event');
+      list = allAvailableAvatars.filter((a) => a.accessRole === 'dev_event' || a.accessRole === 'locked_event');
     }
-    return filterAvatarsByRole(list, selectedRole);
-  }, [activeTab, selectedRole]);
+    return filterAvatarsByRole(list, filterRole);
+  }, [activeTab, filterRole, allAvailableAvatars]);
 
   // Selected avatar object
   const currentAvatar = useMemo(() => {
     return (
-      [...DEFAULT_AVATARS, ...PIPOYA_AVATARS].find((a) => a.id === selectedAvatarId) || DEFAULT_AVATARS[0]
+      allAvailableAvatars.find((a) => a.id === selectedAvatarId) || allAvailableAvatars[0] || DEFAULT_AVATARS[0]
     );
-  }, [selectedAvatarId]);
+  }, [selectedAvatarId, allAvailableAvatars]);
 
-  if (!mounted || gameState.profile) return null;
+  // Show TitleScreen when: not mounted yet, OR profile is fully set (has role)
+  // Profiles without a `role` are stale auto-generated ones that should be re-created
+  if (!mounted || (gameState.profile && gameState.profile.role)) return null;
 
   const isNickValid = nickname.trim().length >= 3 && nickname.trim().length <= 16;
 
@@ -97,9 +132,32 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
         nickname: nickname.trim(),
         avatar: currentAvatar.id,
         hue: pickHue,
-        role: selectedRole,
+        role: filterRole,
       },
       pickTag
+    );
+  };
+
+  // Role badge display
+  const roleBadge = () => {
+    if (userRole === 'officer') {
+      return (
+        <span className="flex items-center gap-1.5 bg-amber-500/15 border-2 border-amber-600/30 text-amber-700 font-pixel text-xs font-bold px-3 py-1.5 rounded-xl">
+          <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" /> Officer
+        </span>
+      );
+    }
+    if (userRole === 'student') {
+      return (
+        <span className="flex items-center gap-1.5 bg-emerald-500/15 border-2 border-emerald-600/30 text-emerald-700 font-pixel text-xs font-bold px-3 py-1.5 rounded-xl">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Student
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1.5 bg-slate-500/15 border-2 border-slate-500/30 text-slate-600 font-pixel text-xs font-bold px-3 py-1.5 rounded-xl">
+        <User className="w-3.5 h-3.5 text-slate-500" /> Guest
+      </span>
     );
   };
 
@@ -118,25 +176,10 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
           capstone vertical slice • character customization & roles
         </span>
 
-        {/* Role Selector */}
+        {/* Role Badge (read-only, determined by auth) */}
         <div className="flex items-center justify-center gap-2 mb-3 bg-[#fff3d0] p-2 rounded-xl border-2 border-[#5b3a17]/20">
           <span className="font-pixel text-xs text-[#5b3a17] font-bold">Your Role:</span>
-          {(['student', 'officer', 'teacher', 'dev'] as const).map((role) => (
-            <button
-              key={role}
-              onClick={() => {
-                playSfx('click');
-                setSelectedRole(role);
-              }}
-              className={`font-pixel text-xs px-3 py-1 rounded-lg border-2 font-bold capitalize transition-all ${
-                selectedRole === role
-                  ? 'bg-[#4c7c38] text-white border-[#2b4c1e] shadow-sm scale-105'
-                  : 'bg-[#fffdf5] text-[#5b3a17] border-[#8c6d46] hover:bg-[#ffeec2]'
-              }`}
-            >
-              {role === 'dev' ? 'Dev / Admin' : role}
-            </button>
-          ))}
+          {roleBadge()}
         </div>
 
         {/* Category Tabs */}
@@ -157,7 +200,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
                   playSfx('click');
                   setActiveTab(tab.id as CategoryTab);
                 }}
-                className={`font-pixel text-xs px-3 py-1.5 rounded-t-lg border-t-2 border-x-2 font-bold transition-all flex items-center gap-1 ${
+                className={`font-pixel text-xs px-3 py-1.5 rounded-t-lg border-t-2 border-x-2 font-bold transition-all flex items-center gap-1 cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[#fff8e1] text-[#5b3a17] border-[#5b3a17] -mb-[2px] z-10 scale-105'
                     : 'bg-[#e2cb9c] text-[#7a5a2a] border-[#a38554] hover:bg-[#edd9b2]'
@@ -172,58 +215,65 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
 
         {/* Avatar Grid */}
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 my-2 max-h-[220px] overflow-y-auto p-2 bg-[#fff8e1]/60 rounded-xl border-2 border-[#c9a86a]">
-          {tabAvatars.map(({ avatar, isLocked, lockReason }) => {
-            const isSelected = selectedAvatarId === avatar.id;
-            return (
-              <div
-                key={avatar.id}
-                onClick={() => {
-                  if (isLocked) {
+          {tabAvatars.length === 0 ? (
+            <div className="col-span-full py-8 text-center text-[#8a5a2b] font-pixel text-xs">
+              <Lock className="w-5 h-5 mx-auto mb-2 text-[#8a5a2b]/60" />
+              No characters available for your role in this category.
+            </div>
+          ) : (
+            tabAvatars.map(({ avatar, isLocked, lockReason }) => {
+              const isSelected = selectedAvatarId === avatar.id;
+              return (
+                <div
+                  key={avatar.id}
+                  onClick={() => {
+                    if (isLocked) {
+                      playSfx('click');
+                      return;
+                    }
                     playSfx('click');
-                    return;
-                  }
-                  playSfx('click');
-                  setSelectedAvatarId(avatar.id);
-                }}
-                title={isLocked ? lockReason : avatar.name}
-                className={`relative border-2 border-[#5b3a17] rounded-xl p-1 bg-[#fff8e1] flex items-center justify-center h-[64px] transition-all ${
-                  isLocked
-                    ? 'opacity-50 cursor-not-allowed bg-gray-200'
-                    : 'cursor-pointer hover:-translate-y-0.5'
-                } ${isSelected ? 'ring-4 ring-[#ffb703] -translate-y-0.5 bg-[#ffeec2]' : ''}`}
-              >
-                {/* Sprite Preview */}
-                <div className="relative w-8 h-10 overflow-hidden flex items-center justify-center">
-                  {avatar.isPipoya32 ? (
-                    <div
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: `url('${avatar.img}')`,
-                        backgroundSize: '300% 400%',
-                        backgroundPosition: '50% 0%',
-                        backgroundRepeat: 'no-repeat',
-                        imageRendering: 'pixelated',
-                        filter: `hue-rotate(${isSelected ? pickHue : 0}deg)`,
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={avatar.photo}
-                      alt={avatar.name}
-                      className="w-8 h-10 object-contain mx-auto"
-                      style={{ filter: `hue-rotate(${isSelected ? pickHue : 0}deg)` }}
-                    />
+                    setSelectedAvatarId(avatar.id);
+                  }}
+                  title={isLocked ? lockReason : avatar.name}
+                  className={`relative border-2 border-[#5b3a17] rounded-xl p-1 bg-[#fff8e1] flex items-center justify-center h-[64px] transition-all ${
+                    isLocked
+                      ? 'opacity-50 cursor-not-allowed bg-gray-200'
+                      : 'cursor-pointer hover:-translate-y-0.5'
+                  } ${isSelected ? 'ring-4 ring-[#ffb703] -translate-y-0.5 bg-[#ffeec2]' : ''}`}
+                >
+                  {/* Sprite Preview */}
+                  <div className="relative w-8 h-10 overflow-hidden flex items-center justify-center">
+                    {avatar.isPipoya32 ? (
+                      <div
+                        className="w-full h-full"
+                        style={{
+                          backgroundImage: `url('${avatar.img}')`,
+                          backgroundSize: '300% 400%',
+                          backgroundPosition: '50% 0%',
+                          backgroundRepeat: 'no-repeat',
+                          imageRendering: 'pixelated',
+                          filter: `hue-rotate(${isSelected ? pickHue : 0}deg)`,
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={avatar.photo}
+                        alt={avatar.name}
+                        className="w-8 h-10 object-contain mx-auto"
+                        style={{ filter: `hue-rotate(${isSelected ? pickHue : 0}deg)` }}
+                      />
+                    )}
+                  </div>
+
+                  {isLocked && (
+                    <span className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-full font-bold grid place-items-center">
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
                   )}
                 </div>
-
-                {isLocked && (
-                  <span className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-full font-bold grid place-items-center">
-                    <Lock className="w-2.5 h-2.5" />
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Outfit Hue */}
@@ -298,9 +348,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
           >
             {nickname.trim() || 'you'}
           </span>
-          <span className="font-pixel text-xs bg-[#5b3a17] text-white px-2 py-0.5 rounded capitalize">
-            {selectedRole}
-          </span>
+          {roleBadge()}
         </div>
 
         {/* Nametag Color */}
