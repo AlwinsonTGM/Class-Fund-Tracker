@@ -10,6 +10,32 @@ export const DEFAULT_AVATARS: Avatar[] = [
 
 export const AVATARS: Avatar[] = [...DEFAULT_AVATARS, ...PLAYER_AVAILABLE_AVATARS];
 
+export function getAvatarById(avatarId?: string): Avatar {
+  if (!avatarId) return AVATARS[0];
+  const found = AVATARS.find((a) => a.id === avatarId);
+  if (found) return found;
+
+  // Fallback dynamic resolution for pipoya avatars from extended catalog
+  if (avatarId.startsWith('pipoya_')) {
+    const rawId = avatarId.replace('pipoya_', '');
+    const foundInPipoya = PIPOYA_AVATARS.find((a) => a.id === avatarId);
+    if (foundInPipoya) return foundInPipoya;
+
+    return {
+      id: avatarId,
+      name: rawId.replace(/_/g, ' '),
+      img: `/assets/pipoya/male/Male 01-1.png`,
+      photo: `/assets/pipoya/male/Male 01-1.png`,
+      isAnimated: true,
+      isPipoya32: true,
+      category: 'Male',
+    };
+  }
+
+  return AVATARS[0];
+}
+
 export const HUES = [0, 30, 55, 120, 170, 210, 275, 320];
 export const TAGCOLORS = ['#fef3c7', '#ffd6e0', '#d0f4de', '#d7e9ff', '#eadcff', '#ffe5cc'];
+
 

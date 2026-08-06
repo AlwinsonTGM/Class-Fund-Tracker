@@ -2,7 +2,7 @@
 
 import React, { forwardRef, useLayoutEffect } from 'react';
 import { PlayerProfile, PlayerEquipped } from '@/types/game';
-import { AVATARS } from '@/config/avatars';
+import { AVATARS, getAvatarById } from '@/config/avatars';
 import { OBJECT_Z_OFFSET } from '@/lib/layerZ';
 import { GraduationCap, Crown, Star } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export const PlayerEntity = forwardRef<PlayerEntityRef, PlayerEntityProps>(
     const tagRef = React.useRef<HTMLDivElement>(null);
     const hatRef = React.useRef<HTMLDivElement>(null);
 
-    const currentAv = AVATARS.find((a) => a.id === profile.avatar) || AVATARS[0];
+    const currentAv = getAvatarById(profile.avatar);
 
     // Initialize initial DOM position ONCE on mount so React VDOM re-renders do NOT reset transform
     useLayoutEffect(() => {

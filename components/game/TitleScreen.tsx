@@ -25,20 +25,32 @@ const DEFAULT_AVATARS: Avatar[] = [
 
 type CategoryTab = 'default' | 'male_female' | 'school' | 'officer' | 'teacher' | 'event';
 
-export const TitleScreen: React.FC = () => {
+interface TitleScreenProps {
+  userRole?: 'officer' | 'student' | 'guest';
+  defaultNickname?: string;
+}
+
+export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', defaultNickname = '' }) => {
   const { gameState, setProfile } = useGameState();
-  const [selectedRole, setSelectedRole] = useState<'student' | 'officer' | 'teacher' | 'dev'>('student');
-  const [activeTab, setActiveTab] = useState<CategoryTab>('default');
-  const [selectedAvatarId, setSelectedAvatarId] = useState<string>('sprout');
-  const [pickHue, setPickHue] = useState(0);
-  const [pickTag, setPickTag] = useState('#fef3c7');
-  const [nickname, setNickname] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'student' | 'officer' | 'teacher' | 'dev'>(
+    userRole === 'officer' ? 'officer' : 'student'
+  );
+  const [activeTab, setActiveTab] = useState<CategoryTab>(userRole === 'officer' ? 'officer' : 'male_female');
+  const [selectedAvatarId, setSelectedAvatarId] = useState<string>(
+    userRole === 'officer' ? 'pipoya_officer_01-1_png' : 'pipoya_male_01-1_png'
+  );
+  const [pickHue, setPickHue] = useState(userRole === 'officer' ? 35 : userRole === 'student' ? 140 : 0);
+  const [pickTag, setPickTag] = useState(userRole === 'officer' ? '#fef3c7' : userRole === 'student' ? '#d1fae5' : '#f3f4f6');
+  const [nickname, setNickname] = useState(defaultNickname);
   const [tipIdx, setTipIdx] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (defaultNickname && !nickname) {
+      setNickname(defaultNickname);
+    }
+  }, [defaultNickname]);
 
   useEffect(() => {
     const interval = setInterval(() => {

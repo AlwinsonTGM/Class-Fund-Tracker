@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useGameState } from '@/context/GameStateContext';
-import { AVATARS } from '@/config/avatars';
+import { AVATARS, getAvatarById } from '@/config/avatars';
 import { setMuted, getMuted, playSfx } from '@/lib/sfx';
 import Link from 'next/link';
 import { Coins, ShoppingBag, Volume2, VolumeX, RotateCcw, MessageSquare, Crown, Star, Maximize2, Minimize2, Radio, ArrowLeft } from 'lucide-react';
@@ -25,7 +25,7 @@ export const HUD: React.FC<HUDProps> = ({ onToggleInv, onToggleChat, unreadChatC
 
   if (!profile) return null;
 
-  const currentAv = AVATARS.find((a) => a.id === profile.avatar) || AVATARS[0];
+  const currentAv = getAvatarById(profile.avatar);
 
   const handleToggleMute = () => {
     const next = !isMutedState;

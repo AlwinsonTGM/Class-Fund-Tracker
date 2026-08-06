@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { RemotePlayerState } from '@/lib/useSupabaseMultiplayer'
-import { AVATARS } from '@/config/avatars'
+import { AVATARS, getAvatarById } from '@/config/avatars'
 import { OBJECT_Z_OFFSET } from '@/lib/layerZ'
 import { Crown, ShieldCheck, User } from 'lucide-react'
 
@@ -11,7 +11,7 @@ interface RemotePlayerEntityProps {
 }
 
 export const RemotePlayerEntity: React.FC<RemotePlayerEntityProps> = ({ player }) => {
-  const currentAv = AVATARS.find((a) => a.id === player.avatar) || AVATARS[0]
+  const currentAv = getAvatarById(player.avatar)
 
   const now = Date.now()
   const isBubShow = !!(player.bubText && player.bubUntil && now < player.bubUntil)

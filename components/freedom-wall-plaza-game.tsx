@@ -9,6 +9,7 @@ import { Joystick } from '@/components/game/Joystick'
 import { FreedomPost } from '@/components/freedom-wall/types'
 import { FreedomPostCard } from '@/components/freedom-wall/freedom-post-card'
 import { AddPostModal } from '@/components/freedom-wall/add-post-modal'
+import { TitleScreen } from '@/components/game/TitleScreen'
 import { CharacterCustomizerModal } from '@/components/game/modals/CharacterCustomizerModal'
 import { X, PenSquare, Radio, Gamepad2, Pin, MessageSquare, Lock, ArrowLeft } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
@@ -45,31 +46,18 @@ function PlazaGameContent({
     ? 'student'
     : 'guest'
 
-  // Auto-initialize profile based on Auth session
-  useEffect(() => {
-    if (!gameState.profile) {
-      let defaultName = 'Guest'
-      if (user?.email) {
-        defaultName = user.email.split('@')[0]
-      } else if (typeof window !== 'undefined') {
-        let guestNum = localStorage.getItem('freedom_guest_num')
-        if (!guestNum) {
-          guestNum = Math.floor(1000 + Math.random() * 9000).toString()
-          localStorage.setItem('freedom_guest_num', guestNum)
-        }
-        defaultName = `Guest #${guestNum}`
-      }
-
-      setProfile(
-        {
-          avatar: userRole === 'officer' ? 'pipoya_officer_01-1_png' : 'pipoya_male_01-1_png',
-          nickname: defaultName,
-          hue: userRole === 'officer' ? 35 : userRole === 'student' ? 140 : 0
-        },
-        userRole === 'officer' ? '#fef3c7' : userRole === 'student' ? '#d1fae5' : '#f3f4f6'
-      )
+  // Default nickname hint for TitleScreen
+  let defaultNickname = ''
+  if (user?.email) {
+    defaultNickname = user.email.split('@')[0]
+  } else if (typeof window !== 'undefined') {
+    let guestNum = localStorage.getItem('freedom_guest_num')
+    if (!guestNum) {
+      guestNum = Math.floor(1000 + Math.random() * 9000).toString()
+      localStorage.setItem('freedom_guest_num', guestNum)
     }
-  }, [gameState.profile, user, userRole, setProfile])
+    defaultNickname = `Guest #${guestNum}`
+  }
 
   useEffect(() => {
     if (triggerAddOpen) {
@@ -189,6 +177,14 @@ function PlazaGameContent({
   // 2. DEDICATED FULL-VIEWPORT GAMEPLAY STATE (Rendered inside /plaza)
   return (
     <div className="relative w-full h-full overflow-hidden select-none bg-[#17301c]">
+      {/* Title Screen for Character Creation & Selection */}
+      {!gameState.profile && (
+        <TitleScreen
+          userRole={userRole}
+          defaultNickname={defaultNickname}
+        />
+      )}
+
       {/* World Map with Multiplayer Engine */}
       <World
         user={user}
