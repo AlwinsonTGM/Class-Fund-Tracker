@@ -1,0 +1,145 @@
+diff --git a/src/app/api/layers/route.ts b/src/app/api/layers/route.ts
+index 4cd9d5c..9b0495b 100644
+--- a/src/app/api/layers/route.ts
++++ b/src/app/api/layers/route.ts
+@@ -63,6 +63,33 @@ async function uniqueFileName(dir: string, baseName: string): Promise<string> {
+   return name;
+ }
+ 
++export async function GET(req: NextRequest) {
++  try {
++    const mapId = req.nextUrl.searchParams.get('mapId');
++    if (!mapId) {
++      return NextResponse.json({ error: 'mapId query param is required' }, { status: 400 });
++    }
++    const dir = layerDir(mapId);
++    let files: string[] = [];
++    try {
++      files = (await fs.readdir(dir)).filter((f) => f.endsWith('.png'));
++    } catch {
++      // Directory does not exist yet — no saved layers.
++      files = [];
++    }
++    files.sort();
++    return NextResponse.json({
++      layers: files.map((f) => ({
++        path: `/maps/${mapId}/layers/${f}`,
++        name: f.replace(/\.png$/, ''),
++      })),
++    });
++  } catch (err) {
++    console.error('Layer list failed:', err);
++    return NextResponse.json({ error: err instanceof Error ? err.message : 'List failed' }, { status: 500 });
++  }
++}
++
+ export async function POST(req: NextRequest) {
+   try {
+     const body = (await req.json()) as SaveBody;
+diff --git a/src/components/editor/hooks/useEditorState.ts b/src/components/editor/hooks/useEditorState.ts
+index 33e8424..9713ef3 100644
+--- a/src/components/editor/hooks/useEditorState.ts
++++ b/src/components/editor/hooks/useEditorState.ts
+@@ -16,6 +16,7 @@ import {
+ import {
+   deleteLayerFile,
+   isLayerFileUrl,
++  listLayerFiles,
+   renameLayerFile,
+   saveLayerFile,
+ } from '@/lib/layerFiles';
+@@ -118,7 +119,45 @@ export function useEditorState(mapId: string) {
+       }
+ 
+       // Restore SAM2 segmented cutout layers (PNGs come from IndexedDB).
+-      const initLayers: SegmentedLayer[] = await loadMapLayers(mapId);
++      let initLayers: SegmentedLayer[] = await loadMapLayers(mapId);
++
++      // Rediscover cutouts persisted as project files (public/maps/<mapId>/layers/)
++      // when the browser draft/IndexedDB has no layer metadata (e.g. storage was
++      // cleared). Layers are rebuilt from the on-disk files so the editor shows
++      // the authored cutouts again instead of appearing empty.
++      if (initLayers.length === 0 && !draft?.layers) {
++        try {
++          const files = await listLayerFiles(mapId);
++          if (files.length > 0) {
++            initLayers = await Promise.all(
++              files.map(async (f, idx) => {
++                const size = await new Promise<{ w: number; h: number } | null>((resolve) => {
++                  const img = new Image();
++                  img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
++                  img.onerror = () => resolve(null);
++                  img.src = f.path;
++                });
++                return {
++                  id: `layer_${f.name}`,
++                  name: f.name.replace(/-/g, ' '),
++                  url: f.path,
++                  x: 0,
++                  y: 0,
++                  w: size?.w ?? 64,
++                  h: size?.h ?? 64,
++                  slot: 'object',
++                  zOffset: 0,
++                  opacity: 1,
++                  visible: true,
++                } satisfies SegmentedLayer;
++              })
++            );
++          }
++        } catch (err) {
++          console.error('Failed to rediscover layer files:', err);
++        }
++      }
++
+       mounted = mounted && !!initLayers; // keep tracking `mounted` freshness
+ 
+       if (mounted) {
+@@ -157,7 +196,9 @@ export function useEditorState(mapId: string) {
+       saveEditorDraft(mapId, {
+         structures,
+         background: { ...background, url: background.isCustomUpload ? '' : background.url },
+-        layers: layers.map((l) => ({ ...l, url: '' })),
++        // Keep stable file URLs (/maps/<mapId>/layers/...) in the draft so layers
++        // survive IndexedDB wipes; only data: URLs stay browser-local.
++        layers: layers.map((l) => ({ ...l, url: isLayerFileUrl(l.url) ? l.url : '' })),
+         savedAt: new Date().toISOString(),
+       });
+       setSavedAt(new Date().toLocaleTimeString());
+@@ -371,7 +412,7 @@ export function useEditorState(mapId: string) {
+         saveEditorDraft(mapId, {
+           structures,
+           background: { ...background, url: background.isCustomUpload ? '' : background.url },
+-          layers: next.map((l) => ({ ...l, url: '' })),
++          layers: next.map((l) => ({ ...l, url: isLayerFileUrl(l.url) ? l.url : '' })),
+           savedAt: new Date().toISOString(),
+         });
+         return next;
+diff --git a/src/lib/layerFiles.ts b/src/lib/layerFiles.ts
+index 06fc3a5..7eacd62 100644
+--- a/src/lib/layerFiles.ts
++++ b/src/lib/layerFiles.ts
+@@ -31,6 +31,23 @@ async function request<T>(method: 'POST' | 'PUT' | 'DELETE', body: Record<string
+   return (await res.json()) as T;
+ }
+ 
++/** List PNG cutout files already saved for a map under public/maps/<mapId>/layers/. */
++export async function listLayerFiles(mapId: string): Promise<LayerFileRef[]> {
++  const res = await fetch(`/api/layers?mapId=${encodeURIComponent(mapId)}`);
++  if (!res.ok) {
++    let message = `Layer API GET failed (${res.status})`;
++    try {
++      const data = (await res.json()) as { error?: string };
++      if (data.error) message = data.error;
++    } catch {
++      /* keep default message */
++    }
++    throw new Error(message);
++  }
++  const data = (await res.json()) as { layers: LayerFileRef[] };
++  return data.layers || [];
++}
++
+ /** Save a PNG data URL as a file; overwritePath reuses an existing file. */
+ export function saveLayerFile(
+   mapId: string,
