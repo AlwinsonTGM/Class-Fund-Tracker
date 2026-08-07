@@ -17,6 +17,7 @@ import type { User } from '@supabase/supabase-js'
 interface FreedomWallPlazaGameProps {
   posts: FreedomPost[]
   isOfficer: boolean
+  isDev?: boolean
   user: User | null
   triggerAddOpen?: boolean
   onCloseAddTrigger?: () => void
@@ -26,6 +27,7 @@ interface FreedomWallPlazaGameProps {
 function PlazaGameContent({
   posts,
   isOfficer,
+  isDev = false,
   user,
   triggerAddOpen = false,
   onCloseAddTrigger,
@@ -39,8 +41,22 @@ function PlazaGameContent({
   const [showAddModal, setShowAddModal] = useState(false)
   const [showCustomizerModal, setShowCustomizerModal] = useState(false)
 
+  // Check if logged in user is Dev / Admin
+  const userRoleMeta = (user?.app_metadata?.role || user?.user_metadata?.role || '').toString().toLowerCase()
+  const isUserAdminMeta = user?.app_metadata?.is_admin || user?.user_metadata?.is_admin || user?.app_metadata?.admin || user?.user_metadata?.admin
+  const isDevUser = user && (
+    userRoleMeta === 'admin' ||
+    userRoleMeta === 'dev' ||
+    userRoleMeta === 'developer' ||
+    isUserAdminMeta ||
+    user.email?.toLowerCase().includes('admin') ||
+    user.email?.toLowerCase().includes('dev')
+  )
+
   // Determine user role
-  const userRole: 'officer' | 'student' | 'guest' = isOfficer
+  const userRole: 'dev' | 'officer' | 'student' | 'guest' = isDevUser
+    ? 'dev'
+    : isOfficer
     ? 'officer'
     : user
     ? 'student'
@@ -59,7 +75,9 @@ function PlazaGameContent({
 
   // Default nickname hint for TitleScreen
   let defaultNickname = ''
-  if (user?.email) {
+  if (userRole === 'dev') {
+    defaultNickname = 'Dev'
+  } else if (user?.email) {
     defaultNickname = user.email.split('@')[0]
   } else if (typeof window !== 'undefined') {
     let guestNum = localStorage.getItem('freedom_guest_num')

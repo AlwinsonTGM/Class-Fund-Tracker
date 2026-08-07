@@ -9,9 +9,10 @@ interface PlazaPageClientProps {
   initialPosts: FreedomPost[]
   user: User | null
   isOfficer: boolean
+  isDev?: boolean
 }
 
-export function PlazaPageClient({ initialPosts, user, isOfficer }: PlazaPageClientProps) {
+export function PlazaPageClient({ initialPosts, user, isOfficer, isDev }: PlazaPageClientProps) {
   // Lock body scrolling while inside the dedicated Plaza route
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -25,6 +26,7 @@ export function PlazaPageClient({ initialPosts, user, isOfficer }: PlazaPageClie
       <FreedomWallPlazaGame
         posts={initialPosts}
         isOfficer={isOfficer}
+        isDev={isDev}
         user={user}
         isDedicatedPage={true}
       />

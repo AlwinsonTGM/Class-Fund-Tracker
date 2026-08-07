@@ -6,7 +6,7 @@ import { PIPOYA_AVATARS, filterAvatarsByRole } from '@/config/pipoyaSprites';
 import { Avatar } from '@/types/game';
 import { useGameState } from '@/context/GameStateContext';
 import { playSfx } from '@/lib/sfx';
-import { Leaf, Lightbulb, Shield, BookOpen, Gift, Lock, ArrowRight, Crown, ShieldCheck, User } from 'lucide-react';
+import { Leaf, Lightbulb, Shield, BookOpen, Gift, Lock, ArrowRight, Crown, ShieldCheck, User, Code2 } from 'lucide-react';
 
 const TIPS = [
   'Walk to the pond and fish — then sell at the General Store.',
@@ -26,7 +26,7 @@ const DEFAULT_AVATARS: Avatar[] = [
 type CategoryTab = 'default' | 'male_female' | 'school' | 'officer' | 'teacher' | 'event';
 
 interface TitleScreenProps {
-  userRole?: 'officer' | 'student' | 'guest';
+  userRole?: 'dev' | 'officer' | 'student' | 'guest';
   defaultNickname?: string;
 }
 
@@ -34,14 +34,14 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
   const { gameState, setProfile } = useGameState();
 
   // Map auth role to the internal filterAvatarsByRole format
-  const filterRole: 'student' | 'officer' | 'teacher' | 'dev' = userRole === 'officer' ? 'officer' : 'student';
+  const filterRole: 'student' | 'officer' | 'teacher' | 'dev' = userRole === 'dev' ? 'dev' : userRole === 'officer' ? 'officer' : 'student';
 
-  const [activeTab, setActiveTab] = useState<CategoryTab>(userRole === 'officer' ? 'officer' : 'male_female');
+  const [activeTab, setActiveTab] = useState<CategoryTab>(userRole === 'dev' ? 'event' : userRole === 'officer' ? 'officer' : 'male_female');
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>(
-    userRole === 'officer' ? 'pipoya_officer_01-1_png' : 'pipoya_male_01-1_png'
+    userRole === 'dev' ? 'pipoya_male_01-1_png' : userRole === 'officer' ? 'pipoya_officer_01-1_png' : 'pipoya_male_01-1_png'
   );
-  const [pickHue, setPickHue] = useState(userRole === 'officer' ? 35 : userRole === 'student' ? 140 : 0);
-  const [pickTag, setPickTag] = useState(userRole === 'officer' ? '#fef3c7' : userRole === 'student' ? '#d1fae5' : '#f3f4f6');
+  const [pickHue, setPickHue] = useState(userRole === 'dev' ? 270 : userRole === 'officer' ? 35 : userRole === 'student' ? 140 : 0);
+  const [pickTag, setPickTag] = useState(userRole === 'dev' ? '#f3e8ff' : userRole === 'officer' ? '#fef3c7' : userRole === 'student' ? '#d1fae5' : '#f3f4f6');
   const [nickname, setNickname] = useState(defaultNickname);
   const [tipIdx, setTipIdx] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -76,8 +76,8 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
               photo: item.url,
               isAnimated: true,
               category: item.category,
-              accessRole: item.accessRole,
-              gridType: item.gridType,
+              accessRole: item.accessRole as any,
+              gridType: item.gridType as any,
               isPipoya32: true,
             }));
           setFullCatalogAvatars(mapped);
@@ -140,6 +140,13 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ userRole = 'student', 
 
   // Role badge display
   const roleBadge = () => {
+    if (userRole === 'dev') {
+      return (
+        <span className="flex items-center gap-1.5 bg-purple-500/20 border-2 border-purple-600/40 text-purple-700 font-pixel text-xs font-bold px-3 py-1.5 rounded-xl">
+          <Code2 className="w-3.5 h-3.5 text-purple-600" /> Dev / Admin
+        </span>
+      );
+    }
     if (userRole === 'officer') {
       return (
         <span className="flex items-center gap-1.5 bg-amber-500/15 border-2 border-amber-600/30 text-amber-700 font-pixel text-xs font-bold px-3 py-1.5 rounded-xl">

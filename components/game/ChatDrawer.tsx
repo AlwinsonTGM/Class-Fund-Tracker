@@ -10,7 +10,7 @@ import { Globe, Lock, Smile, Send, Star, Crown } from 'lucide-react';
 interface ChatDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  userRole?: 'officer' | 'student' | 'guest';
+  userRole?: 'dev' | 'officer' | 'student' | 'guest';
 }
 
 const NAUGHTY = ['stupid', 'idiot', 'ugly', 'dumb', 'hate', 'loser'];
@@ -71,9 +71,9 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, userRole = 'gues
   };
 
   const handleSend = () => {
-    if (isGuest) return;
+    if (tab === 'members' && isGuest) return;
     const raw = inputMsg.trim();
-    if (!raw || !profile) return;
+    if (!raw) return;
 
     if (Date.now() - lastSendRef.current < 1500) {
       return;
@@ -98,12 +98,15 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, userRole = 'gues
       })
     );
 
+    const authorName = profile?.nickname || 'Guest';
+    const authorColor = equipped?.goldtag ? '#ffe08a' : tagColor || (isGuest ? '#9ca3af' : '#3b82f6');
+
     setMessages((prev) => [
       ...prev,
       {
         ch: tab,
-        author: profile.nickname,
-        color: equipped.goldtag ? '#ffe08a' : tagColor,
+        author: authorName,
+        color: authorColor,
         text: f.o,
         ts: Date.now(),
       },
@@ -114,7 +117,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, userRole = 'gues
   };
 
   const handleSelectEmote = (emote: EmoteDef) => {
-    if (isGuest) return;
+    if (tab === 'members' && isGuest) return;
     // Append emote shortcut to input message
     setInputMsg((prev) => (prev ? `${prev} ${emote.shortcuts[0]}` : emote.shortcuts[0]));
     // Also trigger overhead emote directly
@@ -192,7 +195,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, userRole = 'gues
       </div>
 
       {/* Popover Emote Picker */}
-      {showEmotePicker && !isGuest && (
+      {showEmotePicker && (tab !== 'members' || !isGuest) && (
         <div className="absolute bottom-[52px] right-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
           <EmotePicker
             onSelect={handleSelectEmote}
@@ -203,7 +206,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, userRole = 'gues
 
       {/* Input Row */}
       <div className="flex gap-1.5 p-2 border-t-3 border-dashed border-[#c9a86a] items-center">
-        {isGuest ? (
+        {tab === 'members' && isGuest ? (
           <div className="w-full text-center font-nunito text-xs text-[#8a5a2b] bg-[#efe0b0] py-2 px-3 rounded-lg border-2 border-[#8a5a2b]/30">
             Log in to participate in members chat
           </div>

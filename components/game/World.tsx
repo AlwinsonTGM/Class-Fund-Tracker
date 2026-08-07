@@ -28,7 +28,7 @@ interface WorldProps {
   onEnterClassroom?: () => void;
   joystickVec?: { x: number; y: number };
   user?: any;
-  userRole?: 'officer' | 'student' | 'guest';
+  userRole?: 'dev' | 'officer' | 'student' | 'guest';
 }
 
 interface FloatText {

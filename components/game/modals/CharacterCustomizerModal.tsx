@@ -18,7 +18,7 @@ const DEFAULT_AVATARS: Avatar[] = [
 type CategoryTab = 'default' | 'male_female' | 'school' | 'officer' | 'teacher' | 'event';
 
 interface CharacterCustomizerModalProps {
-  userRole: 'student' | 'officer' | 'guest';
+  userRole: 'dev' | 'student' | 'officer' | 'guest';
   onClose: () => void;
 }
 

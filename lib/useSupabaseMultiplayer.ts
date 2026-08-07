@@ -5,7 +5,7 @@ import { supabase } from './supabase'
 export interface RemotePlayerState {
   playerId: string
   nickname: string
-  role: 'officer' | 'student' | 'guest'
+  role: 'dev' | 'officer' | 'student' | 'guest'
   avatar: string
   hue: number
   x: number
@@ -22,7 +22,7 @@ export interface RemotePlayerState {
 export interface ChatMessage {
   id: string
   author: string
-  role: 'officer' | 'student' | 'guest'
+  role: 'dev' | 'officer' | 'student' | 'guest'
   color: string
   text: string
   timestamp: number
@@ -31,7 +31,7 @@ export interface ChatMessage {
 interface UseMultiplayerProps {
   localPlayerId: string
   nickname: string
-  role: 'officer' | 'student' | 'guest'
+  role: 'dev' | 'officer' | 'student' | 'guest'
   avatar: string
   hue: number
   posRef: React.MutableRefObject<{
@@ -133,7 +133,7 @@ export function useSupabaseMultiplayer({
             id: Math.random().toString(36).substring(2),
             author: payload.author || 'Anonymous',
             role: payload.role || 'guest',
-            color: payload.role === 'officer' ? '#f59e0b' : payload.role === 'student' ? '#10b981' : '#6b7280',
+            color: payload.role === 'dev' ? '#c084fc' : payload.role === 'officer' ? '#f59e0b' : payload.role === 'student' ? '#10b981' : '#6b7280',
             text: payload.text,
             timestamp: Date.now()
           }
@@ -204,7 +204,7 @@ export function useSupabaseMultiplayer({
   // 2. Throttled Position Broadcast (called from 60fps loop)
   const broadcastPosition = useCallback(() => {
     const now = Date.now()
-    if (now - lastBroadcastRef.current < 80) return // ~12.5 updates/sec
+    if (now - lastBroadcastRef.current < 45) return // ~22 updates/sec
     lastBroadcastRef.current = now
 
     if (channelRef.current && isSubscribedRef.current && localPlayerId) {
@@ -232,7 +232,7 @@ export function useSupabaseMultiplayer({
       id: Math.random().toString(36).substring(2),
       author: nickname,
       role,
-      color: role === 'officer' ? '#f59e0b' : role === 'student' ? '#10b981' : '#6b7280',
+      color: role === 'dev' ? '#c084fc' : role === 'officer' ? '#f59e0b' : role === 'student' ? '#10b981' : '#6b7280',
       text: trimmed,
       timestamp: Date.now()
     }

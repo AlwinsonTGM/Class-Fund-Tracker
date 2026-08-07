@@ -10,7 +10,21 @@ export default async function PlazaPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   let isOfficer = false
+  let isDev = false
   if (user) {
+    const userRoleMeta = (user.app_metadata?.role || user.user_metadata?.role || '').toString().toLowerCase()
+    const isUserAdminMeta = user.app_metadata?.is_admin || user.user_metadata?.is_admin || user.app_metadata?.admin || user.user_metadata?.admin
+    if (
+      userRoleMeta === 'admin' ||
+      userRoleMeta === 'dev' ||
+      userRoleMeta === 'developer' ||
+      isUserAdminMeta ||
+      user.email?.toLowerCase().includes('admin') ||
+      user.email?.toLowerCase().includes('dev')
+    ) {
+      isDev = true
+    }
+
     const { data: moderator } = await supabase
       .from('moderators')
       .select('email')
@@ -48,6 +62,7 @@ export default async function PlazaPage() {
       initialPosts={dbPosts || []}
       user={user}
       isOfficer={isOfficer}
+      isDev={isDev}
     />
   )
 }
