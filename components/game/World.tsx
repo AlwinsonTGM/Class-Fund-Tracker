@@ -334,10 +334,15 @@ const formatBubbleText = (txt: string, maxLen: number = 80): string => {
   useEffect(() => {
     if (!profile) return;
 
-    let lastT = performance.now();
+    let lastT = 0;
     let animFrameId: number;
 
     const tick = (t: number) => {
+      if (!lastT) {
+        lastT = t;
+        animFrameId = requestAnimationFrame(tick);
+        return;
+      }
       const dt = Math.min((t - lastT) / 1000, 0.05);
       lastT = t;
       const now = performance.now();
@@ -352,12 +357,13 @@ const formatBubbleText = (txt: string, maxLen: number = 80): string => {
       if (keys['w'] || keys['arrowup']) vy -= 1;
       if (keys['s'] || keys['arrowdown']) vy += 1;
 
+      // Pythagorean Vector Normalization: sqrt(vx^2 + vy^2)
       const len = Math.hypot(vx, vy);
       if (len > 0) {
-        if (len > 1) {
-          vx /= len;
-          vy /= len;
-        }
+        const scale = len > 1 ? 1 : len;
+        vx = (vx / len) * scale;
+        vy = (vy / len) * scale;
+
         const sp = 200;
 
         let nx = Math.max(40, Math.min(WORLD_W - 40, posRef.current.x + vx * sp * dt));
@@ -667,8 +673,8 @@ const formatBubbleText = (txt: string, maxLen: number = 80): string => {
       // Camera Smooth Tracking
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      camRef.current.x += (posRef.current.x - camRef.current.x) * Math.min(1, dt * 4);
-      camRef.current.y += (posRef.current.y - camRef.current.y) * Math.min(1, dt * 4);
+      camRef.current.x += (posRef.current.x - camRef.current.x) * Math.min(1, dt * 12);
+      camRef.current.y += (posRef.current.y - camRef.current.y) * Math.min(1, dt * 12);
 
       const cx = WORLD_W > vw ? Math.max(vw / 2, Math.min(WORLD_W - vw / 2, camRef.current.x)) : WORLD_W / 2;
       const cy = WORLD_H > vh ? Math.max(vh / 2, Math.min(WORLD_H - vh / 2, camRef.current.y)) : WORLD_H / 2;

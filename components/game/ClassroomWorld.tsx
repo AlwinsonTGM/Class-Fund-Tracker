@@ -303,10 +303,15 @@ const formatBubbleText = (txt: string, maxLen: number = 80): string => {
   useEffect(() => {
     if (!profile) return;
 
-    let lastT = performance.now();
+    let lastT = 0;
     let animFrameId: number;
 
     const tick = (t: number) => {
+      if (!lastT) {
+        lastT = t;
+        animFrameId = requestAnimationFrame(tick);
+        return;
+      }
       const dt = Math.min((t - lastT) / 1000, 0.05);
       lastT = t;
       const now = performance.now();
@@ -321,12 +326,13 @@ const formatBubbleText = (txt: string, maxLen: number = 80): string => {
       if (keys['w'] || keys['arrowup']) vy -= 1;
       if (keys['s'] || keys['arrowdown']) vy += 1;
 
+      // Pythagorean Vector Normalization: sqrt(vx^2 + vy^2)
       const len = Math.hypot(vx, vy);
       if (len > 0) {
-        if (len > 1) {
-          vx /= len;
-          vy /= len;
-        }
+        const scale = len > 1 ? 1 : len;
+        vx = (vx / len) * scale;
+        vy = (vy / len) * scale;
+
         const sp = 260; // Slightly faster movement inside classroom for comfortable traversal
 
         let nx = Math.max(40, Math.min(CLASSROOM_W - 40, posRef.current.x + vx * sp * dt));
@@ -627,8 +633,8 @@ const formatBubbleText = (txt: string, maxLen: number = 80): string => {
       // Camera Smooth Tracking with Automatic Centering
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      camRef.current.x += (posRef.current.x - camRef.current.x) * Math.min(1, dt * 5);
-      camRef.current.y += (posRef.current.y - camRef.current.y) * Math.min(1, dt * 5);
+      camRef.current.x += (posRef.current.x - camRef.current.x) * Math.min(1, dt * 12);
+      camRef.current.y += (posRef.current.y - camRef.current.y) * Math.min(1, dt * 12);
 
       const offsetX = CLASSROOM_W <= vw
         ? (vw - CLASSROOM_W) / 2
