@@ -596,6 +596,35 @@ button, a, input, select, label, [role="button"] {
   to   { background-position-x: -144px; }
 }
 
+/* Inline chat emote icon badge */
+.chat-inline-emote {
+  display: inline-block;
+  vertical-align: middle;
+  width: 28px;
+  height: 28px;
+  background-size: 84px 28px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: chatEmotePlay 0.6s steps(3) infinite;
+  margin: 0 2px;
+}
+.chat-inline-emote.emote-quick {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-size: 72px 24px;
+  animation: chatEmotePlayQuick 0.6s steps(3) infinite;
+  margin: 0;
+}
+@keyframes chatEmotePlay {
+  from { background-position-x: 0px; }
+  to   { background-position-x: -84px; }
+}
+@keyframes chatEmotePlayQuick {
+  from { background-position-x: 0px; }
+  to   { background-position-x: -72px; }
+}
+
 .float { position: absolute; font: 700 16px 'Pixelify Sans', cursive; color: #fff; text-shadow: 0 2px 0 #3a2410, 0 0 6px rgba(0,0,0,.4); pointer-events: none; animation: floatup 1.2s ease-out forwards; white-space: nowrap; transform: translate(-50%, -50%); z-index: 9999; }
 @keyframes floatup { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -160%) scale(1.1); } }
 
