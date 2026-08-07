@@ -57,7 +57,10 @@ export const SegmentedLayers: React.FC<SegmentedLayersProps> = ({
             <img
               key={l.id}
               {...imgProps}
-              alt={l.name}
+              alt=""
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
               className={`absolute select-none ${interactive ? 'cursor-grab map-layer-interactive' : 'pointer-events-none'}`}
               style={{
                 left: l.x,
@@ -87,7 +90,10 @@ export const SegmentedLayers: React.FC<SegmentedLayersProps> = ({
           >
             <img
               {...imgProps}
-              alt={l.name}
+              alt=""
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
               className={`absolute ${interactive ? 'cursor-grab map-layer-interactive' : 'pointer-events-none'}`}
               style={{
                 left: -cx,
